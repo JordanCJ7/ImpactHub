@@ -21,7 +21,7 @@ Additional, non-critical features will be deferred to post-MVP to ensure deliver
 - **Total Duration:** 10 weeks (Sprint 0 + 4 Development Sprints)
 
 ### Team
-- **Size:** 3–5 members
+- **Size:** 4 members
 - **Skills:** Frontend (React/Vue.js), Backend (Node.js/Django), Database (PostgreSQL/MongoDB)
 
 ### Scope
