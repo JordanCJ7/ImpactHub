@@ -1,218 +1,251 @@
-# ImpactHub
-# Charity Donation Platform — Agile Project Plan
+# ImpactHub: Charity Donation Platform
 
-## Overview
-This document outlines the plan to deliver a **Charity Donation Platform** within **5 sprints** (including Sprint 0) using **Agile Scrum principles**. The platform will focus on core MVP features:
+> A transparent, donor-trust-focused platform to support meaningful causes.
 
-- **Campaign Browsing**
-- **Donation System**
-- **Donation Tracking**
-- **Impact Reports**
-- **Social Sharing**
-
-Additional, non-critical features will be deferred to post-MVP to ensure delivery within the timeline.
+🚀 **Status:** In development (Agile Scrum, 5-sprint MVP plan)  
+📅 **Timeline:** 5 weeks (Sprint 0 + 4 development sprints)  
+🎯 **MVP Goal:** Deliver core donation features with production-ready quality
 
 ---
 
-## 1. Feasibility and Constraints
+## 📋 Overview
 
-### Timeline
-- **Sprint Duration:** 1 week per sprint
-- **Total Duration:** 5 weeks (Sprint 0 + 4 Development Sprints)
+ImpactHub is a lightweight charity donation platform built to empower donors with transparency, trust, and impact. Using Agile Scrum, we are delivering a **Minimum Viable Product (MVP)** in **5 weeks** with a 4-member team.
 
-### Team
-- **Size:** 4 members
-- **Skills:** Frontend (React/Vue.js), Backend (Node.js), Database (MongoDB)
+### ✅ MVP Features
+- Browse charitable campaigns
+- Make secure one-time donations
+- Track personal donation history
+- View impact reports from charities
+- Share campaigns on social media
 
-### Scope
-- **MVP Focus:** Core donation and campaign features
-- **Deferred Features:** Recurring donations, advanced analytics, multi-currency support
-
-### Constraints
-- Limited sprints → strict prioritization
-- Avoiding technical debt
-- Rapid feedback loops to validate progress
+### 🚫 Deferred (Post-MVP)
+- Recurring donations
+- Multi-currency support
+- Advanced analytics dashboard
+- Admin/content management system
 
 ---
 
-## 2. Sprint Plan
+## 🧩 Tech Stack
 
-### **Sprint 0: Planning & Setup (1 week)**
+| Layer       | Technology               |
+|------------|--------------------------|
+| Frontend   | React (with Material-UI) |
+| Backend    | Node.js + Express        |
+| Database   | PostgreSQL               |
+| Auth       | JWT + OAuth (Google)     |
+| Payments   | Stripe                   |
+| CI/CD      | GitHub Actions           |
+| Hosting    | AWS / Firebase (TBD)     |
+| Testing    | Jest, React Testing Library |
 
-**Goal:** Establish the foundation for development.
+---
+
+## 🗓️ Agile Sprint Plan
+
+We follow **Scrum methodology** with 1-week sprints, daily standups, sprint reviews, and retrospectives.
+
+### 📆 Total Duration: 5 Weeks
+
+| Sprint | Focus                     | Effort (per dev) |
+|--------|----------------------------|------------------|
+| Sprint 0 | Planning & Setup         | 20–30 hrs        |
+| Sprint 1 | Campaigns + Donations    | 80–100 hrs       |
+| Sprint 2 | Donation Tracking        | 80–100 hrs       |
+| Sprint 3 | Impact Reports           | 80–100 hrs       |
+| Sprint 4 | Social Sharing + Polish  | 80–100 hrs       |
+
+> 💡 **Note:** Effort assumes ~16–20 hours/week per developer.
+
+---
+
+### **Sprint 0: Planning & Setup (Pre-Development Week)**
+
+> *No user-facing features. Focus: Foundation & alignment.*
+
+**Goal:** Prepare for rapid development with clear direction.
 
 **Tasks:**
-- Define **product vision**: A transparent, donor-trust-focused charity platform
-- Create **initial product backlog** with high-priority user stories:
-  - Browse campaigns
-  - Donate securely
-  - Track donations
-  - View impact reports
-  - Share campaigns on social media
-- Prioritize backlog with **MoSCoW** method
-- Set up **tech stack**:
-  - Frontend: React
-  - Backend: Node.js/Express
-  - Database: PostgreSQL
-  - Payments: Stripe
-- Create **wireframes** for campaign listing and donation pages
-- Configure **CI/CD pipeline** (GitHub Actions)
-- Identify stakeholders (charities, test donors)
+- Define product vision and stakeholder needs
+- Create and prioritize product backlog (MoSCoW method)
+- Design wireframes (campaign listing, donation flow)
+- Set up tech stack: React, Express, PostgreSQL, Stripe
+- Configure CI/CD pipeline (GitHub Actions)
+- Identify key stakeholders (charities, test donors)
 
 **Deliverables:**
-- Product backlog
-- Development environment
-- Initial wireframes
-- Stakeholder alignment
+- Approved product backlog
+- Development environment & repo structure
+- Initial UI wireframes
+- Stakeholder alignment document
 
 ---
 
-### **Sprint 1: Campaign Browsing & Basic Donation System (1 week)**
+### **Sprint 1: Campaign Browsing & Donation Flow**
 
-**Goal:** Implement campaign display and enable secure donations.
+**Goal:** Enable users to browse causes and donate securely.
 
 **User Stories:**
-- As a donor, I want to browse campaigns to choose causes.
-- As a donor, I want to donate securely to support a cause.
+- As a donor, I want to browse active campaigns.
+- As a donor, I want to make a secure donation via Stripe.
 
 **Tasks:**
-- Build **campaign listing page** (React)
-- Create backend APIs (`GET /campaigns`)
-- Design database schema for **campaigns** and **donations**
-- Integrate **Stripe** for single donations
-- Unit tests for APIs and payment flows
-- Responsive UI for campaigns
+- Build responsive campaign listing page (React)
+- Implement `GET /campaigns` API
+- Design DB schema: `campaigns`, `donations`
+- Integrate Stripe for one-time payments
+- Write unit tests for backend APIs and payment logic
+- Ensure mobile responsiveness
 
 **Deliverables:**
-- Functional campaign listing
-- Secure single donation flow
+- Functional campaign listing UI
+- End-to-end donation flow (test mode)
 
 ---
 
-### **Sprint 2: Donation Tracking (1 week)**
+### **Sprint 2: Donation Tracking**
 
-**Goal:** Let donors view their donation history.
+**Goal:** Allow donors to log in and view their donation history.
 
-**User Story:**
-- As a donor, I want to track my donations to see my history.
+**User Stories:**
+- As a donor, I want to create an account to track my donations.
+- As a donor, I want to see my past donations in a dashboard.
 
 **Tasks:**
-- Implement authentication (OAuth/JWT)
-- Build **donor dashboard** (React)
-- Backend API for donation history (`GET /donations/user`)
+- Implement authentication (JWT + OAuth)
+- Build donor dashboard (React)
+- Create `GET /donations/user` API
 - Link donations to user accounts in DB
-- Integration tests for authentication & APIs
-- UI refinements based on Sprint 1 feedback
+- Add integration tests for auth & data flow
+- Refine UI based on Sprint 1 feedback
 
 **Deliverables:**
+- Login/registration flow
 - Donation history dashboard
 
 ---
 
-### **Sprint 3: Impact Reports (1 week)**
+### **Sprint 3: Impact Reports**
 
-**Goal:** Provide transparent reports on donation usage.
+**Goal:** Show donors how their contributions create change.
 
 **User Story:**
-- As a donor, I want to view impact reports to understand donation outcomes.
+- As a donor, I want to view impact reports to understand how donations are used.
 
 **Tasks:**
-- Backend logic to process charity-reported data
-- Frontend report page with metrics & simple visuals
-- Integrate Chart.js for pie chart visualization
-- Store impact report data in DB
+- Design DB structure for impact data (metrics, narratives)
+- Build backend logic to serve report data
+- Create frontend report page with visualizations (Chart.js)
+- Display pie chart: "Funds Allocation" (e.g., 80% program, 15% ops, 5% admin)
 - Unit tests for report generation
 
 **Deliverables:**
-- Impact report page with one visualization
+- Impact report page with one interactive visualization
+- Sample data integration (simulated charity reports)
 
 ---
 
-### **Sprint 4: Social Sharing & MVP Polish (1 week)**
+### **Sprint 4: Social Sharing & MVP Polish**
 
-**Goal:** Finalize MVP and add sharing features.
+**Goal:** Finalize MVP and prepare for production.
 
 **User Story:**
-- As a user, I want to share campaigns on social media to promote causes.
+- As a user, I want to share campaigns on social media to spread awareness.
 
 **Tasks:**
-- Integrate social sharing APIs (Twitter/X, Facebook)
-- Add share buttons to campaign pages
-- Tests for share functionality
-- UX improvements from previous feedback (mobile responsive, trust badges)
-- End-to-end testing of all features
+- Add social sharing buttons (Twitter/X, Facebook)
+- Integrate client-side share APIs
+- Conduct end-to-end testing of all flows
+- Apply UX improvements: trust badges, loading states, mobile fixes
+- Run usability tests with 5+ users
 - Deploy to production (AWS/Firebase)
+- Final security audit (HTTPS, JWT, Stripe PCI compliance)
 
 **Deliverables:**
-- Social sharing features
+- Social sharing functionality
 - Polished, production-ready MVP
+- Deployed staging and production environments
 
 ---
 
-## 3. Key Considerations
+## 🛠️ Agile Practices
 
-### Scope Management
-- Focus on **MVP only**
-- Use existing APIs to save time
-- Simplify complex features
+We follow core Scrum rituals and quality practices:
 
-### Team Efficiency
-- Parallel work across frontend & backend
-- Use component libraries (Material-UI)
-- Automate testing
+- **Daily Standups:** 15 mins, sync progress and blockers
+- **Sprint Reviews:** Demo features to stakeholders
+- **Retrospectives:** Reflect and improve team process
+- **CI/CD:** Automated testing and deployment after each sprint
+- **User Testing:** At least 5 test users per sprint
+- **Backlog Grooming:** Weekly refinement using MoSCoW prioritization
 
-### Stakeholder Feedback
-- Early engagement with charities & donors
-- Post-sprint feedback sessions
-
-### Technical Simplicity
-- Lean stack: React, Node.js/Express, PostgreSQL, Stripe
-- HTTPS & JWT authentication for security
-
----
-
-## 4. Risk Management
-
-| **Risk** | **Impact** | **Mitigation** |
-|----------|------------|----------------|
-| Feature creep | Timeline delays | Strict backlog prioritization |
-| Payment integration delays | Donation flow blocked | Early testing with Stripe |
-| Poor UX trust | Lower donor retention | Frequent usability testing |
+### ✅ Definition of Done (DoD)
+A feature is "Done" when:
+- Code is peer-reviewed and merged
+- Unit/integration tests pass
+- Responsive and accessible UI
+- Documented in project wiki
+- Deployed and tested on staging
 
 ---
 
-## 5. Sprint Timeline & Effort
+## 📌 Backlog & Scope Management
 
-**Total Duration:** 10 weeks
-
-| **Sprint** | **Focus** | **Effort (Hours)** |
-|------------|-----------|--------------------|
-| Sprint 0 | Planning & Setup | ~20–30 |
-| Sprint 1 | Campaigns + Donations | ~80–100 |
-| Sprint 2 | Donation Tracking | ~80–100 |
-| Sprint 3 | Impact Reports | ~80–100 |
-| Sprint 4 | Sharing + Polish | ~80–100 |
+- **Strict MVP focus:** Only "Must-have" features included
+- **Change control:** New requests go to backlog for post-MVP
+- **Lean approach:** Use existing APIs and component libraries to reduce dev time
 
 ---
 
-## 6. Agile Practices
+## 🔒 Key Technical Considerations
 
-- **Daily Standups** — 15 minutes
-- **Sprint Reviews** — Feature demos to stakeholders
-- **Retrospectives** — Process improvements
-- **Continuous Delivery** — CI/CD deployment after each sprint
-- **User Testing** — At least 5 users per sprint
+- **Security:** HTTPS, JWT auth, Stripe PCI compliance
+- **Performance:** Optimized API responses, lazy loading
+- **Trust:** Transparent impact reporting, verified charities (TBD post-MVP)
+- **Scalability:** Modular backend design for future growth
 
 ---
 
-## 7. Conclusion
+## ⚠️ Risk Management
 
-Delivering the **Charity Donation Platform** in 5 sprints is **feasible** with:
-- Strict MVP focus
-- Iterative development
-- Regular stakeholder feedback
+| Risk | Impact | Mitigation |
+|------|--------|----------|
+| Feature creep | Timeline delays | Strict backlog control, MoSCoW prioritization |
+| Stripe integration delays | Blocked donation flow | Early sandbox testing, fallback logging |
+| Low donor trust | Poor conversion | Usability testing, trust badges, clear impact data |
+| Team bandwidth | Missed deadlines | Parallel frontend/backend work, reuse components |
+
+---
+
+## 🤝 Stakeholder Engagement
+
+- **Charities:** Provide input on impact reporting format
+- **Test Donors:** Participate in usability sessions
+- **Sprint Reviews:** Bi-weekly demos starting Sprint 1
+- **Feedback Loop:** Survey after each sprint
+
+---
+
+## 🎯 Conclusion
+
+Delivering a functional, trustworthy charity donation platform in **5 sprints is feasible** with:
+- Clear MVP scope
 - Lean tech stack
+- Iterative development
+- Regular feedback
 
-By the end of Sprint 4, the platform will be **ready for production** with all core features operational.
+By the end of **Sprint 4**, ImpactHub will be **production-ready** with all core features live and tested.
 
 ---
+
+## 📂 Project Resources
+
+- [Figma Wireframes](https://figma.com/...) *(link when available)*
+- [API Documentation](/docs/api.md) *(to be created)*
+- [Contribution Guidelines](CONTRIBUTING.md) *(optional)*
+- [Code of Conduct](CODE_OF_CONDUCT.md) *(optional)*
+
+---
+
+## 🚀 Let’s make an impact — one donation at a time.
