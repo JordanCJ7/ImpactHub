@@ -17,12 +17,12 @@ Additional, non-critical features will be deferred to post-MVP to ensure deliver
 ## 1. Feasibility and Constraints
 
 ### Timeline
-- **Sprint Duration:** 2 weeks per sprint
-- **Total Duration:** 10 weeks (Sprint 0 + 4 Development Sprints)
+- **Sprint Duration:** 1 week per sprint
+- **Total Duration:** 5 weeks (Sprint 0 + 4 Development Sprints)
 
 ### Team
 - **Size:** 4 members
-- **Skills:** Frontend (React/Vue.js), Backend (Node.js/Django), Database (PostgreSQL/MongoDB)
+- **Skills:** Frontend (React/Vue.js), Backend (Node.js), Database (MongoDB)
 
 ### Scope
 - **MVP Focus:** Core donation and campaign features
@@ -37,7 +37,7 @@ Additional, non-critical features will be deferred to post-MVP to ensure deliver
 
 ## 2. Sprint Plan
 
-### **Sprint 0: Planning & Setup (2 weeks)**
+### **Sprint 0: Planning & Setup (1 week)**
 
 **Goal:** Establish the foundation for development.
 
@@ -67,7 +67,7 @@ Additional, non-critical features will be deferred to post-MVP to ensure deliver
 
 ---
 
-### **Sprint 1: Campaign Browsing & Basic Donation System (2 weeks)**
+### **Sprint 1: Campaign Browsing & Basic Donation System (1 week)**
 
 **Goal:** Implement campaign display and enable secure donations.
 
@@ -89,7 +89,7 @@ Additional, non-critical features will be deferred to post-MVP to ensure deliver
 
 ---
 
-### **Sprint 2: Donation Tracking (2 weeks)**
+### **Sprint 2: Donation Tracking (1 week)**
 
 **Goal:** Let donors view their donation history.
 
@@ -109,7 +109,7 @@ Additional, non-critical features will be deferred to post-MVP to ensure deliver
 
 ---
 
-### **Sprint 3: Impact Reports (2 weeks)**
+### **Sprint 3: Impact Reports (1 week)**
 
 **Goal:** Provide transparent reports on donation usage.
 
@@ -128,7 +128,7 @@ Additional, non-critical features will be deferred to post-MVP to ensure deliver
 
 ---
 
-### **Sprint 4: Social Sharing & MVP Polish (2 weeks)**
+### **Sprint 4: Social Sharing & MVP Polish (1 week)**
 
 **Goal:** Finalize MVP and add sharing features.
 
