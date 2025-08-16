@@ -1,6 +1,6 @@
 # UI Wireframes (Sprint 0)
 
-- Campaign listing page (to be designed)
-- Donation flow (to be designed)
+- Campaign Listing Page: [Placeholder for wireframe image or link]
+- Donation Flow: [Placeholder for wireframe image or link]
 
-> Add Figma or image links here when available.
+> Replace with Figma/Miro links or screenshots when available.
