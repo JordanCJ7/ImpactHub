@@ -10,7 +10,7 @@
 
 ## 📋 Overview
 
-ImpactHub is a lightweight charity donation platform built to empower donors with transparency, trust, and impact. Using Agile Scrum, we are delivering a **Minimum Viable Product (MVP)** in **5 weeks** with a 4-member team.
+ImpactHub is a lightweight charity donation platform built to empower donors with transparency, trust, and real-world impact. Using Agile Scrum, we are delivering a **Minimum Viable Product (MVP)** in **5 weeks** with a 4-member team.
 
 ### ✅ MVP Features
 - Browse charitable campaigns
@@ -33,12 +33,13 @@ ImpactHub is a lightweight charity donation platform built to empower donors wit
 |------------|--------------------------|
 | Frontend   | React (with Material-UI) |
 | Backend    | Node.js + Express        |
-| Database   | PostgreSQL               |
+| Database   | MongoDB                  |
 | Auth       | JWT + OAuth (Google)     |
-| Payments   | Stripe                   |
-| CI/CD      | GitHub Actions           |
-| Hosting    | AWS / Firebase (TBD)     |
+| Payments   | Stripe + PayPal SDK (TBD)|
 | Testing    | Jest, React Testing Library |
+| Hosting    | AWS / Firebase (TBD)     |
+
+> 💡 **Note:** PayPal integration is under evaluation; Stripe is primary for MVP.
 
 ---
 
@@ -70,8 +71,8 @@ We follow **Scrum methodology** with 1-week sprints, daily standups, sprint revi
 - Define product vision and stakeholder needs
 - Create and prioritize product backlog (MoSCoW method)
 - Design wireframes (campaign listing, donation flow)
-- Set up tech stack: React, Express, PostgreSQL, Stripe
-- Configure CI/CD pipeline (GitHub Actions)
+- Set up tech stack: React, Express, MongoDB
+- Configure development and staging environments
 - Identify key stakeholders (charities, test donors)
 
 **Deliverables:**
@@ -88,19 +89,20 @@ We follow **Scrum methodology** with 1-week sprints, daily standups, sprint revi
 
 **User Stories:**
 - As a donor, I want to browse active campaigns.
-- As a donor, I want to make a secure donation via Stripe.
+- As a donor, I want to make a secure donation via Stripe (and evaluate PayPal).
 
 **Tasks:**
 - Build responsive campaign listing page (React)
 - Implement `GET /campaigns` API
-- Design DB schema: `campaigns`, `donations`
+- Design MongoDB schema: `campaigns`, `donations`
 - Integrate Stripe for one-time payments
+- Begin evaluation of PayPal SDK (proof of concept)
 - Write unit tests for backend APIs and payment logic
 - Ensure mobile responsiveness
 
 **Deliverables:**
 - Functional campaign listing UI
-- End-to-end donation flow (test mode)
+- End-to-end donation flow (test mode via Stripe)
 
 ---
 
@@ -116,7 +118,7 @@ We follow **Scrum methodology** with 1-week sprints, daily standups, sprint revi
 - Implement authentication (JWT + OAuth)
 - Build donor dashboard (React)
 - Create `GET /donations/user` API
-- Link donations to user accounts in DB
+- Store and retrieve user donations in MongoDB
 - Add integration tests for auth & data flow
 - Refine UI based on Sprint 1 feedback
 
@@ -134,11 +136,12 @@ We follow **Scrum methodology** with 1-week sprints, daily standups, sprint revi
 - As a donor, I want to view impact reports to understand how donations are used.
 
 **Tasks:**
-- Design DB structure for impact data (metrics, narratives)
+- Design MongoDB collections for impact data (metrics, narratives, media)
 - Build backend logic to serve report data
 - Create frontend report page with visualizations (Chart.js)
 - Display pie chart: "Funds Allocation" (e.g., 80% program, 15% ops, 5% admin)
 - Unit tests for report generation
+- Support basic image uploads for charity updates (optional)
 
 **Deliverables:**
 - Impact report page with one interactive visualization
@@ -155,7 +158,8 @@ We follow **Scrum methodology** with 1-week sprints, daily standups, sprint revi
 
 **Tasks:**
 - Add social sharing buttons (Twitter/X, Facebook)
-- Integrate client-side share APIs
+- Integrate client-side share functionality
+- Finalize payment decision: Stripe (primary), PayPal (if time permits)
 - Conduct end-to-end testing of all flows
 - Apply UX improvements: trust badges, loading states, mobile fixes
 - Run usability tests with 5+ users
@@ -176,7 +180,6 @@ We follow core Scrum rituals and quality practices:
 - **Daily Standups:** 15 mins, sync progress and blockers
 - **Sprint Reviews:** Demo features to stakeholders
 - **Retrospectives:** Reflect and improve team process
-- **CI/CD:** Automated testing and deployment after each sprint
 - **User Testing:** At least 5 test users per sprint
 - **Backlog Grooming:** Weekly refinement using MoSCoW prioritization
 
@@ -186,7 +189,7 @@ A feature is "Done" when:
 - Unit/integration tests pass
 - Responsive and accessible UI
 - Documented in project wiki
-- Deployed and tested on staging
+- Tested in staging environment
 
 ---
 
@@ -203,7 +206,7 @@ A feature is "Done" when:
 - **Security:** HTTPS, JWT auth, Stripe PCI compliance
 - **Performance:** Optimized API responses, lazy loading
 - **Trust:** Transparent impact reporting, verified charities (TBD post-MVP)
-- **Scalability:** Modular backend design for future growth
+- **Scalability:** Schema design in MongoDB supports flexible reporting and growth
 
 ---
 
@@ -212,8 +215,8 @@ A feature is "Done" when:
 | Risk | Impact | Mitigation |
 |------|--------|----------|
 | Feature creep | Timeline delays | Strict backlog control, MoSCoW prioritization |
-| Stripe integration delays | Blocked donation flow | Early sandbox testing, fallback logging |
-| Low donor trust | Poor conversion | Usability testing, trust badges, clear impact data |
+| Payment integration delays | Blocked donation flow | Prioritize Stripe; PayPal as stretch goal |
+| Poor donor trust | Low conversion | Usability testing, trust badges, clear impact data |
 | Team bandwidth | Missed deadlines | Parallel frontend/backend work, reuse components |
 
 ---
@@ -231,7 +234,7 @@ A feature is "Done" when:
 
 Delivering a functional, trustworthy charity donation platform in **5 sprints is feasible** with:
 - Clear MVP scope
-- Lean tech stack
+- Lean tech stack (MongoDB, React, Node.js)
 - Iterative development
 - Regular feedback
 
