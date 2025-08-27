@@ -41,6 +41,7 @@ ImpactHub is a lightweight charity donation platform built to empower donors wit
 
 > 💡 **Note:** PayPal integration is under evaluation; Stripe is primary for MVP.
 
+### For team roles and sprint responsibilities, see [TEAM.md](TEAM.md)
 ---
 
 ## 🗓️ Agile Sprint Plan
