@@ -1,26 +1,42 @@
-// App.tsx
-import { useState } from "react";
-import "./App.css";
+import { Toaster } from './components/ui/sonner';
+import { TooltipProvider } from './components/ui/tooltip';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
 
-function App() {
-  const [count, setCount] = useState(0);
+// Auth Pages
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
 
-  return (
-    <>
-      <h1>Vite + React + TypeScript</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  );
-}
+
+const ComingSoon = ({ title }: { title: string }) => (
+  <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="text-center">
+      <h1 className="text-4xl font-bold text-gray-900 mb-4">{title}</h1>
+      <p className="text-xl text-gray-600 mb-8">Coming Soon</p>
+      <p className="text-gray-500">This feature is currently under development.</p>
+    </div>
+  </div>
+);
+
+const App = () => (
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <BrowserRouter>
+          <div className="min-h-screen flex flex-col">
+            <main className="flex-1">
+              <Routes>
+                
+                {/* Auth Routes */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+              </Routes>
+            </main>
+          </div>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
+);
 
 export default App;
