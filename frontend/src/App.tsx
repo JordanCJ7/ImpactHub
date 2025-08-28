@@ -9,6 +9,9 @@ import Footer from '@/components/common/Footer';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 
+// Public
+import CampaignList from './pages/publicc/CampaignList';
+
 const App = () => (
     <AuthProvider>
       <TooltipProvider>
@@ -21,6 +24,9 @@ const App = () => (
                 {/* Auth */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+
+                {/* Public */}
+                <Route path="/campaigns" element={<CampaignList />} />
               </Routes>
             </main>
             <Footer />
