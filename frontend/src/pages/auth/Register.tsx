@@ -82,7 +82,7 @@ const Register: React.FC = () => {
               <Heart className="h-6 w-6 text-white" />
             </div>
             <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
-              CharityConnect
+              ImpactHub
             </span>
           </Link>
         </div>
