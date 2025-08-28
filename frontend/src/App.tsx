@@ -8,6 +8,8 @@ import { AuthProvider } from './contexts/AuthContext';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 
+// Public
+import CampaignList from './pages/public/CampaignList';
 
 const ComingSoon = ({ title }: { title: string }) => (
   <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -31,6 +33,9 @@ const App = () => (
                 {/* Auth Routes */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+
+                {/* Public */}
+                <Route path="/" element={<CampaignList />} />
               </Routes>
             </main>
           </div>
