@@ -9,6 +9,7 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 
 // Public
+import Home from './pages/publicc/Home';
 import CampaignList from './pages/publicc/CampaignList';
 
 const ComingSoon = ({ title }: { title: string }) => (
@@ -35,6 +36,7 @@ const App = () => (
                 <Route path="/register" element={<Register />} />
 
                 {/* Public */}
+                <Route path="/" element={<Home />} />
                 <Route path="/campaigns" element={<CampaignList />} />
               </Routes>
             </main>
