@@ -35,7 +35,7 @@ const App = () => (
                 <Route path="/register" element={<Register />} />
 
                 {/* Public */}
-                <Route path="/" element={<CampaignList />} />
+                <Route path="/campaigns" element={<CampaignList />} />
               </Routes>
             </main>
           </div>
