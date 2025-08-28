@@ -9,7 +9,7 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 
 // Public
-import CampaignList from './pages/public/CampaignList';
+import CampaignList from './pages/publicc/CampaignList';
 
 const ComingSoon = ({ title }: { title: string }) => (
   <div className="min-h-screen bg-gray-50 flex items-center justify-center">
