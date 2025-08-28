@@ -110,7 +110,7 @@ const Register: React.FC = () => {
                     id="firstName"
                     value={formData.firstName}
                     onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-                    placeholder="John"
+                    placeholder="Enter your first name"
                     required
                   />
                 </div>
@@ -120,7 +120,7 @@ const Register: React.FC = () => {
                     id="lastName"
                     value={formData.lastName}
                     onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-                    placeholder="Doe"
+                    placeholder="Enter your last name"
                     required
                   />
                 </div>
@@ -133,7 +133,7 @@ const Register: React.FC = () => {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder="john@example.com"
+                  placeholder="abc@example.com"
                   required
                 />
               </div>
