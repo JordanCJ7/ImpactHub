@@ -12,6 +12,7 @@ import Register from './pages/auth/Register';
 // Public
 import Home from './pages/publicc/Home';
 import CampaignList from './pages/publicc/CampaignList';
+import DonationConfirmation from './pages/publicc/DonationConfirmation';
 
 const App = () => (
     <AuthProvider>
@@ -29,6 +30,7 @@ const App = () => (
                 {/* Public */}
                 <Route path="/" element={<Home />} />
                 <Route path="/campaigns" element={<CampaignList />} />
+                 <Route path="/donation-confirmation/:id" element={<DonationConfirmation />} />
               </Routes>
             </main>
             <Footer />
