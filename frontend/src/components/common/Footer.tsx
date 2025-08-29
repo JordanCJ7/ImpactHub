@@ -13,7 +13,7 @@ const Footer: React.FC = () => {
               <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-lg flex items-center justify-center">
                 <Heart className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xl font-bold">CharityConnect</span>
+              <span className="text-xl font-bold">ImpactHub</span>
             </Link>
             <p className="text-gray-400 text-sm">
               Connecting hearts, changing lives. Join us in making a difference in communities worldwide.
@@ -69,15 +69,15 @@ const Footer: React.FC = () => {
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <Mail className="h-4 w-4 text-indigo-400" />
-                <span className="text-gray-400 text-sm">support@charityconnect.org</span>
+                <span className="text-gray-400 text-sm">support@impacthub.org</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="h-4 w-4 text-indigo-400" />
-                <span className="text-gray-400 text-sm">+1 (555) 123-4567</span>
+                <span className="text-gray-400 text-sm">+94 91 222 2226</span>
               </div>
               <div className="flex items-center space-x-3">
                 <MapPin className="h-4 w-4 text-indigo-400" />
-                <span className="text-gray-400 text-sm">123 Charity St, Hope City, HC 12345</span>
+                <span className="text-gray-400 text-sm">17/F New Kandy Road, Yakkala</span>
               </div>
             </div>
           </div>
@@ -85,7 +85,7 @@ const Footer: React.FC = () => {
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center">
           <p className="text-gray-400 text-sm">
-            © 2024 CharityConnect. All rights reserved. Built with ❤️ for making a difference.
+            © 2024 ImpactHub. All rights reserved. Built with ❤️ for making a difference.
           </p>
         </div>
       </div>

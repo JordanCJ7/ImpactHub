@@ -63,8 +63,8 @@ const Login: React.FC = () => {
 
   // Demo accounts for different roles
   const demoAccounts = [
-    { role: 'donor', email: 'donor@demo.com', name: 'John Donor' },
-    { role: 'campaign-leader', email: 'leader@demo.com', name: 'Sarah Leader' },
+    { role: 'donor', email: 'donor@demo.com', name: 'Kamal Jayasuriya' },
+    { role: 'campaign-leader', email: 'leader@demo.com', name: 'Kamani Leader' },
     { role: 'admin', email: 'admin@demo.com', name: 'Admin User' }
   ];
 

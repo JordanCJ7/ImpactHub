@@ -11,7 +11,7 @@ import { FileText } from 'lucide-react';
 
 const DonorDashboard: React.FC = () => {
   const stats = [
-    { icon: DollarSign, label: "Total Donated", value: "$2,450", change: "+$150 this month", color: "text-green-600" },
+    { icon: DollarSign, label: "Total Donated", value: "LKR 2,450", change: "LKR150 this month", color: "text-green-600" },
     { icon: Heart, label: "Campaigns Supported", value: "12", change: "+2 this month", color: "text-red-600" },
     { icon: Users, label: "People Impacted", value: "1,247", change: "+89 this month", color: "text-blue-600" },
     { icon: Award, label: "Donor Level", value: "Gold", change: "Next: Platinum", color: "text-yellow-600" }
@@ -21,7 +21,7 @@ const DonorDashboard: React.FC = () => {
     {
       id: 1,
       campaign: "Clean Water for Rural Communities",
-      amount: 150,
+      amount: 1500,
       date: "2024-01-15",
       status: "completed",
       image: "/images/CleanWater.jpg"
@@ -29,7 +29,7 @@ const DonorDashboard: React.FC = () => {
     {
       id: 2,
       campaign: "Education for Every Child",
-      amount: 100,
+      amount: 1000,
       date: "2024-01-12",
       status: "completed",
       image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=100&h=100&fit=crop"
@@ -37,7 +37,7 @@ const DonorDashboard: React.FC = () => {
     {
       id: 3,
       campaign: "Emergency Food Relief",
-      amount: 75,
+      amount: 750,
       date: "2024-01-08",
       status: "completed",
       image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=100&h=100&fit=crop"
@@ -50,7 +50,7 @@ const DonorDashboard: React.FC = () => {
       title: "Clean Water for Rural Communities",
       raised: 75420,
       goal: 100000,
-      yourContribution: 150,
+      yourContribution: 1500,
       lastUpdate: "Well drilling completed in village 1",
       image: "/images/CleanWater.jpg",
       daysLeft: 23
@@ -60,7 +60,7 @@ const DonorDashboard: React.FC = () => {
       title: "Education for Every Child",
       raised: 42350,
       goal: 75000,
-      yourContribution: 100,
+      yourContribution: 10000,
       lastUpdate: "School construction 60% complete",
       image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=300&h=200&fit=crop",
       daysLeft: 45
@@ -70,7 +70,7 @@ const DonorDashboard: React.FC = () => {
       title: "Emergency Food Relief",
       raised: 28900,
       goal: 50000,
-      yourContribution: 75,
+      yourContribution: 7500,
       lastUpdate: "Distributed 500 food packages this week",
       image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=300&h=200&fit=crop",
       daysLeft: 12
@@ -81,7 +81,7 @@ const DonorDashboard: React.FC = () => {
     { title: "First Donation", description: "Made your first donation", date: "Dec 2023", earned: true },
     { title: "Consistent Giver", description: "Donated for 3 consecutive months", date: "Jan 2024", earned: true },
     { title: "Community Builder", description: "Supported 10 different campaigns", date: "Jan 2024", earned: true },
-    { title: "Major Donor", description: "Single donation over $500", date: null, earned: false }
+    { title: "Major Donor", description: "Single donation over LKR 500", date: null, earned: false }
   ];
 
   return (
@@ -91,7 +91,7 @@ const DonorDashboard: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Welcome back, John!</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Welcome back, Kamal!</h1>
               <p className="text-gray-600">Here's your impact summary and recent activity.</p>
             </div>
             <div className="flex items-center space-x-3">
@@ -160,11 +160,11 @@ const DonorDashboard: React.FC = () => {
                       />
                       <div className="flex-1 min-w-0">
                         <h4 className="font-semibold text-gray-900 mb-1">{campaign.title}</h4>
-                        <p className="text-sm text-gray-600 mb-2">Your contribution: <span className="font-medium text-green-600">${campaign.yourContribution}</span></p>
+                        <p className="text-sm text-gray-600 mb-2">Your contribution: <span className="font-medium text-green-600">LKR {campaign.yourContribution}</span></p>
                         
                         <div className="space-y-2">
                           <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">${campaign.raised.toLocaleString()} raised</span>
+                            <span className="text-sm text-gray-600">LKR {campaign.raised.toLocaleString()} raised</span>
                             <span className="text-sm text-gray-500">{campaign.daysLeft} days left</span>
                           </div>
                           <Progress value={(campaign.raised / campaign.goal) * 100} className="h-2" />
@@ -205,7 +205,7 @@ const DonorDashboard: React.FC = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-semibold text-gray-900">${donation.amount}</div>
+                        <div className="font-semibold text-gray-900">LKR {donation.amount}</div>
                         <Badge className="bg-green-100 text-green-800">Completed</Badge>
                       </div>
                     </div>
