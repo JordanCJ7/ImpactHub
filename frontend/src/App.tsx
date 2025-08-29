@@ -27,6 +27,9 @@ import DonationHistory from './pages/donor/DonationHistory';
 import LeaderDashboard from './pages/leader/LeaderDashboard';
 import CreateCampaign from './pages/leader/CreateCampaign';
 
+// Development/Testing Pages
+import IntegrationTest from '@/pages/IntegrationTest';
+
 import NotFound from './pages/NotFound';
 
 
@@ -71,6 +74,9 @@ const App = () => (
              {/* Campaign Leader Routes */}
                 <Route path="/leader/dashboard" element={<LeaderDashboard />} />
                  <Route path="/leader/create" element={<CreateCampaign />} />
+
+            {/* Development/Testing Routes */}
+            <Route path="/test" element={<IntegrationTest />} />
 
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />
