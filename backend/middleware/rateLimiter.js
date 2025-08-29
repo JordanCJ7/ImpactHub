@@ -1,29 +1,68 @@
 const rateLimit = require('express-rate-limit');
 
 // General API rate limiting
-const apiLimiter = rateLimit({
+const general = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: 100, // limit each IP to 100 requests per windowMs
   message: {
     error: 'Too many requests from this IP, please try again later.',
+    retryAfter: 15 * 60 // 15 minutes in seconds
   },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-// Strict rate limiting for auth endpoints
-const authLimiter = rateLimit({
+// Strict rate limiting for authentication routes
+const auth = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 requests per windowMs
+  max: 5, // limit each IP to 5 requests per windowMs
   message: {
     error: 'Too many authentication attempts, please try again later.',
+    retryAfter: 15 * 60
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true, // Don't count successful requests
+});
+
+// Rate limiting for donation creation
+const donation = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 3, // limit each IP to 3 donation attempts per 5 minutes
+  message: {
+    error: 'Too many donation attempts, please try again later.',
+    retryAfter: 5 * 60
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiting for campaign creation
+const campaign = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5, // limit each IP to 5 campaign creations per hour
+  message: {
+    error: 'Too many campaign creation attempts, please try again later.',
+    retryAfter: 60 * 60
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiting for password reset
+const passwordReset = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3, // limit each IP to 3 password reset attempts per hour
+  message: {
+    error: 'Too many password reset attempts, please try again later.',
+    retryAfter: 60 * 60
   },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
 // Payment endpoint rate limiting
-const paymentLimiter = rateLimit({
+const payment = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 10, // Limit each IP to 10 payment requests per minute
   message: {
@@ -34,7 +73,10 @@ const paymentLimiter = rateLimit({
 });
 
 module.exports = {
-  apiLimiter,
-  authLimiter,
-  paymentLimiter
+  general,
+  auth,
+  donation,
+  campaign,
+  passwordReset,
+  payment
 };
