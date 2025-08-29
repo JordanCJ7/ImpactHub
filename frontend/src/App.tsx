@@ -14,6 +14,7 @@ import Register from './pages/auth/Register';
 import Home from './pages/publicc/Home';
 import CampaignList from './pages/publicc/CampaignList';
 import DonationConfirmation from './pages/publicc/DonationConfirmation';
+import CampaignDetails from './pages/publicc/CampaignDetails';
 
 
 // Donor Pages
@@ -25,6 +26,7 @@ const App = () => (
         <Toaster />
         <BrowserRouter>
           <div className="min-h-screen flex flex-col">
+            <Navbar />
             <main className="flex-1">
               <Routes>
                 
