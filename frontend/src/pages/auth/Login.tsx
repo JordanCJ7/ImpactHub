@@ -12,7 +12,7 @@ import { useAuth, UserRole } from '@/contexts/AuthContext';
 const Login: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, loading: authLoading } = useAuth();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -29,24 +29,22 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      await login(formData.email, formData.password, formData.role);
+      const result = await login(formData.email, formData.password);
       
-      // Navigate based on role
-      switch (formData.role) {
-        case 'donor':
-          navigate('/donor/dashboard');
-          break;
-        case 'campaign-leader':
-          navigate('/leader/dashboard');
-          break;
-        case 'admin':
-          navigate('/admin/dashboard');
-          break;
-        default:
-          navigate('/');
+      if (result.success && result.user) {
+        // Navigate based on actual user role from backend response
+        const redirectPath = searchParams.get('redirect');
+        if (redirectPath) {
+          navigate(redirectPath);
+        } else {
+          // Navigate to role-specific dashboard based on actual user role
+          navigate(getDashboardPath(result.user.role));
+        }
+      } else {
+        setError(result.error || 'Login failed. Please try again.');
       }
     } catch (err) {
-      setError('Invalid credentials. Please try again.');
+      setError('Network error. Please check your connection and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -79,8 +77,14 @@ const Login: React.FC = () => {
       
       try {
         setIsLoading(true);
-        await login(demo.email, 'demo123', demoRole);
-        navigate(getDashboardPath(demoRole));
+        const result = await login(demo.email, 'demo123');
+        
+        if (result.success && result.user) {
+          // Navigate based on actual user role from backend response
+          navigate(getDashboardPath(result.user.role));
+        } else {
+          setError(result.error || 'Demo login failed. Please try again.');
+        }
       } catch (err) {
         setError('Demo login failed. Please try again.');
       } finally {
