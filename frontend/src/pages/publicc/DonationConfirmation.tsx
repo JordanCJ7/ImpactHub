@@ -40,7 +40,7 @@ const DonationConfirmation: React.FC = () => {
             Thank You!
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Your generous donation of <span className="font-semibold text-green-600">LKR{donation.amount}</span> has been successfully processed.
+            Your generous donation of <span className="font-semibold text-green-600">LKR {donation.amount}</span> has been successfully processed.
           </p>
         </div>
 

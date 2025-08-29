@@ -17,7 +17,7 @@ const DonorProfile: React.FC = () => {
     firstName: 'Kamal',
     lastName: 'Jayasinghe',
     email: 'kamaljayasinghe@email.com',
-    phone: '+1 (555) 123-4567',
+    phone: '+94 71 889 1234',
     bio: 'Passionate about making a difference in communities around the world.',
     location: 'Malabe, Colombo',
     joinDate: 'December 2023',
