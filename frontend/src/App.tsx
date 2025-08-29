@@ -21,6 +21,7 @@ import Donate from './pages/publicc/Donate';
 // Donor Pages
 import DonorProfile from './pages/donor/DonorProfile';
 import DonorDashboard from './pages/donor/DonorDashboard';
+import DonationHistory from './pages/donor/DonationHistory'; 
 
 
 
@@ -63,6 +64,7 @@ const App = () => (
             {/* Donor Routes */}
             <Route path="/donor/profile" element={<DonorProfile />} />
             <Route path="/donor/dashboard" element={<DonorDashboard />} />
+            <Route path="/donor/history" element={<DonationHistory />} />
 
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />
