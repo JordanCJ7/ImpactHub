@@ -53,6 +53,21 @@ const register = async (req, res) => {
     
   } catch (error) {
     console.error('Registration error:', error);
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: validationErrors 
+      });
+    }
+    
+    // Handle duplicate key error (unique constraint)
+    if (error.code === 11000) {
+      return res.status(400).json({ error: 'User already exists with this email' });
+    }
+    
     res.status(500).json({ error: 'Failed to register user' });
   }
 };
@@ -69,8 +84,8 @@ const login = async (req, res) => {
       });
     }
     
-    // Find user by email
-    const user = await User.findOne({ email: email.toLowerCase() });
+    // Find user by email and include password field
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
@@ -194,6 +209,36 @@ const getUserProfile = async (req, res) => {
   }
 };
 
+// Get current user (authenticated user)
+const getCurrentUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json(user);
+    
+  } catch (error) {
+    console.error('Error fetching current user:', error);
+    res.status(500).json({ error: 'Failed to fetch current user' });
+  }
+};
+
+// Logout user
+const logout = async (req, res) => {
+  try {
+    // For JWT-based auth, logout is handled client-side by removing the token
+    // But we can still log the action or invalidate tokens if needed
+    res.json({ message: 'Logged out successfully' });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({ error: 'Failed to logout' });
+  }
+};
+
 // Update user profile
 const updateUserProfile = async (req, res) => {
   try {
@@ -236,5 +281,7 @@ module.exports = {
   login,
   googleAuth,
   getUserProfile,
+  getCurrentUser,
+  logout,
   updateUserProfile
 };
