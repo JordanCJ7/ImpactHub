@@ -3,7 +3,6 @@ import { TooltipProvider } from './components/ui/tooltip';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 
-
 import Navbar from '@/components/common/Navbar';
 import Footer from '@/components/common/Footer';
 
