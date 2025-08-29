@@ -15,6 +15,7 @@ import Home from './pages/publicc/Home';
 import CampaignList from './pages/publicc/CampaignList';
 import DonationConfirmation from './pages/publicc/DonationConfirmation';
 import CampaignDetails from './pages/publicc/CampaignDetails';
+import Donate from './pages/publicc/Donate';
 
 // Donor Pages
 import DonorProfile from './pages/donor/DonorProfile';
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/campaigns" element={<CampaignList />} />
             <Route path="/donation-confirmation/:id" element={<DonationConfirmation />} />
             <Route path="/campaigns/:id" element={<CampaignDetails />} />
+            <Route path="/donate/:id" element={<Donate />} />
 
             {/* Donor Routes */}
             <Route path="/donor/profile" element={<DonorProfile />} />
