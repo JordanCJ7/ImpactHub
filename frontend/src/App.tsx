@@ -36,7 +36,7 @@ const App = () => (
                 <Route path="/" element={<Home />} />
                 <Route path="/campaigns" element={<CampaignList />} />
 
-                 <Route path="/donation-confirmation/:id" element={<DonationConfirmation />} />
+                <Route path="/donation-confirmation/:id" element={<DonationConfirmation />} />
                 <Route path="/campaigns/:id" element={<CampaignDetails />} />
 
                 {/* Donor Routes */}
