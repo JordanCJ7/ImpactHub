@@ -49,24 +49,16 @@ const Register: React.FC = () => {
 
     try {
       const fullName = `${formData.firstName} ${formData.lastName}`;
-      await register(fullName, formData.email, formData.password, formData.role);
+      const result = await register(fullName, formData.email, formData.password, formData.role);
       
-      // Navigate based on role
-      switch (formData.role) {
-        case 'donor':
-          navigate('/donor/dashboard');
-          break;
-        case 'campaign-leader':
-          navigate('/leader/dashboard');
-          break;
-        case 'admin':
-          navigate('/admin/dashboard');
-          break;
-        default:
-          navigate('/');
+      if (result.success) {
+        // Navigate to appropriate dashboard or home
+        navigate('/');
+      } else {
+        setError(result.error || 'Registration failed. Please try again.');
       }
     } catch (err) {
-      setError('Registration failed. Please try again.');
+      setError('Network error. Please check your connection and try again.');
     } finally {
       setIsLoading(false);
     }
