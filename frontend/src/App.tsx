@@ -13,7 +13,8 @@ import Register from './pages/auth/Register';
 // Public
 import Home from './pages/publicc/Home';
 import CampaignList from './pages/publicc/CampaignList';
-import CampaignDetails from './pages/publicc/CampaignDetails'; 
+import DonationConfirmation from './pages/publicc/DonationConfirmation';
+
 
 // Donor Pages
 import DonorProfile from './pages/donor/DonorProfile';
@@ -34,10 +35,13 @@ const App = () => (
                 {/* Public */}
                 <Route path="/" element={<Home />} />
                 <Route path="/campaigns" element={<CampaignList />} />
+
+                <Route path="/donation-confirmation/:id" element={<DonationConfirmation />} />
                 <Route path="/campaigns/:id" element={<CampaignDetails />} />
 
                 {/* Donor Routes */}
                 <Route path="/donor/profile" element={<DonorProfile />} />
+
               </Routes>
             </main>
             <Footer />
