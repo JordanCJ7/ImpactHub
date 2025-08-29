@@ -1,3 +1,4 @@
+
 import { Toaster } from './components/ui/sonner';
 import { TooltipProvider } from './components/ui/tooltip';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
@@ -18,16 +19,19 @@ import CampaignDetails from './pages/publicc/CampaignDetails';
 
 // Donor Pages
 import DonorProfile from './pages/donor/DonorProfile';
+import DonorDashboard from './pages/donor/DonorDashboard';
+
+
+
+import NotFound from './pages/NotFound';
+
 
 // Layout wrapper
 const Layout = ({ children }) => {
   const location = useLocation();
-
   // Paths where navbar and footer should be hidden
   const hideLayout = ["/login", "/register"];
-
   const shouldHide = hideLayout.includes(location.pathname);
-
   return (
     <div className="min-h-screen flex flex-col">
       {!shouldHide && <Navbar />}
@@ -56,6 +60,10 @@ const App = () => (
 
             {/* Donor Routes */}
             <Route path="/donor/profile" element={<DonorProfile />} />
+            <Route path="/donor/dashboard" element={<DonorDashboard />} />
+
+            {/* 404 Route */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>
       </BrowserRouter>
