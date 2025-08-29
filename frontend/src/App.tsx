@@ -15,6 +15,9 @@ import Home from './pages/publicc/Home';
 import CampaignList from './pages/publicc/CampaignList';
 import CampaignDetails from './pages/publicc/CampaignDetails'; 
 
+// Donor Pages
+import DonorProfile from './pages/donor/DonorProfile';
+
 const App = () => (
     <AuthProvider>
       <TooltipProvider>
@@ -32,6 +35,9 @@ const App = () => (
                 <Route path="/" element={<Home />} />
                 <Route path="/campaigns" element={<CampaignList />} />
                 <Route path="/campaigns/:id" element={<CampaignDetails />} />
+
+                {/* Donor Routes */}
+                <Route path="/donor/profile" element={<DonorProfile />} />
               </Routes>
             </main>
             <Footer />
