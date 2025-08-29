@@ -3,6 +3,7 @@ import { TooltipProvider } from './components/ui/tooltip';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 
+import Navbar from '@/components/common/Navbar';
 import Footer from '@/components/common/Footer';
 
 // Auth Pages
@@ -13,6 +14,10 @@ import Register from './pages/auth/Register';
 import Home from './pages/publicc/Home';
 import CampaignList from './pages/publicc/CampaignList';
 import DonationConfirmation from './pages/publicc/DonationConfirmation';
+
+
+// Donor Pages
+import DonorProfile from './pages/donor/DonorProfile';
 
 const App = () => (
     <AuthProvider>
@@ -30,7 +35,13 @@ const App = () => (
                 {/* Public */}
                 <Route path="/" element={<Home />} />
                 <Route path="/campaigns" element={<CampaignList />} />
+
                  <Route path="/donation-confirmation/:id" element={<DonationConfirmation />} />
+                <Route path="/campaigns/:id" element={<CampaignDetails />} />
+
+                {/* Donor Routes */}
+                <Route path="/donor/profile" element={<DonorProfile />} />
+
               </Routes>
             </main>
             <Footer />
