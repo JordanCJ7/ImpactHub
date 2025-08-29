@@ -269,9 +269,191 @@ const handlePaymentFailed = async (paymentIntent) => {
   }
 };
 
+// Get recent donations (public)
+const getRecentDonations = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const donations = await Donation.find({ 
+      status: 'completed',
+      isAnonymous: false 
+    })
+    .populate('campaignId', 'title')
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .select('donorName amount campaignId createdAt message');
+    
+    res.json(donations);
+  } catch (error) {
+    console.error('Error fetching recent donations:', error);
+    res.status(500).json({ error: 'Failed to fetch recent donations' });
+  }
+};
+
+// Get top donations (public)
+const getTopDonations = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const donations = await Donation.find({ 
+      status: 'completed',
+      isAnonymous: false 
+    })
+    .populate('campaignId', 'title')
+    .sort({ amount: -1 })
+    .limit(limit)
+    .select('donorName amount campaignId createdAt message');
+    
+    res.json(donations);
+  } catch (error) {
+    console.error('Error fetching top donations:', error);
+    res.status(500).json({ error: 'Failed to fetch top donations' });
+  }
+};
+
+// Get donation statistics (public)
+const getDonationStats = async (req, res) => {
+  try {
+    const totalDonations = await Donation.countDocuments({ status: 'completed' });
+    const totalAmount = await Donation.aggregate([
+      { $match: { status: 'completed' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    
+    const totalDonated = totalAmount.length > 0 ? totalAmount[0].total : 0;
+    
+    res.json({
+      totalDonations,
+      totalAmount: totalDonated,
+      averageDonation: totalDonations > 0 ? totalDonated / totalDonations : 0
+    });
+  } catch (error) {
+    console.error('Error fetching donation stats:', error);
+    res.status(500).json({ error: 'Failed to fetch donation statistics' });
+  }
+};
+
+// Create donation (placeholder - use payment intent instead)
+const createDonation = async (req, res) => {
+  res.status(400).json({ 
+    error: 'Direct donation creation not supported. Use /create-payment-intent instead.' 
+  });
+};
+
+// Placeholder functions for missing routes
+const getMyDonations = async (req, res) => {
+  try {
+    const userEmail = req.user.email;
+    const donations = await Donation.find({ 
+      donorEmail: userEmail,
+      status: 'completed' 
+    })
+    .populate('campaignId', 'title')
+    .sort({ createdAt: -1 });
+    
+    res.json(donations);
+  } catch (error) {
+    console.error('Error fetching user donations:', error);
+    res.status(500).json({ error: 'Failed to fetch your donations' });
+  }
+};
+
+const getDonationById = async (req, res) => {
+  res.status(501).json({ error: 'Function not implemented yet' });
+};
+
+const cancelDonation = async (req, res) => {
+  res.status(501).json({ error: 'Function not implemented yet' });
+};
+
+const refundDonation = async (req, res) => {
+  res.status(501).json({ error: 'Function not implemented yet' });
+};
+
+const generateReceipt = async (req, res) => {
+  res.status(501).json({ error: 'Function not implemented yet' });
+};
+
+const getTaxSummary = async (req, res) => {
+  res.status(501).json({ error: 'Function not implemented yet' });
+};
+
+const getDonationAnalytics = async (req, res) => {
+  res.status(501).json({ error: 'Function not implemented yet' });
+};
+
+const getCampaignDonationAnalytics = async (req, res) => {
+  res.status(501).json({ error: 'Function not implemented yet' });
+};
+
+const getAllDonations = async (req, res) => {
+  res.status(501).json({ error: 'Function not implemented yet' });
+};
+
+const verifyDonation = async (req, res) => {
+  res.status(501).json({ error: 'Function not implemented yet' });
+};
+
+const generateReports = async (req, res) => {
+  res.status(501).json({ error: 'Function not implemented yet' });
+};
+
+const createRecurringDonation = async (req, res) => {
+  res.status(501).json({ error: 'Function not implemented yet' });
+};
+
+const getMyRecurringDonations = async (req, res) => {
+  res.status(501).json({ error: 'Function not implemented yet' });
+};
+
+const cancelRecurringDonation = async (req, res) => {
+  res.status(501).json({ error: 'Function not implemented yet' });
+};
+
+const pauseRecurringDonation = async (req, res) => {
+  res.status(501).json({ error: 'Function not implemented yet' });
+};
+
+const resumeRecurringDonation = async (req, res) => {
+  res.status(501).json({ error: 'Function not implemented yet' });
+};
+
+const processPayment = async (req, res) => {
+  res.status(501).json({ error: 'Function not implemented yet' });
+};
+
+const stripeWebhook = async (req, res) => {
+  res.status(501).json({ error: 'Function not implemented yet' });
+};
+
+const payhereWebhook = async (req, res) => {
+  res.status(501).json({ error: 'Function not implemented yet' });
+};
+
 module.exports = {
   createPaymentIntent,
   confirmDonation,
   getDonationHistory,
-  handleWebhook
+  handleWebhook,
+  getRecentDonations,
+  getTopDonations,
+  getDonationStats,
+  createDonation,
+  getMyDonations,
+  getDonationById,
+  cancelDonation,
+  refundDonation,
+  generateReceipt,
+  getTaxSummary,
+  getDonationAnalytics,
+  getCampaignDonationAnalytics,
+  getAllDonations,
+  verifyDonation,
+  generateReports,
+  createRecurringDonation,
+  getMyRecurringDonations,
+  cancelRecurringDonation,
+  pauseRecurringDonation,
+  resumeRecurringDonation,
+  processPayment,
+  stripeWebhook,
+  payhereWebhook
 };
