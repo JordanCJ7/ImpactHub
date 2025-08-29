@@ -17,7 +17,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; user?: User }>;
   register: (name: string, email: string, password: string, role: UserRole) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
@@ -80,15 +80,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth();
   }, []);
 
-  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string; user?: User }> => {
     try {
       setLoading(true);
       const credentials: LoginCredentials = { email, password };
       const response = await authService.login(credentials);
       
       if (response.data) {
-        setUser(convertApiUser(response.data.user));
-        return { success: true };
+        const userData = convertApiUser(response.data.user);
+        setUser(userData);
+        return { success: true, user: userData };
       } else {
         return { success: false, error: response.error || 'Login failed' };
       }
