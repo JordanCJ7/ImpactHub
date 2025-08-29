@@ -35,7 +35,7 @@ const CampaignList: React.FC = () => {
       donors: 1247,
       daysLeft: 23,
       category: "health",
-      location: "Kenya, East Africa",
+      location: "Thanamalvila , Monaragala",
       featured: true,
       urgent: false
     },
@@ -49,7 +49,7 @@ const CampaignList: React.FC = () => {
       donors: 892,
       daysLeft: 45,
       category: "education",
-      location: "Guatemala, Central America",
+      location: "Ambalangoda",
       featured: false,
       urgent: false
     },
@@ -63,7 +63,7 @@ const CampaignList: React.FC = () => {
       donors: 567,
       daysLeft: 12,
       category: "emergency",
-      location: "Philippines, Southeast Asia",
+      location: "Yapanaya",
       featured: false,
       urgent: true
     },
@@ -77,7 +77,7 @@ const CampaignList: React.FC = () => {
       donors: 2156,
       daysLeft: 67,
       category: "environment",
-      location: "Brazil, South America",
+      location: "Anuradhapura",
       featured: true,
       urgent: false
     },
@@ -91,7 +91,7 @@ const CampaignList: React.FC = () => {
       donors: 334,
       daysLeft: 89,
       category: "animals",
-      location: "United States",
+      location: "Ratnapura",
       featured: false,
       urgent: false
     },
@@ -105,7 +105,7 @@ const CampaignList: React.FC = () => {
       donors: 1543,
       daysLeft: 34,
       category: "health",
-      location: "India, South Asia",
+      location: "Polonnaruwa, Sri Lanka",
       featured: false,
       urgent: false
     }
@@ -235,10 +235,10 @@ const CampaignList: React.FC = () => {
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-sm font-medium text-gray-600">
-                          ${campaign.raised.toLocaleString()} raised
+                          LKR {campaign.raised.toLocaleString()} raised
                         </span>
                         <span className="text-sm text-gray-500">
-                          ${campaign.goal.toLocaleString()} goal
+                          LKR {campaign.goal.toLocaleString()} goal
                         </span>
                       </div>
                       <Progress value={(campaign.raised / campaign.goal) * 100} className="h-2" />

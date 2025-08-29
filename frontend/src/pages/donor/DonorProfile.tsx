@@ -61,9 +61,9 @@ const DonorProfile: React.FC = () => {
     { title: "First Donation", description: "Made your first donation", date: "Dec 2023", earned: true },
     { title: "Consistent Giver", description: "Donated for 3 consecutive months", date: "Jan 2024", earned: true },
     { title: "Community Builder", description: "Supported 10 different campaigns", date: "Jan 2024", earned: true },
-    { title: "Water Champion", description: "Donated $500+ to water causes", date: "Jan 2024", earned: true },
+    { title: "Water Champion", description: "Donated LKR 500+ to water causes", date: "Jan 2024", earned: true },
     { title: "Education Supporter", description: "Supported 5 education campaigns", date: null, earned: false },
-    { title: "Major Donor", description: "Single donation over $1,000", date: null, earned: false }
+    { title: "Major Donor", description: "Single donation over LKR 1,000", date: null, earned: false }
   ];
 
   const handleSave = () => {

@@ -39,7 +39,7 @@ const Navbar: React.FC = () => {
               <Heart className="h-5 w-5 text-white" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
-              CharityConnect
+              ImpactHub
             </span>
           </Link>
 

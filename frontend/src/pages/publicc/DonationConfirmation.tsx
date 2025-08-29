@@ -40,7 +40,7 @@ const DonationConfirmation: React.FC = () => {
             Thank You!
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Your generous donation of <span className="font-semibold text-green-600">${donation.amount}</span> has been successfully processed.
+            Your generous donation of <span className="font-semibold text-green-600">LKR{donation.amount}</span> has been successfully processed.
           </p>
         </div>
 
@@ -79,18 +79,18 @@ const DonationConfirmation: React.FC = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Donation Amount:</span>
-                    <span className="font-semibold">${donation.amount}</span>
+                    <span className="font-semibold">LKR {donation.amount}</span>
                   </div>
                   {donation.coverFees && (
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>Processing Fee (covered by you):</span>
-                      <span>${(donation.totalAmount - donation.amount).toFixed(2)}</span>
+                      <span>LKR {(donation.totalAmount - donation.amount).toFixed(2)}</span>
                     </div>
                   )}
                   <Separator />
                   <div className="flex justify-between text-lg font-semibold">
                     <span>Total Charged:</span>
-                    <span>${donation.totalAmount}</span>
+                    <span>LKR {donation.totalAmount}</span>
                   </div>
                 </div>
 

@@ -24,7 +24,7 @@ const CampaignDetails: React.FC = () => {
     donors: 1247,
     daysLeft: 23,
     category: "Health & Medical",
-    location: "Kenya, East Africa",
+    location: "Thanamalvila , Monaragala",
     organizer: {
       name: "Water for Life Foundation",
       avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&crop=face",
@@ -50,9 +50,9 @@ const CampaignDetails: React.FC = () => {
       }
     ],
     recentDonors: [
-      { name: "Sarah M.", amount: 500, time: "2 hours ago", avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=50&h=50&fit=crop&crop=face" },
-      { name: "Michael R.", amount: 250, time: "5 hours ago", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop&crop=face" },
-      { name: "Emma L.", amount: 100, time: "1 day ago", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&h=50&fit=crop&crop=face" }
+      { name: "Kamani W.", amount: 500, time: "2 hours ago", avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=50&h=50&fit=crop&crop=face" },
+      { name: "Minsara K.", amount: 250, time: "5 hours ago", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop&crop=face" },
+      { name: "Eshini L.", amount: 100, time: "1 day ago", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&h=50&fit=crop&crop=face" }
     ]
   };
 
@@ -144,7 +144,7 @@ const CampaignDetails: React.FC = () => {
                       <p className="text-gray-700 mb-4">
                         Access to clean water is a fundamental human right, yet millions of people in rural communities 
                         still lack this basic necessity. Our comprehensive water project aims to transform the lives of 
-                        10,000 people across 15 remote villages in Kenya.
+                        10,000 people across 15 remote villages in Thanamalvila.
                       </p>
                       
                       <h4 className="text-lg font-semibold mb-3">Our Approach:</h4>
@@ -205,7 +205,7 @@ const CampaignDetails: React.FC = () => {
                           </div>
                         </div>
                         <div className="text-lg font-semibold text-green-600">
-                          ${donor.amount}
+                          LKR{donor.amount}
                         </div>
                       </div>
                     ))}
@@ -224,10 +224,10 @@ const CampaignDetails: React.FC = () => {
             <Card className="sticky top-4">
               <CardHeader>
                 <div className="text-3xl font-bold text-gray-900">
-                  ${campaign.raised.toLocaleString()}
+                  LKR {campaign.raised.toLocaleString()}
                 </div>
                 <div className="text-sm text-gray-600">
-                  raised of ${campaign.goal.toLocaleString()} goal
+                  raised of LKR {campaign.goal.toLocaleString()} goal
                 </div>
                 <Progress value={progressPercentage} className="h-3" />
                 <div className="flex justify-between text-sm text-gray-600">

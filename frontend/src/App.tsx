@@ -22,7 +22,9 @@ import Donate from './pages/publicc/Donate';
 import DonorProfile from './pages/donor/DonorProfile';
 import DonorDashboard from './pages/donor/DonorDashboard';
 
-
+// Campaign Leader Pages
+import LeaderDashboard from './pages/leader/LeaderDashboard';
+import CreateCampaign from './pages/leader/CreateCampaign';
 
 import NotFound from './pages/NotFound';
 
@@ -63,6 +65,10 @@ const App = () => (
             {/* Donor Routes */}
             <Route path="/donor/profile" element={<DonorProfile />} />
             <Route path="/donor/dashboard" element={<DonorDashboard />} />
+
+             {/* Campaign Leader Routes */}
+                <Route path="/leader/dashboard" element={<LeaderDashboard />} />
+                 <Route path="/leader/create" element={<CreateCampaign />} />
 
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />

@@ -41,10 +41,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     const mockUser: User = {
       id: '1',
-      name: role === 'donor' ? 'John Donor' : role === 'campaign-leader' ? 'Sarah Leader' : role === 'admin' ? 'Admin User' : 'Public User',
+      name: role === 'donor' ? 'Kamal Jayasuriya' : role === 'campaign-leader' ? 'Kamani Leader' : role === 'admin' ? 'Admin User' : 'Public User',
       email,
       role,
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(role === 'donor' ? 'John Donor' : role === 'campaign-leader' ? 'Sarah Leader' : role === 'admin' ? 'Admin User' : 'Public User')}&background=4F46E5&color=fff`
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(role === 'donor' ? 'Kamal Jayasuriya' : role === 'campaign-leader' ? 'Kamani Leader' : role === 'admin' ? 'Admin User' : 'Public User')}&background=4F46E5&color=fff`
     };
     
     setUser(mockUser);

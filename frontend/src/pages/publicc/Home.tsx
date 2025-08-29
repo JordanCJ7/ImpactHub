@@ -44,7 +44,7 @@ const Home: React.FC = () => {
   ];
 
   const stats = [
-    { icon: Heart, label: "Total Raised", value: "$2.4M", color: "text-red-600" },
+    { icon: Heart, label: "Total Raised", value: "LKR 2.4M", color: "text-red-600" },
     { icon: Users, label: "Active Donors", value: "15K+", color: "text-blue-600" },
     { icon: Target, label: "Campaigns Funded", value: "324", color: "text-green-600" },
     { icon: Globe, label: "Countries Reached", value: "42", color: "text-purple-600" }
@@ -135,10 +135,10 @@ const Home: React.FC = () => {
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-sm font-medium text-gray-600">
-                          ${campaign.raised.toLocaleString()} raised
+                          LKR {campaign.raised.toLocaleString()} raised
                         </span>
                         <span className="text-sm text-gray-500">
-                          ${campaign.goal.toLocaleString()} goal
+                          LKR{campaign.goal.toLocaleString()} goal
                         </span>
                       </div>
                       <Progress value={(campaign.raised / campaign.goal) * 100} className="h-2" />
@@ -234,7 +234,7 @@ const Home: React.FC = () => {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-indigo-600">
+            <Button size="lg" variant="outline" className="bg-white text-indigo-600 hover:bg-gray-100">
               <Link to="/campaigns">Browse Campaigns</Link>
             </Button>
           </div>
