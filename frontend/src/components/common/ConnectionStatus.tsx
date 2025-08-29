@@ -40,3 +40,6 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ className = 
     </div>
   );
 };
+
+// Default export
+export default ConnectionStatus;
