@@ -54,7 +54,7 @@ const Donate: React.FC = () => {
     organizer: "Water for Life Foundation",
   };
 
-  const presetAmounts = [25, 50, 100, 250, 500, 1000];
+  const presetAmounts = [500, 1000, 2000, 2500, 5000, 10000];
   const selectedAmount =
     donationAmount === "custom"
       ? parseFloat(customAmount) || 0

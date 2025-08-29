@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { Heart, Share2, Flag, Users, Clock, MapPin, CheckCircle, Calendar, DollarSign, TrendingUp, ArrowLeft } from 'lucide-react';
+import { Heart, Share2, Flag, Users, Clock, MapPin, CheckCircle, Calendar, TrendingUp, ArrowLeft } from 'lucide-react';
 
 const CampaignDetails: React.FC = () => {
   const { id } = useParams();
@@ -50,9 +50,9 @@ const CampaignDetails: React.FC = () => {
       }
     ],
     recentDonors: [
-      { name: "Kamani W.", amount: 500, time: "2 hours ago", avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=50&h=50&fit=crop&crop=face" },
-      { name: "Minsara K.", amount: 250, time: "5 hours ago", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop&crop=face" },
-      { name: "Eshini L.", amount: 100, time: "1 day ago", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&h=50&fit=crop&crop=face" }
+      { name: "Kamani W.", amount: 5000, time: "2 hours ago", avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=50&h=50&fit=crop&crop=face" },
+      { name: "Minsara K.", amount: 2500, time: "5 hours ago", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop&crop=face" },
+      { name: "Eshini L.", amount: 1500, time: "1 day ago", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&h=50&fit=crop&crop=face" }
     ]
   };
 
@@ -205,7 +205,7 @@ const CampaignDetails: React.FC = () => {
                           </div>
                         </div>
                         <div className="text-lg font-semibold text-green-600">
-                          LKR{donor.amount}
+                          LKR {donor.amount}
                         </div>
                       </div>
                     ))}
@@ -252,7 +252,6 @@ const CampaignDetails: React.FC = () => {
                 
                 <Button asChild className="w-full" size="lg">
                   <Link to={`/donate/${campaign.id}`}>
-                    <DollarSign className="mr-2 h-5 w-5" />
                     Donate Now
                   </Link>
                 </Button>
