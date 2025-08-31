@@ -9,6 +9,7 @@ interface User {
   email: string;
   role: UserRole;
   avatar?: string;
+  avatarData?: string;
   isEmailVerified?: boolean;
   profile?: any;
   preferences?: any;
@@ -46,6 +47,7 @@ const convertApiUser = (apiUser: ApiUser): User => ({
   email: apiUser.email,
   role: apiUser.role as UserRole,
   avatar: apiUser.avatar,
+  avatarData: apiUser.avatarData,
   isEmailVerified: apiUser.isEmailVerified,
   profile: apiUser.profile,
   preferences: apiUser.preferences,
