@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,8 +19,10 @@ const DonorProfile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userStats, setUserStats] = useState<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [stats, setStats] = useState({
     totalDonated: 0,
     donationCount: 0,
@@ -260,6 +262,78 @@ const DonorProfile: React.FC = () => {
     }
   };
 
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please select a valid image file (JPG, PNG, GIF).');
+      return;
+    }
+
+    // Validate file size (2MB limit)
+    if (file.size > 2 * 1024 * 1024) {
+      setError('File size must be less than 2MB.');
+      return;
+    }
+
+    try {
+      setUploadingAvatar(true);
+      setError(null);
+
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      // Upload avatar using fetch directly since we need to send FormData
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/auth/me/avatar`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Update the profile state with new avatar URL
+        setProfile(prev => ({ ...prev, avatar: data.avatar }));
+        
+        // Fetch updated user data to get the base64 avatar
+        try {
+          const userResponse = await authService.getCurrentUser();
+          if (userResponse.data) {
+            updateUser(userResponse.data);
+          }
+        } catch (userError) {
+          console.error('Failed to fetch updated user data:', userError);
+          // Fallback: just update the avatar field
+          if (user) {
+            updateUser({ ...user, avatar: data.avatar });
+          }
+        }
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Failed to upload avatar');
+      }
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      setError('Failed to upload avatar. Please try again.');
+    } finally {
+      setUploadingAvatar(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -387,16 +461,38 @@ const DonorProfile: React.FC = () => {
               <CardContent className="space-y-6">
                 {/* Avatar */}
                 <div className="flex items-center space-x-6">
-                  <Avatar className="w-24 h-24">
-                    <AvatarImage src={profile.avatar} alt={`${profile.firstName} ${profile.lastName}`} />
-                    <AvatarFallback className="text-2xl">
-                      {(profile.firstName || 'U').charAt(0)}{(profile.lastName || 'S').charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative">
+                    <Avatar className="w-24 h-24">
+                      <AvatarImage 
+                        src={user?.avatarData || undefined} 
+                        alt={`${profile.firstName} ${profile.lastName}`} 
+                      />
+                      <AvatarFallback className="text-2xl">
+                        {(profile.firstName || 'U').charAt(0)}{(profile.lastName || 'S').charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    {uploadingAvatar && (
+                      <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                        <Loader2 className="h-6 w-6 text-white animate-spin" />
+                      </div>
+                    )}
+                  </div>
                   <div>
-                    <Button variant="outline" size="sm" disabled={!isEditing}>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={triggerFileInput}
+                      disabled={uploadingAvatar}
+                    >
                       <Camera className="h-4 w-4 mr-2" />
-                      Change Photo
+                      {uploadingAvatar ? 'Uploading...' : 'Change Photo'}
                     </Button>
                     <p className="text-sm text-gray-500 mt-2">
                       JPG, GIF or PNG. Max size of 2MB.
