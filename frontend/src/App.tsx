@@ -25,6 +25,7 @@ import DonationHistory from './pages/donor/DonationHistory';
 
 // Campaign Leader Pages
 import LeaderDashboard from './pages/leader/LeaderDashboard';
+import LeaderProfile from './pages/leader/LeaderProfile';
 import CreateCampaign from './pages/leader/CreateCampaign';
 
 // Development/Testing Pages
@@ -91,6 +92,11 @@ const App = () => (
                 <Route path="/leader/dashboard" element={
                   <ProtectedRoute allowedRoles={['campaign-leader']}>
                     <LeaderDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/leader/profile" element={
+                  <ProtectedRoute allowedRoles={['campaign-leader']}>
+                    <LeaderProfile />
                   </ProtectedRoute>
                 } />
                  <Route path="/leader/create" element={
