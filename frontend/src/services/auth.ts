@@ -7,6 +7,7 @@ export interface User {
   email: string;
   role: 'donor' | 'campaign-leader' | 'admin' | 'public';
   avatar?: string;
+  avatarData?: string;
   isEmailVerified: boolean;
   profile?: {
     bio?: string;
