@@ -39,12 +39,30 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Serve static files for uploads with custom CORS headers
+app.use('/uploads', (req, res, next) => {
+  // Set CORS headers for images
+  res.header('Access-Control-Allow-Origin', process.env.FRONTEND_URL || 'http://localhost:5173');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+  
+  next();
+}, express.static(path.join(__dirname, 'uploads')));
+
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/campaigns', require('./routes/campaigns'));
 app.use('/api/donations', require('./routes/donations'));
 app.use('/api/analytics', require('./routes/analytics'));
+app.use('/api/avatars', require('./routes/avatars'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/admin', require('./routes/admin'));
 
