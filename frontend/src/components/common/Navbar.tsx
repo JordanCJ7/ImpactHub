@@ -100,7 +100,10 @@ const Navbar: React.FC = () => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={user?.avatar} alt={user?.name || 'User'} />
+                        <AvatarImage 
+                          src={user?.avatarData || user?.avatar || undefined} 
+                          alt={user?.name || 'User'} 
+                        />
                         <AvatarFallback>
                           {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                         </AvatarFallback>
