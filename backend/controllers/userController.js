@@ -219,7 +219,34 @@ const getCurrentUser = async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
     
-    res.json(user);
+    const userObj = user.toJSON();
+    
+    // If user has an avatar, convert it to base64 data URL
+    if (userObj.avatar) {
+      try {
+        const path = require('path');
+        const fs = require('fs').promises;
+        const avatarPath = path.join(__dirname, '../uploads/avatars', path.basename(userObj.avatar));
+        const avatarData = await fs.readFile(avatarPath);
+        const ext = path.extname(userObj.avatar).toLowerCase();
+        
+        let mimeType = 'image/jpeg'; // default
+        switch (ext) {
+          case '.png': mimeType = 'image/png'; break;
+          case '.gif': mimeType = 'image/gif'; break;
+          case '.webp': mimeType = 'image/webp'; break;
+          case '.jpg':
+          case '.jpeg': mimeType = 'image/jpeg'; break;
+        }
+        
+        userObj.avatarData = `data:${mimeType};base64,${avatarData.toString('base64')}`;
+      } catch (avatarError) {
+        console.log('Could not load avatar file:', avatarError.message);
+        // Don't fail the request if avatar can't be loaded
+      }
+    }
+    
+    res.json(userObj);
     
   } catch (error) {
     console.error('Error fetching current user:', error);
