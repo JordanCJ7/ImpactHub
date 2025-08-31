@@ -70,6 +70,7 @@ router.post('/resend-verification', auth, authController.resendVerification);
 // Profile management
 router.get('/me', auth, authController.getCurrentUser);
 router.put('/me', auth, authController.updateProfile);
+router.post('/me/avatar', auth, authController.upload.single('avatar'), authController.uploadAvatar);
 router.delete('/me', auth, authController.deleteAccount);
 
 // Change password
