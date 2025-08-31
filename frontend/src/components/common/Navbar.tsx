@@ -30,6 +30,20 @@ const Navbar: React.FC = () => {
     }
   };
 
+  const getProfilePath = () => {
+    if (!user?.role) return '/';
+    switch (user.role) {
+      case 'donor':
+        return '/donor/profile';
+      case 'campaign-leader':
+        return '/leader/profile';
+      case 'admin':
+        return '/admin/profile';
+      default:
+        return '/';
+    }
+  };
+
   return (
     <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -101,7 +115,7 @@ const Navbar: React.FC = () => {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/donor/profile" className="flex items-center">
+                      <Link to={getProfilePath()} className="flex items-center">
                         <Settings className="mr-2 h-4 w-4" />
                         Profile Settings
                       </Link>
