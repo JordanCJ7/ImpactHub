@@ -128,6 +128,7 @@ const LeaderProfile: React.FC = () => {
 
       const updatedProfile = {
         name: `${profile.firstName} ${profile.lastName}`.trim(),
+        email: profile.email, // Add email to updateData
         phone: profile.phone,
         bio: profile.bio,
         location: profile.location,
@@ -135,7 +136,7 @@ const LeaderProfile: React.FC = () => {
         organizationEmail: profile.organizationEmail
       };
 
-      await authService.updateProfile(updatedProfile);
+      await authService.updateProfile(updatedProfile, profile.email);
       updateUser({ ...user, ...updatedProfile });
       setIsEditing(false);
       
