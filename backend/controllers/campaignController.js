@@ -22,17 +22,22 @@ const getAllCampaigns = async (req, res) => {
     // Sort options
     let sort = { createdAt: -1 }; // Default: newest first
     
-    if (req.query.sort) {
-      switch (req.query.sort) {
+    if (req.query.sortBy || req.query.sort) {
+      const sortParam = req.query.sortBy || req.query.sort;
+      switch (sortParam) {
+        case 'raised':
         case 'progress':
           sort = { currentAmount: -1 };
           break;
+        case 'goal':
         case 'target':
           sort = { targetAmount: -1 };
           break;
+        case 'ending_soon':
         case 'ending-soon':
           sort = { endDate: 1 };
           break;
+        case 'recent':
         case 'newest':
           sort = { createdAt: -1 };
           break;
@@ -51,11 +56,9 @@ const getAllCampaigns = async (req, res) => {
     res.json({
       campaigns,
       pagination: {
-        currentPage: page,
-        totalPages,
-        totalCampaigns: total,
-        hasNext: page < totalPages,
-        hasPrev: page > 1
+        current: page,
+        pages: totalPages,
+        total: total
       }
     });
   } catch (error) {
@@ -102,10 +105,15 @@ const searchCampaigns = async (req, res) => {
       .select('-impactReports');
     
     const total = await Campaign.countDocuments(filter);
+    const totalPages = Math.ceil(total / limit);
     
     res.json({
       campaigns,
-      total,
+      pagination: {
+        current: page,
+        pages: totalPages,
+        total: total
+      },
       query: q || '',
       filters: { category, minAmount, maxAmount }
     });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,132 +6,160 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Search, Filter, Heart, Users, Clock, ArrowRight, MapPin } from 'lucide-react';
+import { Search, Filter, Heart, Users, Clock, ArrowRight, MapPin, Loader2, AlertCircle } from 'lucide-react';
+import { campaignService, type Campaign } from '@/services/campaigns';
 
 const CampaignList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('recent');
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pages: 1,
+    total: 0
+  });
 
   const categories = [
     { value: 'all', label: 'All Categories' },
-    { value: 'health', label: 'Health & Medical' },
-    { value: 'education', label: 'Education' },
-    { value: 'environment', label: 'Environment' },
-    { value: 'emergency', label: 'Emergency Relief' },
-    { value: 'animals', label: 'Animals & Wildlife' },
-    { value: 'community', label: 'Community Development' },
-    { value: 'children', label: 'Children & Youth' }
+    { value: 'Health & Medical', label: 'Health & Medical' },
+    { value: 'Education', label: 'Education' },
+    { value: 'Environment', label: 'Environment' },
+    { value: 'Emergency Relief', label: 'Emergency Relief' },
+    { value: 'Animals & Wildlife', label: 'Animals & Wildlife' },
+    { value: 'Community Development', label: 'Community Development' },
+    { value: 'Children & Youth', label: 'Children & Youth' },
+    { value: 'Arts & Culture', label: 'Arts & Culture' },
+    { value: 'Sports & Recreation', label: 'Sports & Recreation' },
+    { value: 'Technology', label: 'Technology' }
   ];
 
-  const campaigns = [
-    {
-      id: 1,
-      title: "Clean Water for Rural Communities",
-      description: "Providing clean drinking water access to 10,000 people in remote villages through well construction and water purification systems.",
-      image: "/images/CleanWater.jpg",
-      raised: 75420,
-      goal: 100000,
-      donors: 1247,
-      daysLeft: 23,
-      category: "health",
-      location: "Thanamalvila , Monaragala",
-      featured: true,
-      urgent: false
-    },
-    {
-      id: 2,
-      title: "Education for Every Child",
-      description: "Building schools and providing educational resources for underprivileged children in rural areas.",
-      image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&h=250&fit=crop",
-      raised: 42350,
-      goal: 75000,
-      donors: 892,
-      daysLeft: 45,
-      category: "education",
-      location: "Ambalangoda",
-      featured: false,
-      urgent: false
-    },
-    {
-      id: 3,
-      title: "Emergency Food Relief",
-      description: "Providing emergency food supplies to families affected by natural disasters and economic hardship.",
-      image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=400&h=250&fit=crop",
-      raised: 28900,
-      goal: 50000,
-      donors: 567,
-      daysLeft: 12,
-      category: "emergency",
-      location: "Yapanaya",
-      featured: false,
-      urgent: true
-    },
-    {
-      id: 4,
-      title: "Save the Rainforest",
-      description: "Protecting endangered rainforest ecosystems and supporting local conservation efforts.",
-      image: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=250&fit=crop",
-      raised: 89250,
-      goal: 120000,
-      donors: 2156,
-      daysLeft: 67,
-      category: "environment",
-      location: "Anuradhapura",
-      featured: true,
-      urgent: false
-    },
-    {
-      id: 5,
-      title: "Animal Shelter Support",
-      description: "Supporting local animal shelters with food, medical care, and facility improvements.",
-      image: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400&h=250&fit=crop",
-      raised: 15680,
-      goal: 30000,
-      donors: 334,
-      daysLeft: 89,
-      category: "animals",
-      location: "Ratnapura",
-      featured: false,
-      urgent: false
-    },
-    {
-      id: 6,
-      title: "Community Health Clinic",
-      description: "Establishing a community health clinic to provide basic healthcare services in underserved areas.",
-      image: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=250&fit=crop",
-      raised: 67890,
-      goal: 95000,
-      donors: 1543,
-      daysLeft: 34,
-      category: "health",
-      location: "Polonnaruwa, Sri Lanka",
-      featured: false,
-      urgent: false
-    }
-  ];
+  // Fetch campaigns data
+  const fetchCampaigns = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  const filteredCampaigns = campaigns.filter(campaign => {
-    const matchesSearch = campaign.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         campaign.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || campaign.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+      let result;
+      
+      if (searchQuery.trim()) {
+        // Search campaigns
+        result = await campaignService.searchCampaigns(searchQuery, {
+          category: selectedCategory !== 'all' ? selectedCategory : undefined,
+          sortBy: sortBy as 'recent' | 'goal' | 'raised' | 'ending_soon',
+          page: pagination.current,
+          limit: 12
+        });
+      } else {
+        // Get campaigns with filters
+        result = await campaignService.getCampaigns({
+          category: selectedCategory !== 'all' ? selectedCategory : undefined,
+          sortBy: sortBy as 'recent' | 'goal' | 'raised' | 'ending_soon',
+          page: pagination.current,
+          limit: 12
+        });
+      }
 
-  const sortedCampaigns = [...filteredCampaigns].sort((a, b) => {
-    switch (sortBy) {
-      case 'raised':
-        return b.raised - a.raised;
-      case 'goal':
-        return b.goal - a.goal;
-      case 'donors':
-        return b.donors - a.donors;
-      case 'ending':
-        return a.daysLeft - b.daysLeft;
-      default:
-        return b.id - a.id; // most recent first
+      if (result.error) {
+        setError(result.error);
+        setCampaigns([]);
+      } else if (result.data) {
+        setCampaigns(result.data.campaigns || []);
+        setPagination(result.data.pagination || { current: 1, pages: 1, total: 0 });
+      }
+    } catch (err) {
+      console.error('Error fetching campaigns:', err);
+      setError('Failed to load campaigns. Please try again.');
+      setCampaigns([]);
+    } finally {
+      setLoading(false);
     }
-  });
+  };
+
+  // Fetch campaigns on component mount and when filters change
+  useEffect(() => {
+    fetchCampaigns();
+  }, [selectedCategory, sortBy, pagination.current]);
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery !== undefined) {
+        setPagination(prev => ({ ...prev, current: 1 })); // Reset to first page
+        fetchCampaigns();
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Helper function to calculate days left
+  const getDaysLeft = (endDate: string) => {
+    const end = new Date(endDate);
+    const now = new Date();
+    const diffTime = end.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, diffDays);
+  };
+
+  // Helper function to calculate progress percentage
+  const getProgressPercentage = (current: number, target: number) => {
+    return Math.min(100, Math.round((current / target) * 100));
+  };
+
+  // Helper function to format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-LK', {
+      style: 'currency',
+      currency: 'LKR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  // Helper function to get location string
+  const getLocationString = (location: Campaign['location']) => {
+    if (!location) return '';
+    
+    // Handle both object format and string format
+    if (typeof location === 'string') {
+      return location;
+    } else if (typeof location === 'object') {
+      const parts = [location.city, location.state, location.country].filter(Boolean);
+      return parts.join(', ');
+    }
+    
+    return '';
+  };
+
+  // Helper function to get campaign image
+  const getCampaignImage = (campaign: Campaign) => {
+    if (campaign.images && campaign.images.length > 0) {
+      // Handle both string array (old format) and object array (new format)
+      const firstImage = campaign.images[0];
+      let imageUrl: string;
+      
+      if (typeof firstImage === 'string') {
+        imageUrl = firstImage;
+      } else if (typeof firstImage === 'object' && firstImage.url) {
+        imageUrl = firstImage.url;
+      } else {
+        // Fallback if format is unexpected
+        return 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=250&fit=crop';
+      }
+      
+      // If the image URL starts with http, use it directly, otherwise prepend the base URL
+      if (imageUrl.startsWith('http')) {
+        return imageUrl;
+      } else {
+        return `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${imageUrl}`;
+      }
+    }
+    // Fallback image
+    return 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=250&fit=crop';
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -186,7 +214,17 @@ const CampaignList: React.FC = () => {
             </div>
 
             <div className="text-center text-gray-600">
-              Showing {sortedCampaigns.length} of {campaigns.length} campaigns
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Loading campaigns...</span>
+                </div>
+              ) : (
+                <span>
+                  Showing {campaigns.length} of {pagination.total} campaigns
+                  {pagination.pages > 1 && ` (Page ${pagination.current} of ${pagination.pages})`}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -195,96 +233,159 @@ const CampaignList: React.FC = () => {
       {/* Campaign Grid */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {sortedCampaigns.map((campaign) => (
-              <Card key={campaign.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300 group">
-                <div className="relative">
-                  <img
-                    src={campaign.image}
-                    alt={campaign.title}
-                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute top-3 left-3 flex gap-2">
-                    {campaign.featured && (
-                      <Badge className="bg-yellow-500 text-white">
-                        Featured
-                      </Badge>
-                    )}
-                    {campaign.urgent && (
-                      <Badge className="bg-red-500 text-white">
-                        Urgent
-                      </Badge>
-                    )}
-                  </div>
-                  <Badge className="absolute top-3 right-3 bg-white text-gray-900 capitalize">
-                    {categories.find(cat => cat.value === campaign.category)?.label.split(' ')[0]}
-                  </Badge>
-                </div>
-                
-                <CardHeader>
-                  <div className="flex items-start space-x-2 text-sm text-gray-500 mb-2">
-                    <MapPin className="h-4 w-4 mt-0.5" />
-                    <span>{campaign.location}</span>
-                  </div>
-                  <CardTitle className="text-lg line-clamp-2">{campaign.title}</CardTitle>
-                  <CardDescription className="line-clamp-3">{campaign.description}</CardDescription>
-                </CardHeader>
-                
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium text-gray-600">
-                          LKR {campaign.raised.toLocaleString()} raised
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          LKR {campaign.goal.toLocaleString()} goal
-                        </span>
-                      </div>
-                      <Progress value={(campaign.raised / campaign.goal) * 100} className="h-2" />
-                    </div>
-                    
-                    <div className="flex justify-between items-center text-sm text-gray-600">
-                      <div className="flex items-center space-x-1">
-                        <Users className="h-4 w-4" />
-                        <span>{campaign.donors} donors</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Clock className="h-4 w-4" />
-                        <span>{campaign.daysLeft} days left</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button asChild className="flex-1">
-                        <Link to={`/campaigns/${campaign.id}`}>
-                          View Campaign
-                          <ArrowRight className="ml-2 h-4 w-4" />
-                        </Link>
-                      </Button>
-                      <Button variant="outline" size="icon">
-                        <Heart className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {/* Loading State */}
+          {loading && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+              <span className="ml-2 text-gray-600">Loading campaigns...</span>
+            </div>
+          )}
 
-          {sortedCampaigns.length === 0 && (
+          {/* Error State */}
+          {error && (
+            <div className="text-center py-12">
+              <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to load campaigns</h3>
+              <p className="text-gray-600 mb-6">{error}</p>
+              <Button onClick={fetchCampaigns}>
+                Try Again
+              </Button>
+            </div>
+          )}
+
+          {/* Campaign Grid */}
+          {!loading && !error && campaigns.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {campaigns.map((campaign) => (
+                <Card key={campaign._id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300 group">
+                  <div className="relative">
+                    <img
+                      src={getCampaignImage(campaign)}
+                      alt={campaign.title}
+                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute top-3 left-3 flex gap-2">
+                      {campaign.featured && (
+                        <Badge className="bg-yellow-500 text-white">
+                          Featured
+                        </Badge>
+                      )}
+                      {campaign.urgent && (
+                        <Badge className="bg-red-500 text-white">
+                          Urgent
+                        </Badge>
+                      )}
+                    </div>
+                    <Badge className="absolute top-3 right-3 bg-white text-gray-900 capitalize">
+                      {campaign.category}
+                    </Badge>
+                  </div>
+                  
+                  <CardHeader>
+                    <div className="flex items-start space-x-2 text-sm text-gray-500 mb-2">
+                      <MapPin className="h-4 w-4 mt-0.5" />
+                      <span>{getLocationString(campaign.location)}</span>
+                    </div>
+                    <CardTitle className="text-lg line-clamp-2">{campaign.title}</CardTitle>
+                    <CardDescription className="line-clamp-3">{campaign.description}</CardDescription>
+                  </CardHeader>
+                  
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-medium text-gray-600">
+                            {formatCurrency(campaign.raised)} raised
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            {formatCurrency(campaign.goal)} goal
+                          </span>
+                        </div>
+                        <Progress value={getProgressPercentage(campaign.raised, campaign.goal)} className="h-2" />
+                      </div>
+                      
+                      <div className="flex justify-between items-center text-sm text-gray-600">
+                        <div className="flex items-center space-x-1">
+                          <Users className="h-4 w-4" />
+                          <span>{campaign.analytics?.donorCount || 0} donors</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Clock className="h-4 w-4" />
+                          <span>{getDaysLeft(campaign.endDate)} days left</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button asChild className="flex-1">
+                          <Link to={`/campaigns/${campaign._id}`}>
+                            View Campaign
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                          </Link>
+                        </Button>
+                        <Button variant="outline" size="icon">
+                          <Heart className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!loading && !error && campaigns.length === 0 && (
             <div className="text-center py-12">
               <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No campaigns found</h3>
               <p className="text-gray-600 mb-6">
-                Try adjusting your search terms or filters to find more campaigns.
+                {searchQuery || selectedCategory !== 'all' 
+                  ? 'Try adjusting your search terms or filters to find more campaigns.'
+                  : 'No campaigns are currently available. Check back soon!'
+                }
               </p>
-              <Button onClick={() => {
-                setSearchQuery('');
-                setSelectedCategory('all');
-              }}>
-                Clear Filters
-              </Button>
+              {(searchQuery || selectedCategory !== 'all') && (
+                <Button onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategory('all');
+                }}>
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {!loading && !error && campaigns.length > 0 && pagination.pages > 1 && (
+            <div className="flex justify-center mt-12">
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setPagination(prev => ({ ...prev, current: prev.current - 1 }))}
+                  disabled={pagination.current <= 1}
+                >
+                  Previous
+                </Button>
+                
+                {Array.from({ length: pagination.pages }, (_, i) => i + 1).map((page) => (
+                  <Button
+                    key={page}
+                    variant={page === pagination.current ? "default" : "outline"}
+                    onClick={() => setPagination(prev => ({ ...prev, current: page }))}
+                    className="w-10"
+                  >
+                    {page}
+                  </Button>
+                ))}
+                
+                <Button
+                  variant="outline"
+                  onClick={() => setPagination(prev => ({ ...prev, current: prev.current + 1 }))}
+                  disabled={pagination.current >= pagination.pages}
+                >
+                  Next
+                </Button>
+              </div>
             </div>
           )}
         </div>

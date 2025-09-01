@@ -17,7 +17,7 @@ export interface Campaign {
     email: string;
     avatar?: string;
   };
-  images: string[];
+  images: string[] | Array<{url: string; caption?: string; isPrimary?: boolean}>;
   status: 'draft' | 'active' | 'paused' | 'completed' | 'cancelled';
   approvalStatus: 'pending' | 'approved' | 'rejected';
   featured: boolean;
@@ -33,7 +33,7 @@ export interface Campaign {
       lat: number;
       lng: number;
     };
-  };
+  } | string;
   beneficiaries?: {
     count: number;
     description: string;
