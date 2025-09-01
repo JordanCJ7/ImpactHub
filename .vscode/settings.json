@@ -1,0 +1,15 @@
+{
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "files.exclude": {
+        "**/node_modules": true,
+        "**/.env": true
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/uploads": true
+    },
+    "task.autoDetect": "on",
+    "task.showDecorations": true,
+    "extensions.autoUpdate": true,
+    "workbench.action.tasks.runTask": "Start Both Services"
+}

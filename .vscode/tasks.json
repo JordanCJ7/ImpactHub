@@ -1,0 +1,124 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Start Backend",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"start"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/backend"
+			},
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "new",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Frontend",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/frontend"
+			},
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "new",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Both Services",
+			"dependsOrder": "parallel",
+			"dependsOn": [
+				"Start Backend",
+				"Start Frontend"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Install All Dependencies",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"install:all"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "new",
+				"showReuseMessage": true,
+				"clear": false
+			}
+		},
+		{
+			"label": "Start Both Services",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoExit",
+				"-Command",
+				"Start-Job {cd backend; npm start}; Start-Job {cd frontend; npm run dev}; Write-Host 'Both backend and frontend started as background jobs. Use Get-Job and Receive-Job to monitor.'"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Start Backend",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"start"
+			],
+			"isBackground": true,
+			"group": "build"
+		},
+		{
+			"label": "Start Frontend",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev"
+			],
+			"isBackground": true,
+			"group": "build"
+		}
+	]
+}

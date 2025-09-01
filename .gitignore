@@ -138,7 +138,6 @@ backend/uploads/
 backend/public/uploads/
 
 # IDE and Editor files
-.vscode/
 .idea/
 *.swp
 *.swo

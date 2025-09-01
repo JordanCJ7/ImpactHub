@@ -1,42 +1,31 @@
 # ImpactHub Development Setup
 
-This file explains how to start both frontend and backend services for development.
+Choose your preferred way to start both frontend and backend services for development.
 
-## 🚀 Recommended: Separate Terminals (Best for Development)
 
-### Option 1: Using Windows Scripts
-```cmd
-# Separate command prompt windows
-start-separate.bat
+## 🏆 Best Option: VS Code Tasks (Recommended)
 
-# OR separate PowerShell windows  
-.\start-separate.ps1
+1. Open VS Code in the project folder.
+2. **Quick method:** Press `Ctrl+Shift+P` → Type `Tasks: Run Build Task` → Press `Enter`.
+3. **Full method:** Press `Ctrl+Shift+P` → Type `Tasks: Run Task` → Select `Start Backend` and `Start Frontend` (each will open in a new terminal tab).
+
+
+## 🚀 Alternative: Manual Start in Separate Terminals
+
+Open two integrated terminals in VS Code:
+
+```powershell
+# Terminal 1: Backend
+cd backend; npm run dev
+
+# Terminal 2: Frontend
+cd frontend; npm run dev
 ```
 
-### Option 2: Using VS Code Tasks (Recommended)
-- Open VS Code
-- Press `Ctrl+Shift+P`
-- Type "Tasks: Run Task"
-- Select "Auto Start Services (Separate Terminals)"
+## 🔧 Single Terminal (Mixed Logs)
 
-### Option 3: Manual Start (Individual Control)
-**Backend Terminal:**
 ```bash
-cd backend
-npm run dev
-```
-
-**Frontend Terminal:**
-```bash
-cd frontend  
-npm run dev
-```
-
-## 🔧 Alternative: Single Terminal (Mixed Logs)
-
-### Option 4: Using npm scripts
-```bash
-# Start both in one terminal (logs will be mixed)
+# All logs in one terminal (harder to debug)
 npm run dev
 ```
 
