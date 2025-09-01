@@ -27,7 +27,7 @@ const seedData = async () => {
         isEmailVerified: true,
         preferences: {
           currency: 'USD',
-          preferredCategories: ['education', 'health']
+          preferredCategories: ['Education', 'Health & Medical']
         }
       },
       {
@@ -37,7 +37,7 @@ const seedData = async () => {
         isEmailVerified: true,
         preferences: {
           currency: 'USD',
-          preferredCategories: ['environment', 'poverty']
+          preferredCategories: ['Environment', 'Community Development']
         }
       }
     ]);
