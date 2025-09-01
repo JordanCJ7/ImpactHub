@@ -1,0 +1,26 @@
+{
+  "name": "impacthub",
+  "version": "1.0.0",
+  "description": "ImpactHub - Charity & Donation Platform",
+  "scripts": {
+    "dev": "concurrently \"npm run backend:dev\" \"npm run frontend:dev\"",
+    "start": "concurrently \"npm run backend:start\" \"npm run frontend:start\"",
+    "backend:dev": "cd backend && npm run dev",
+    "backend:start": "cd backend && npm start",
+    "frontend:dev": "cd frontend && npm run dev",
+    "frontend:start": "cd frontend && npm run preview",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "build": "cd frontend && npm run build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "charity",
+    "donation",
+    "platform",
+    "fullstack"
+  ],
+  "author": "ImpactHub Team",
+  "license": "MIT"
+}

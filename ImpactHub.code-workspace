@@ -1,0 +1,64 @@
+{
+    "folders": [
+        {
+            "name": "ImpactHub Root",
+            "path": "."
+        },
+        {
+            "name": "Backend",
+            "path": "./backend"
+        },
+        {
+            "name": "Frontend", 
+            "path": "./frontend"
+        }
+    ],
+    "settings": {
+        "terminal.integrated.defaultProfile.windows": "PowerShell",
+        "files.exclude": {
+            "**/node_modules": true,
+            "**/.env": true
+        },
+        "search.exclude": {
+            "**/node_modules": true,
+            "**/uploads": true
+        },
+        "task.autoDetect": "on",
+        "task.showDecorations": true,
+        "extensions.autoUpdate": true
+    },
+    "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "Auto Start Services",
+                "type": "shell",
+                "command": "npm",
+                "args": ["run", "dev"],
+                "group": {
+                    "kind": "build",
+                    "isDefault": true
+                },
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "new"
+                },
+                "isBackground": true,
+                "runOptions": {
+                    "runOn": "folderOpen"
+                }
+            }
+        ]
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-vscode.vscode-json",
+            "bradlc.vscode-tailwindcss",
+            "esbenp.prettier-vscode",
+            "ms-vscode.vscode-typescript-next",
+            "ms-vscode.powershell"
+        ]
+    }
+}
