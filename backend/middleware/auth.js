@@ -14,7 +14,9 @@ const auth = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    console.log('Decoded token:', decoded);
     const user = await User.findById(decoded.id || decoded.userId).select('-password');
+    console.log('Found user:', user ? user.email : 'null');
     
     if (!user) {
       return res.status(401).json({ 
