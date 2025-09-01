@@ -23,6 +23,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { campaignService } from '@/services/campaigns';
+import { uploadService } from '@/services/upload';
 import { useToast } from '@/hooks/use-toast';
 
 const CreateCampaign: React.FC = () => {
@@ -31,6 +32,14 @@ const CreateCampaign: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<Array<{
+    filename: string;
+    url: string;
+    originalName: string;
+    size: number;
+    file?: File;
+  }>>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -82,6 +91,122 @@ const CreateCampaign: React.FC = () => {
   const handlePrevious = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
+    }
+  };
+
+  // Handle image upload
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    // Validate files
+    const validation = uploadService.validateImageFiles(files);
+    if (!validation.valid) {
+      toast({
+        title: "Upload Error",
+        description: validation.error,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if total images would exceed limit
+    if (uploadedImages.length + files.length > 5) {
+      toast({
+        title: "Upload Error",
+        description: "You can upload a maximum of 5 images.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploadingImages(true);
+    try {
+      const result = await uploadService.uploadCampaignImages(files);
+      
+      if (result.error) {
+        toast({
+          title: "Upload Error",
+          description: result.error,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (result.data) {
+        // Add uploaded images to state
+        const newImages = result.data.images.map(img => ({
+          filename: img.filename,
+          url: img.url,
+          originalName: img.originalName,
+          size: img.size
+        }));
+        
+        setUploadedImages(prev => [...prev, ...newImages]);
+        
+        // Update form data with image URLs
+        const imageUrls = newImages.map(img => img.url);
+        setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, ...imageUrls]
+        }));
+
+        toast({
+          title: "Success",
+          description: `${files.length} image(s) uploaded successfully.`,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Upload Error",
+        description: "Failed to upload images. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingImages(false);
+      // Reset file input
+      event.target.value = '';
+    }
+  };
+
+  // Remove uploaded image
+  const handleRemoveImage = async (index: number) => {
+    const imageToRemove = uploadedImages[index];
+    
+    try {
+      // Delete from server
+      const result = await uploadService.deleteCampaignImage(imageToRemove.filename);
+      
+      if (result.error) {
+        toast({
+          title: "Delete Error",
+          description: result.error,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Remove from state
+      const newUploadedImages = uploadedImages.filter((_, i) => i !== index);
+      setUploadedImages(newUploadedImages);
+      
+      // Update form data
+      const newImageUrls = newUploadedImages.map(img => img.url);
+      setFormData(prev => ({
+        ...prev,
+        images: newImageUrls
+      }));
+
+      toast({
+        title: "Success",
+        description: "Image removed successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Delete Error",
+        description: "Failed to remove image. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -160,11 +285,11 @@ const CreateCampaign: React.FC = () => {
     switch (step) {
       case 0:
         return formData.title && formData.title.length >= 10 && formData.title.length <= 100 &&
+               formData.description && formData.description.length >= 10 && formData.description.length <= 500 &&
                formData.goal && parseFloat(formData.goal) >= 100 &&
                formData.category && formData.endDate;
       case 1:
-        return formData.description && formData.description.length >= 50 && formData.description.length <= 5000 &&
-               formData.story;
+        return formData.story && formData.story.length >= 10;
       case 2:
         return formData.timeline && formData.budget;
       default:
@@ -360,13 +485,71 @@ const CreateCampaign: React.FC = () => {
 
                 <div>
                   <Label>Campaign Images</Label>
-                  <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                    <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600 mb-4">Upload images to make your campaign more compelling</p>
-                    <Button variant="outline">
-                      <Upload className="h-4 w-4 mr-2" />
-                      Choose Images
-                    </Button>
+                  <div className="mt-2 space-y-4">
+                    {/* Upload Area */}
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                      <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600 mb-4">
+                        Upload images to make your campaign more compelling (Max 5 images, 5MB each)
+                      </p>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        id="image-upload"
+                        disabled={isUploadingImages || uploadedImages.length >= 5}
+                      />
+                      <Button 
+                        variant="outline" 
+                        onClick={() => document.getElementById('image-upload')?.click()}
+                        disabled={isUploadingImages || uploadedImages.length >= 5}
+                      >
+                        {isUploadingImages ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Upload className="h-4 w-4 mr-2" />
+                        )}
+                        {isUploadingImages ? 'Uploading...' : 'Choose Images'}
+                      </Button>
+                      {uploadedImages.length >= 5 && (
+                        <p className="text-sm text-orange-600 mt-2">
+                          Maximum of 5 images reached
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Uploaded Images Preview */}
+                    {uploadedImages.length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-700 mb-2">
+                          Uploaded Images ({uploadedImages.length}/5)
+                        </p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {uploadedImages.map((image, index) => (
+                            <div key={index} className="relative group">
+                              <img
+                                src={uploadService.getCampaignImageUrl(image.filename)}
+                                alt={image.originalName}
+                                className="w-full h-32 object-cover rounded-lg border"
+                              />
+                              <button
+                                onClick={() => handleRemoveImage(index)}
+                                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Remove image"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                              <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-2 rounded-b-lg">
+                                <p className="truncate">{image.originalName}</p>
+                                <p>{(image.size / 1024 / 1024).toFixed(1)} MB</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

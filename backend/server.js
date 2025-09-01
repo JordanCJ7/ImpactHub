@@ -68,6 +68,7 @@ app.use('/api/campaigns', require('./routes/campaigns'));
 app.use('/api/donations', require('./routes/donations'));
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/avatars', require('./routes/avatars'));
+app.use('/api/uploads', require('./routes/uploads'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/admin', require('./routes/admin'));
 
