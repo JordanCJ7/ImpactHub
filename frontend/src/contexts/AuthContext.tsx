@@ -91,23 +91,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Token is invalid, remove it
             await authService.logout();
           }
-        } else if (process.env.NODE_ENV === 'development') {
-          // Auto-login with test user in development
-          console.log('Auto-logging in with test user for development...');
-          try {
-            const credentials: LoginCredentials = { email: 'test@example.com', password: 'password123' };
-            const response = await authService.login(credentials);
-
-            if (response.data) {
-              const userData = convertApiUser(response.data.user);
-              setUser(userData);
-              console.log('Auto-login successful');
-            } else {
-              console.log('Auto-login failed:', response.error);
-            }
-          } catch (error) {
-            console.log('Auto-login error:', error);
-          }
+          // Note: Auto-login removed for security reasons
+          // Development should use manual login for proper testing
         }
       } catch (error) {
         console.error('Failed to initialize auth:', error);
