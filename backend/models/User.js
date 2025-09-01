@@ -26,9 +26,9 @@ const userSchema = new mongoose.Schema({
     minlength: [6, 'Password must be at least 6 characters'],
     select: false
   },
-  avatar: {
+  organizationName: {
     type: String,
-    default: null
+    maxlength: [100, 'Organization name cannot be more than 100 characters']
   },
   role: {
     type: String,
@@ -64,6 +64,11 @@ const userSchema = new mongoose.Schema({
   isOAuthUser: {
     type: Boolean,
     default: false
+  },
+  // Avatar field
+  avatar: {
+    type: String,
+    default: null
   },
   // Profile information
   profile: {
