@@ -77,7 +77,7 @@ export interface CreateCampaignData {
   title: string;
   description: string;
   story?: string;
-  goal: number;
+  goal: number | string;
   category: string;
   images?: string[];
   endDate: string;
