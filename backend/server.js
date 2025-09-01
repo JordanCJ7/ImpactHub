@@ -9,6 +9,16 @@ const path = require('path');
 // Load environment variables from the backend directory
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
+// Validate required environment variables
+const requiredEnvVars = ['JWT_SECRET', 'MONGODB_URI'];
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+
+if (missingEnvVars.length > 0) {
+  console.error('Missing required environment variables:', missingEnvVars.join(', '));
+  console.error('Please check your .env file and ensure all required variables are set.');
+  process.exit(1);
+}
+
 const app = express();
 
 // Security middleware
@@ -113,14 +123,14 @@ app.use('*', (req, res) => {
 // Database connection
 const connectDB = async () => {
   try {
-    console.log('Attempting to connect to MongoDB...');
-    console.log('MongoDB URI:', process.env.MONGODB_URI ? 'URI loaded from environment' : 'Using default localhost URI');
-    
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/impacthub', {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log(`MongoDB connected: ${conn.connection.host}`);
+    
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`MongoDB connected: ${conn.connection.host}`);
+    }
   } catch (error) {
     console.error('MongoDB connection error:', error);
     process.exit(1);
@@ -129,13 +139,17 @@ const connectDB = async () => {
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  console.log('SIGTERM received. Shutting down gracefully...');
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('SIGTERM received. Shutting down gracefully...');
+  }
   await mongoose.connection.close();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
-  console.log('SIGINT received. Shutting down gracefully...');
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('SIGINT received. Shutting down gracefully...');
+  }
   await mongoose.connection.close();
   process.exit(0);
 });
@@ -147,9 +161,11 @@ const startServer = async () => {
   try {
     await connectDB();
     app.listen(PORT, () => {
-      console.log(`🚀 Server is running on port ${PORT}`);
-      console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
-      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`🚀 Server is running on port ${PORT}`);
+        console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+        console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      }
     });
   } catch (error) {
     console.error('Failed to start server:', error);

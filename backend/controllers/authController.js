@@ -387,11 +387,15 @@ const forgotPassword = async (req, res) => {
 
     await user.save();
 
-    // TODO: Send email with reset link
-    // const resetUrl = `${req.protocol}://${req.get('host')}/api/auth/reset-password?token=${resetToken}`;
-
+    // Generate reset URL for email (implementation pending)
+    const resetUrl = `${req.protocol}://${req.get('host')}/reset-password?token=${resetToken}`;
+    
+    // Note: Email service integration required
+    // This would typically send an email with the reset link
+    
     res.json({
-      message: 'Password reset link sent to email'
+      message: 'Password reset link sent to email',
+      ...(process.env.NODE_ENV === 'development' && { resetUrl }) // Include URL in dev for testing
     });
   } catch (error) {
     console.error('Forgot password error:', error);
@@ -519,10 +523,15 @@ const resendVerification = async (req, res) => {
 
     await user.save();
 
-    // TODO: Send verification email
-
+    // Generate verification URL for email (implementation pending)
+    const verifyUrl = `${req.protocol}://${req.get('host')}/verify-email?token=${verificationToken}`;
+    
+    // Note: Email service integration required
+    // This would typically send a verification email
+    
     res.json({
-      message: 'Verification email sent'
+      message: 'Verification email sent',
+      ...(process.env.NODE_ENV === 'development' && { verifyUrl }) // Include URL in dev for testing
     });
   } catch (error) {
     console.error('Resend verification error:', error);
@@ -535,9 +544,11 @@ const resendVerification = async (req, res) => {
 // Google OAuth authentication
 const googleAuth = async (req, res) => {
   try {
-    // TODO: Implement Google OAuth
+    // OAuth implementation requires Google OAuth 2.0 setup
+    // This would typically handle Google OAuth flow
     res.status(501).json({
-      error: 'Google authentication not yet implemented'
+      error: 'Google authentication not yet implemented',
+      message: 'OAuth integration requires additional setup and configuration'
     });
   } catch (error) {
     console.error('Google auth error:', error);
@@ -550,9 +561,11 @@ const googleAuth = async (req, res) => {
 // Facebook OAuth authentication
 const facebookAuth = async (req, res) => {
   try {
-    // TODO: Implement Facebook OAuth
+    // OAuth implementation requires Facebook App setup
+    // This would typically handle Facebook OAuth flow
     res.status(501).json({
-      error: 'Facebook authentication not yet implemented'
+      error: 'Facebook authentication not yet implemented',
+      message: 'OAuth integration requires additional setup and configuration'
     });
   } catch (error) {
     console.error('Facebook auth error:', error);

@@ -68,7 +68,10 @@ class ApiService {
 
       return { data };
     } catch (error) {
-      console.error('API request failed:', error);
+      // Log errors only in development
+      if (process.env.NODE_ENV === 'development') {
+        console.error('API request failed:', error);
+      }
       return {
         error: 'Network error. Please check your connection.',
       };

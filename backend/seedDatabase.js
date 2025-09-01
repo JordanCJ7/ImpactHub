@@ -1,3 +1,9 @@
+/**
+ * DATABASE SEED SCRIPT
+ * WARNING: This script is for development/testing purposes only
+ * Do not run in production environment
+ */
+
 const mongoose = require('mongoose');
 const Campaign = require('./models/Campaign');
 const User = require('./models/User');
@@ -5,6 +11,11 @@ const Donation = require('./models/Donation');
 require('dotenv').config();
 
 const seedData = async () => {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('ERROR: Database seed scripts should not be run in production!');
+    process.exit(1);
+  }
+
   try {
     // Connect to database
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/impacthub');

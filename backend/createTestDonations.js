@@ -1,3 +1,9 @@
+/**
+ * TEST DATA CREATION SCRIPT
+ * WARNING: This script is for development/testing purposes only
+ * Do not run in production environment
+ */
+
 const mongoose = require('mongoose');
 const path = require('path');
 
@@ -10,6 +16,11 @@ const Campaign = require('./models/Campaign');
 const Donation = require('./models/Donation');
 
 async function createTestDonations() {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('ERROR: Test data scripts should not be run in production!');
+    process.exit(1);
+  }
+
   try {
     // Connect to MongoDB
     await mongoose.connect(process.env.MONGODB_URI);
