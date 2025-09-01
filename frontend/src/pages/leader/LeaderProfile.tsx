@@ -29,7 +29,6 @@ const LeaderProfile: React.FC = () => {
     activeCampaigns: 0,
     leaderLevel: 'Rising Star'
   });
-  const [campaignHistory, setCampaignHistory] = useState<any[]>([]);
 
   const [profile, setProfile] = useState({
     firstName: '',
@@ -58,6 +57,8 @@ const LeaderProfile: React.FC = () => {
     showPhone: false,
     showDonations: true
   });
+
+  const [campaignHistory, setCampaignHistory] = useState<any[]>([]);
 
   // Load profile data on component mount
   useEffect(() => {
@@ -275,7 +276,7 @@ const LeaderProfile: React.FC = () => {
               <div className="relative">
                 <Avatar className="h-20 w-20">
                   <AvatarImage 
-                    src={user?.avatarData || undefined} 
+                    src={profile.avatar ? `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${profile.avatar}` : undefined} 
                     alt={`${profile.firstName} ${profile.lastName}`} 
                   />
                   <AvatarFallback className="text-lg">
