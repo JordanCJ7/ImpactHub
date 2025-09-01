@@ -31,24 +31,50 @@
         "version": "2.0.0",
         "tasks": [
             {
-                "label": "Auto Start Services",
-                "type": "shell",
-                "command": "npm",
-                "args": ["run", "dev"],
+                "label": "Auto Start Services (Separate Terminals)",
+                "dependsOrder": "parallel",
+                "dependsOn": [
+                    "Start Backend Terminal",
+                    "Start Frontend Terminal"
+                ],
                 "group": {
                     "kind": "build",
                     "isDefault": true
+                }
+            },
+            {
+                "label": "Start Backend Terminal",
+                "type": "shell",
+                "command": "npm",
+                "args": ["run", "dev"],
+                "options": {
+                    "cwd": "${workspaceFolder}/backend"
                 },
                 "presentation": {
                     "echo": true,
                     "reveal": "always",
                     "focus": false,
-                    "panel": "new"
+                    "panel": "new",
+                    "group": "backend"
                 },
-                "isBackground": true,
-                "runOptions": {
-                    "runOn": "folderOpen"
-                }
+                "isBackground": true
+            },
+            {
+                "label": "Start Frontend Terminal",
+                "type": "shell",
+                "command": "npm",
+                "args": ["run", "dev"],
+                "options": {
+                    "cwd": "${workspaceFolder}/frontend"
+                },
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "new",
+                    "group": "frontend"
+                },
+                "isBackground": true
             }
         ]
     },
