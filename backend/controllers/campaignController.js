@@ -420,16 +420,161 @@ const recordShare = async (req, res) => {
   }
 };
 
-// Create campaign (placeholder)
+// Create campaign
 const createCampaign = async (req, res) => {
   try {
-    res.status(501).json({
-      error: 'Campaign creation not yet implemented'
+    console.log('Create campaign request body:', req.body);
+    console.log('User:', req.user ? req.user.email : 'null');
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: errors.array()
+      });
+    }
+
+    const {
+      title,
+      description,
+      story,
+      goal,
+      category,
+      images,
+      endDate,
+      location,
+      beneficiaries,
+      features,
+      seo
+    } = req.body;
+
+    console.log('Parsed data:', { title, description, goal, category, endDate });
+
+    // Validate and parse goal
+    const parsedGoal = parseFloat(goal);
+    if (isNaN(parsedGoal) || parsedGoal < 100) {
+      console.log('Invalid goal:', goal, parsedGoal);
+      return res.status(400).json({
+        error: 'Goal must be a valid number and at least 100'
+      });
+    }
+
+    // Validate and parse endDate
+    const endDateObj = new Date(endDate);
+    if (isNaN(endDateObj.getTime())) {
+      console.log('Invalid endDate:', endDate);
+      return res.status(400).json({
+        error: 'Invalid end date'
+      });
+    }
+
+    // Calculate duration from endDate
+    const startDate = new Date();
+    const duration = Math.ceil((endDateObj - startDate) / (1000 * 60 * 60 * 24));
+
+    if (duration <= 0) {
+      console.log('Invalid duration:', duration);
+      return res.status(400).json({
+        error: 'End date must be in the future'
+      });
+    }
+
+    console.log('Calculated duration:', duration);
+
+    // Create campaign object
+    const campaignData = {
+      title,
+      description,
+      story,
+      goal: parsedGoal,
+      category,
+      creator: req.user.id,
+      organizationName: req.user.organizationName || req.user.profile?.organization?.name || req.user.name,
+      organizationEmail: req.user.email,
+      endDate: endDateObj,
+      duration,
+      status: 'draft', // Start as draft, can be activated later
+      approvalStatus: 'pending'
+    };
+
+    console.log('Campaign data to save:', campaignData);
+
+    // Add optional fields
+    if (location && (location.country || location.city || location.state)) {
+      campaignData.location = [location.city, location.state, location.country].filter(Boolean).join(', ');
+    }
+
+    if (beneficiaries && beneficiaries.description) {
+      campaignData.beneficiaries = beneficiaries.description;
+    }
+
+    if (images && images.length > 0) {
+      campaignData.images = images.map((url, index) => ({
+        url,
+        isPrimary: index === 0
+      }));
+    }
+
+    console.log('Final campaign data:', campaignData);
+
+    // Create the campaign
+    const campaign = new Campaign(campaignData);
+    await campaign.save();
+    console.log('Campaign saved successfully:', campaign._id);
+
+    // Create audit log
+    try {
+      await AuditLog.create({
+        user: req.user.id,
+        action: 'campaign_created',
+        resource: 'campaign',
+        resourceId: campaign._id,
+        details: `Created campaign: ${title}`,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+      console.log('Audit log created');
+    } catch (auditError) {
+      console.error('Audit log creation failed:', auditError);
+      // Don't fail the request for audit log errors
+    }
+
+    // Notify admins about new campaign pending approval
+    try {
+      const adminUsers = await User.find({ role: 'admin' });
+      console.log('Found admin users:', adminUsers.length);
+      for (const admin of adminUsers) {
+        await Notification.create({
+          recipient: admin._id,
+          type: 'new_campaign',
+          title: 'New Campaign Pending Approval',
+          message: `A new campaign "${title}" is pending your approval.`,
+          data: { campaignId: campaign._id }
+        });
+      }
+      console.log('Notifications sent to admins');
+    } catch (notificationError) {
+      console.error('Notification creation failed:', notificationError);
+      // Don't fail the request for notification errors
+    }
+
+    res.status(201).json({
+      message: 'Campaign created successfully',
+      campaign: {
+        _id: campaign._id,
+        title: campaign.title,
+        status: campaign.status,
+        approvalStatus: campaign.approvalStatus,
+        createdAt: campaign.createdAt
+      }
     });
   } catch (error) {
     console.error('Create campaign error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
-      error: 'Failed to create campaign'
+      error: 'Failed to create campaign',
+      details: error.message
     });
   }
 };
