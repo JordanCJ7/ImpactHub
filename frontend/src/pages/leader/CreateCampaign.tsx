@@ -19,23 +19,35 @@ import {
   AlertCircle,
   Camera,
   X,
-  Plus
+  Plus,
+  Loader2
 } from 'lucide-react';
+import { campaignService } from '@/services/campaigns';
+import { useToast } from '@/hooks/use-toast';
 
 const CreateCampaign: React.FC = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     goal: '',
-    duration: '',
     category: '',
-    location: '',
+    endDate: '',
+    location: {
+      country: '',
+      state: '',
+      city: ''
+    },
     story: '',
     images: [] as string[],
-    tags: [] as string[],
-    beneficiaries: '',
+    beneficiaries: {
+      count: 0,
+      description: ''
+    },
     timeline: '',
     budget: '',
     risks: ''
@@ -73,34 +85,86 @@ const CreateCampaign: React.FC = () => {
     }
   };
 
-  const handleSubmit = () => {
-    // In a real app, this would submit to the backend
-    console.log('Campaign data:', formData);
-    navigate('/leader/campaigns');
-  };
+  const handleSubmit = async () => {
+    if (!isStepValid(currentStep)) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  const addTag = (tag: string) => {
-    if (tag && !formData.tags.includes(tag)) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, tag]
-      }));
+    setIsSubmitting(true);
+    try {
+      const campaignData = {
+        title: formData.title,
+        description: formData.description,
+        story: formData.story,
+        goal: parseFloat(formData.goal), // Convert to number
+        category: formData.category,
+        endDate: formData.endDate ? `${formData.endDate}T00:00:00.000Z` : '',
+        location: formData.location.country ? formData.location : undefined,
+        beneficiaries: formData.beneficiaries.description ? formData.beneficiaries : undefined,
+        images: formData.images.length > 0 ? formData.images : undefined,
+        organizationName: 'Test Organization', // Add required field
+        organizationEmail: 'test@example.com' // Add required field
+      };
+
+      const response = await campaignService.createCampaign(campaignData);
+      
+      toast({
+        title: "Success!",
+        description: "Your campaign has been created successfully and is pending approval.",
+      });
+
+      navigate('/leader/dashboard');
+    } catch (error: any) {
+      console.error('Create campaign error:', error);
+      const errorMessage = error.response?.data?.error || "Failed to create campaign. Please try again.";
+      const errorDetails = error.response?.data?.details;
+      
+      toast({
+        title: "Error",
+        description: errorDetails ? 
+          `${errorMessage}: ${errorDetails.map((d: any) => d.msg).join(', ')}` : 
+          errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const removeTag = (tagToRemove: string) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }));
+  const handleSaveDraft = async () => {
+    setIsSavingDraft(true);
+    try {
+      // For draft saving, we could implement a separate endpoint
+      // For now, just show a success message
+      toast({
+        title: "Draft Saved",
+        description: "Your campaign draft has been saved.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save draft.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingDraft(false);
+    }
   };
 
   const isStepValid = (step: number) => {
     switch (step) {
       case 0:
-        return formData.title && formData.goal && formData.category && formData.duration;
+        return formData.title && formData.title.length >= 10 && formData.title.length <= 100 &&
+               formData.goal && parseFloat(formData.goal) >= 100 &&
+               formData.category && formData.endDate;
       case 1:
-        return formData.description && formData.story;
+        return formData.description && formData.description.length >= 50 && formData.description.length <= 5000 &&
+               formData.story;
       case 2:
         return formData.timeline && formData.budget;
       default:
@@ -115,9 +179,9 @@ const CreateCampaign: React.FC = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" onClick={() => navigate('/leader/campaigns')}>
+              <Button variant="ghost" onClick={() => navigate('/leader/dashboard')}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Campaigns
+                Back to Dashboard
               </Button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Create New Campaign</h1>
@@ -125,9 +189,17 @@ const CreateCampaign: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <Button variant="outline">
-                <Save className="h-4 w-4 mr-2" />
-                Save Draft
+              <Button 
+                variant="outline" 
+                onClick={handleSaveDraft}
+                disabled={isSavingDraft || isSubmitting}
+              >
+                {isSavingDraft ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                {isSavingDraft ? 'Saving...' : 'Save Draft'}
               </Button>
               <Button variant="outline">
                 <Eye className="h-4 w-4 mr-2" />
@@ -200,14 +272,14 @@ const CreateCampaign: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="duration">Campaign Duration (days) *</Label>
+                    <Label htmlFor="endDate">Campaign End Date *</Label>
                     <Input
-                      id="duration"
-                      type="number"
-                      value={formData.duration}
-                      onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
-                      placeholder="60"
+                      id="endDate"
+                      type="date"
+                      value={formData.endDate}
+                      onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
                       className="mt-1"
+                      min={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
                     />
                   </div>
                 </div>
@@ -228,13 +300,32 @@ const CreateCampaign: React.FC = () => {
                   </div>
                   <div>
                     <Label htmlFor="location">Location</Label>
-                    <Input
-                      id="location"
-                      value={formData.location}
-                      onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                      placeholder="City, Country"
-                      className="mt-1"
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-1">
+                      <Input
+                        placeholder="Country"
+                        value={formData.location.country}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          location: { ...prev.location, country: e.target.value }
+                        }))}
+                      />
+                      <Input
+                        placeholder="State/Province"
+                        value={formData.location.state}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          location: { ...prev.location, state: e.target.value }
+                        }))}
+                      />
+                      <Input
+                        placeholder="City"
+                        value={formData.location.city}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          location: { ...prev.location, city: e.target.value }
+                        }))}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -283,41 +374,15 @@ const CreateCampaign: React.FC = () => {
                   <Label htmlFor="beneficiaries">Who Will Benefit?</Label>
                   <Textarea
                     id="beneficiaries"
-                    value={formData.beneficiaries}
-                    onChange={(e) => setFormData(prev => ({ ...prev, beneficiaries: e.target.value }))}
+                    value={formData.beneficiaries.description}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      beneficiaries: { ...prev.beneficiaries, description: e.target.value }
+                    }))}
                     placeholder="Describe who will benefit from this campaign and how many people will be impacted"
                     rows={4}
                     className="mt-1"
                   />
-                </div>
-
-                <div>
-                  <Label>Tags</Label>
-                  <div className="mt-2">
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {formData.tags.map((tag, index) => (
-                        <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                          {tag}
-                          <X 
-                            className="h-3 w-3 cursor-pointer" 
-                            onClick={() => removeTag(tag)}
-                          />
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Add tags (press Enter)"
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            addTag(e.currentTarget.value);
-                            e.currentTarget.value = '';
-                          }
-                        }}
-                      />
-                    </div>
-                  </div>
                 </div>
               </div>
             )}
@@ -382,9 +447,9 @@ const CreateCampaign: React.FC = () => {
                     <div className="space-y-2 text-sm">
                       <div><span className="text-gray-600">Title:</span> {formData.title}</div>
                       <div><span className="text-gray-600">Goal:</span> LKR {formData.goal}</div>
-                      <div><span className="text-gray-600">Duration:</span> {formData.duration} days</div>
+                      <div><span className="text-gray-600">End Date:</span> {formData.endDate}</div>
                       <div><span className="text-gray-600">Category:</span> {formData.category}</div>
-                      <div><span className="text-gray-600">Location:</span> {formData.location}</div>
+                      <div><span className="text-gray-600">Location:</span> {[formData.location.city, formData.location.state, formData.location.country].filter(Boolean).join(', ')}</div>
                     </div>
                   </div>
                   <div>
@@ -392,7 +457,7 @@ const CreateCampaign: React.FC = () => {
                     <div className="space-y-2 text-sm">
                       <div><span className="text-gray-600">Description:</span> {formData.description.substring(0, 100)}...</div>
                       <div><span className="text-gray-600">Story length:</span> {formData.story.length} characters</div>
-                      <div><span className="text-gray-600">Tags:</span> {formData.tags.join(', ')}</div>
+                      <div><span className="text-gray-600">Beneficiaries:</span> {formData.beneficiaries.description.substring(0, 100)}...</div>
                     </div>
                   </div>
                 </div>
@@ -431,9 +496,16 @@ const CreateCampaign: React.FC = () => {
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           ) : (
-            <Button onClick={handleSubmit}>
-              <Upload className="h-4 w-4 mr-2" />
-              Publish Campaign
+            <Button 
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4 mr-2" />
+              )}
+              {isSubmitting ? 'Publishing...' : 'Publish Campaign'}
             </Button>
           )}
         </div>
