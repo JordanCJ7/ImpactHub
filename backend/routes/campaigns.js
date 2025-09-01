@@ -28,10 +28,12 @@ const createCampaignValidation = [
     .isISO8601()
     .withMessage('Please provide a valid end date'),
   body('organizationName')
+    .optional()
     .trim()
     .isLength({ min: 2, max: 100 })
     .withMessage('Organization name must be between 2 and 100 characters'),
   body('organizationEmail')
+    .optional()
     .isEmail()
     .withMessage('Please provide a valid organization email')
 ];
