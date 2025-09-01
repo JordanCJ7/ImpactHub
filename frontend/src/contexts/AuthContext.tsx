@@ -58,36 +58,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Check if user is already authenticated on mount
-  useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        if (authService.isAuthenticated()) {
-          const response = await authService.getCurrentUser();
-          if (response.data) {
-            setUser(convertApiUser(response.data));
-          } else {
-            // Token is invalid, remove it
-            await authService.logout();
-          }
-        }
-      } catch (error) {
-        console.error('Failed to initialize auth:', error);
-        await authService.logout();
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initializeAuth();
-  }, []);
-
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string; user?: User }> => {
     try {
       setLoading(true);
       const credentials: LoginCredentials = { email, password };
       const response = await authService.login(credentials);
-      
+
       if (response.data) {
         const userData = convertApiUser(response.data.user);
         setUser(userData);
@@ -102,6 +78,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(false);
     }
   };
+
+  // Check if user is already authenticated on mount
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        if (authService.isAuthenticated()) {
+          const response = await authService.getCurrentUser();
+          if (response.data) {
+            setUser(convertApiUser(response.data));
+          } else {
+            // Token is invalid, remove it
+            await authService.logout();
+          }
+        } else if (process.env.NODE_ENV === 'development') {
+          // Auto-login with test user in development
+          console.log('Auto-logging in with test user for development...');
+          try {
+            const credentials: LoginCredentials = { email: 'test@example.com', password: 'password123' };
+            const response = await authService.login(credentials);
+
+            if (response.data) {
+              const userData = convertApiUser(response.data.user);
+              setUser(userData);
+              console.log('Auto-login successful');
+            } else {
+              console.log('Auto-login failed:', response.error);
+            }
+          } catch (error) {
+            console.log('Auto-login error:', error);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to initialize auth:', error);
+        await authService.logout();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+  }, []);
 
   const register = async (name: string, email: string, password: string, role: UserRole): Promise<{ success: boolean; error?: string }> => {
     try {
