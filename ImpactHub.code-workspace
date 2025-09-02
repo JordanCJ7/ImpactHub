@@ -1,0 +1,90 @@
+{
+    "folders": [
+        {
+            "name": "ImpactHub Root",
+            "path": "."
+        },
+        {
+            "name": "Backend",
+            "path": "./backend"
+        },
+        {
+            "name": "Frontend", 
+            "path": "./frontend"
+        }
+    ],
+    "settings": {
+        "terminal.integrated.defaultProfile.windows": "PowerShell",
+        "files.exclude": {
+            "**/node_modules": true,
+            "**/.env": true
+        },
+        "search.exclude": {
+            "**/node_modules": true,
+            "**/uploads": true
+        },
+        "task.autoDetect": "on",
+        "task.showDecorations": true,
+        "extensions.autoUpdate": true
+    },
+    "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "Auto Start Services (Separate Terminals)",
+                "dependsOrder": "parallel",
+                "dependsOn": [
+                    "Start Backend Terminal",
+                    "Start Frontend Terminal"
+                ],
+                "group": {
+                    "kind": "build",
+                    "isDefault": true
+                }
+            },
+            {
+                "label": "Start Backend Terminal",
+                "type": "shell",
+                "command": "npm",
+                "args": ["run", "dev"],
+                "options": {
+                    "cwd": "${workspaceFolder}/backend"
+                },
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "new",
+                    "group": "backend"
+                },
+                "isBackground": true
+            },
+            {
+                "label": "Start Frontend Terminal",
+                "type": "shell",
+                "command": "npm",
+                "args": ["run", "dev"],
+                "options": {
+                    "cwd": "${workspaceFolder}/frontend"
+                },
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "new",
+                    "group": "frontend"
+                },
+                "isBackground": true
+            }
+        ]
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-vscode.vscode-json",
+            "bradlc.vscode-tailwindcss",
+            "esbenp.prettier-vscode",
+            "ms-vscode.vscode-typescript-next",
+            "ms-vscode.powershell"
+        ]
+    }
+}

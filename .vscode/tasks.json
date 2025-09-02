@@ -1,0 +1,38 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+					"label": "Start Backend",
+					"type": "shell",
+					"command": "npm start",
+					"options": {
+						"cwd": "${workspaceFolder}/backend"
+					},
+					"presentation": {
+						"panel": "dedicated",
+						"showReuseMessage": false,
+						"clear": true
+					},
+					"problemMatcher": []
+		},
+		{
+					"label": "Start Frontend",
+					"type": "shell",
+					"command": "npm run dev",
+					"options": {
+						"cwd": "${workspaceFolder}/frontend"
+					},
+					"presentation": {
+						"panel": "dedicated",
+						"showReuseMessage": false,
+						"clear": true
+					},
+					"problemMatcher": []
+		},
+		{
+			"label": "Auto Start Services (Separate Terminals)",
+			"dependsOn": ["Start Backend", "Start Frontend"],
+			"dependsOrder": "parallel"
+		}
+	]
+}

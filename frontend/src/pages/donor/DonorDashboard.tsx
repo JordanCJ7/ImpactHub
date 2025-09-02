@@ -1,0 +1,442 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Heart, TrendingUp, Users, Calendar, DollarSign, Award, Bell, Settings, Plus, ArrowRight, Globe, Target, Loader2, AlertCircle } from 'lucide-react';
+import { FileText } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { donationService, campaignService, analyticsService } from '@/services';
+import type { Donation, UserAnalytics } from '@/services';
+
+const DonorDashboard: React.FC = () => {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [userAnalytics, setUserAnalytics] = useState<UserAnalytics | null>(null);
+  const [recentDonations, setRecentDonations] = useState<Donation[]>([]);
+  const [supportedCampaigns, setSupportedCampaigns] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    totalDonated: 0,
+    campaignsSupported: 0,
+    peopleImpacted: 0,
+    donorLevel: 'Bronze'
+  });
+
+  // Static achievements data (can be replaced with API call later)
+  const achievements = [
+    { title: "First Donation", description: "Made your first donation", date: "Dec 2023", earned: stats.totalDonated > 0 },
+    { title: "Consistent Giver", description: "Donated for 3 consecutive months", date: "Jan 2024", earned: stats.campaignsSupported >= 3 },
+    { title: "Community Builder", description: "Supported 10 different campaigns", date: "Jan 2024", earned: stats.campaignsSupported >= 10 },
+    { title: "Major Donor", description: "Single donation over LKR 5,000", date: null, earned: false }
+  ];
+
+  // Load dashboard data
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Load user analytics and stats
+      const [analyticsResponse, donationsResponse, campaignsResponse] = await Promise.allSettled([
+        analyticsService.getUserAnalytics(),
+        donationService.getMyDonations({ limit: 5 }),
+        campaignService.getSupportedCampaigns(1, 3)
+      ]);
+
+      // Handle analytics data
+      if (analyticsResponse.status === 'fulfilled' && analyticsResponse.value.data) {
+        const analytics = analyticsResponse.value.data;
+        setUserAnalytics(analytics);
+        setStats({
+          totalDonated: analytics.overview.totalDonated || 0,
+          campaignsSupported: analytics.overview.campaignsSupported || 0,
+          peopleImpacted: analytics.impactMetrics?.peopleHelped || 0,
+          donorLevel: analytics.overview.donorLevel || 'Bronze'
+        });
+      }
+
+      // Handle donations data
+      if (donationsResponse.status === 'fulfilled' && donationsResponse.value.data) {
+        const donationsData = donationsResponse.value.data;
+        if (donationsData && 'donations' in donationsData) {
+          setRecentDonations(donationsData.donations || []);
+        } else if (Array.isArray(donationsData)) {
+          setRecentDonations(donationsData);
+        }
+      }
+
+      // Handle campaigns data
+      if (campaignsResponse.status === 'fulfilled' && campaignsResponse.value.data) {
+        const campaignsData = campaignsResponse.value.data;
+        if (campaignsData && 'campaigns' in campaignsData) {
+          setSupportedCampaigns(campaignsData.campaigns || []);
+        } else if (Array.isArray(campaignsData)) {
+          setSupportedCampaigns(campaignsData);
+        }
+      }
+
+    } catch (err) {
+      console.error('Error loading dashboard data:', err);
+      setError('Failed to load dashboard data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-LK', {
+      style: 'currency',
+      currency: 'LKR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const getDonorLevelColor = (level: string) => {
+    switch (level.toLowerCase()) {
+      case 'bronze': return 'text-orange-600';
+      case 'silver': return 'text-gray-600';
+      case 'gold': return 'text-yellow-600';
+      case 'platinum': return 'text-purple-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'failed': return 'bg-red-100 text-red-800';
+      case 'cancelled': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const statsDisplay = [
+    { 
+      icon: DollarSign, 
+      label: "Total Donated", 
+      value: formatCurrency(stats.totalDonated), 
+      change: userAnalytics?.monthlyDonations?.slice(-1)[0] 
+        ? `${formatCurrency(userAnalytics.monthlyDonations.slice(-1)[0].amount)} this month` 
+        : "No donations this month", 
+      color: "text-green-600" 
+    },
+    { 
+      icon: Heart, 
+      label: "Campaigns Supported", 
+      value: stats.campaignsSupported.toString(), 
+      change: userAnalytics?.overview?.donationCount 
+        ? `${userAnalytics.overview.donationCount} total donations` 
+        : "0 donations", 
+      color: "text-red-600" 
+    },
+    { 
+      icon: Users, 
+      label: "People Impacted", 
+      value: stats.peopleImpacted.toLocaleString(), 
+      change: userAnalytics?.impactMetrics?.communitiesReached 
+        ? `${userAnalytics.impactMetrics.communitiesReached} communities` 
+        : "0 communities", 
+      color: "text-blue-600" 
+    },
+    { 
+      icon: Award, 
+      label: "Donor Level", 
+      value: stats.donorLevel, 
+      change: "Keep donating to level up!", 
+      color: getDonorLevelColor(stats.donorLevel) 
+    }
+  ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Welcome back, {user?.name?.split(' ')[0] || 'Friend'}!
+              </h1>
+              <p className="text-gray-600">Here's your impact summary and recent activity.</p>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Button variant="outline" asChild>
+                <Link to="/donor/notifications">
+                  <Bell className="h-4 w-4 mr-2" />
+                  Notifications
+                  <Badge className="ml-2 bg-red-500 text-white">3</Badge>
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link to="/campaigns">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Find Campaigns
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {error && (
+          <Alert className="mb-6 border-red-200 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">{error}</AlertDescription>
+          </Alert>
+        )}
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {statsDisplay.map((stat, index) => (
+            <Card key={index}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">{stat.label}</p>
+                    <div className="flex items-center space-x-2">
+                      <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">{stat.change}</p>
+                  </div>
+                  <div className={`p-2 rounded-lg bg-gray-50`}>
+                    <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Supported Campaigns */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Your Supported Campaigns</CardTitle>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/campaigns">View All</Link>
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {supportedCampaigns.length > 0 ? (
+                    supportedCampaigns.map((campaign) => (
+                      <div key={campaign._id} className="flex items-start space-x-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold flex-shrink-0">
+                          {campaign.title ? campaign.title.substring(0, 2).toUpperCase() : 'CA'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-gray-900 mb-1">{campaign.title}</h4>
+                          <p className="text-sm text-gray-600 mb-2">
+                            Your contribution: <span className="font-medium text-green-600">{formatCurrency(campaign.donatedAmount || 0)}</span>
+                          </p>
+                          
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-600">{formatCurrency(campaign.amountRaised || 0)} raised</span>
+                              <span className="text-sm text-gray-500">
+                                {campaign.endDate ? Math.max(0, Math.ceil((new Date(campaign.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 'N/A'} days left
+                              </span>
+                            </div>
+                            <Progress value={campaign.goal ? ((campaign.amountRaised || 0) / campaign.goal) * 100 : 0} className="h-2" />
+                          </div>
+                          
+                          {campaign.lastUpdate && (
+                            <p className="text-sm text-blue-600 mt-2">Latest: {campaign.lastUpdate}</p>
+                          )}
+                        </div>
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to={`/campaigns/${campaign._id}`}>
+                            <ArrowRight className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <Target className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500">No campaigns supported yet</p>
+                      <Button className="mt-4" asChild>
+                        <Link to="/campaigns">Explore Campaigns</Link>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Recent Donations</CardTitle>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/donor/history">View All History</Link>
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {recentDonations.length > 0 ? (
+                    recentDonations.map((donation) => (
+                      <div key={donation._id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                            <Heart className="h-6 w-6 text-blue-600" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-gray-900">{donation.campaign.title}</h4>
+                            <p className="text-sm text-gray-500">{formatDate(donation.createdAt)}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold text-gray-900">{formatCurrency(donation.amount)}</div>
+                          <Badge className={getStatusColor(donation.status)}>
+                            {donation.status.charAt(0).toUpperCase() + donation.status.slice(1)}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <Heart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500">No donations yet</p>
+                      <Button className="mt-4" asChild>
+                        <Link to="/campaigns">Make Your First Donation</Link>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Impact Summary */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Globe className="h-5 w-5 text-blue-600" />
+                  <span>Your Global Impact</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-blue-600">
+                    {stats.peopleImpacted.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-gray-600">Lives Touched</div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div>
+                    <div className="text-xl font-bold text-green-600">
+                      {userAnalytics?.impactMetrics?.communitiesReached || 0}
+                    </div>
+                    <div className="text-xs text-gray-600">Communities</div>
+                  </div>
+                  <div>
+                    <div className="text-xl font-bold text-purple-600">
+                      {userAnalytics?.impactMetrics?.projectsSupported || stats.campaignsSupported}
+                    </div>
+                    <div className="text-xs text-gray-600">Projects</div>
+                  </div>
+                </div>
+
+                <Button variant="outline" className="w-full" asChild>
+                  <Link to="/impact">
+                    <Target className="mr-2 h-4 w-4" />
+                    View Impact Report
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Achievements */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Achievements</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {achievements.slice(0, 3).map((achievement, index) => (
+                    <div key={index} className={`flex items-center space-x-3 p-3 rounded-lg ${achievement.earned ? 'bg-yellow-50' : 'bg-gray-50'}`}>
+                      <Award className={`h-5 w-5 ${achievement.earned ? 'text-yellow-600' : 'text-gray-400'}`} />
+                      <div className="flex-1">
+                        <h4 className="font-medium text-sm">{achievement.title}</h4>
+                        <p className="text-xs text-gray-600">{achievement.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <Button variant="outline" className="w-full mt-4" asChild>
+                  <Link to="/donor/profile">View All Achievements</Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button className="w-full" asChild>
+                  <Link to="/campaigns">Find New Campaigns</Link>
+                </Button>
+                <Button variant="outline" className="w-full" asChild>
+                  <Link to="/donor/history">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Donation History
+                  </Link>
+                </Button>
+                <Button variant="outline" className="w-full" asChild>
+                  <Link to="/donor/profile">Update Profile</Link>
+                </Button>
+                <Button variant="outline" className="w-full" asChild>
+                  <Link to="/donor/leaderboard">View Leaderboard</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DonorDashboard;

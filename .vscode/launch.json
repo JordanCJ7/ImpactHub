@@ -1,0 +1,28 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Backend",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/server.js",
+            "cwd": "${workspaceFolder}/backend",
+            "env": {
+                "NODE_ENV": "development"
+            },
+            "console": "integratedTerminal",
+            "restart": true,
+            "runtimeExecutable": "node"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Launch Full Application",
+            "configurations": [
+                "Launch Backend"
+            ],
+            "preLaunchTask": "Start Frontend",
+            "stopAll": true
+        }
+    ]
+}
