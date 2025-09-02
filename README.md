@@ -245,10 +245,10 @@ By the end of **Sprint 4**, ImpactHub will be **production-ready** with all core
 
 ## 📂 Project Resources
 
-- [Figma Wireframes](https://figma.com/...) *(link when available)*
+- [Figma Wireframes](https://www.figma.com/design/0MwQUvQYhZYodnlbzXdEkf/SPM-assignment-1?node-id=176-120&t=xxVRTODqk1704ovG-0)
 - [API Documentation](/docs/api.md) *(to be created)*
-- [Contribution Guidelines](CONTRIBUTING.md) *(optional)*
-- [Code of Conduct](CODE_OF_CONDUCT.md) *(optional)*
+- [Contribution Guidelines](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
 
 ---
 
