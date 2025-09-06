@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 const path = require('path');
 
 // Load environment variables
@@ -24,14 +23,12 @@ async function createCampaignLeader() {
       return;
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash('password123', 12);
-
     // Create campaign leader
     const campaignLeader = new User({
       name: 'Campaign Leader',
       email: 'leader@example.com',
-      password: hashedPassword,
+  // Set plain password; it will be hashed by the User model's pre-save hook
+  password: 'password123',
       role: 'campaign-leader',
       isEmailVerified: true,
       organizationName: 'Test Organization',

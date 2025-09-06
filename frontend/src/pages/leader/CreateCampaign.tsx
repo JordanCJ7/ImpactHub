@@ -211,11 +211,35 @@ const CreateCampaign: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    if (!isStepValid(currentStep)) {
+    // Validate all steps against backend rules before submitting
+    const errors: string[] = [];
+    if (!(formData.title && formData.title.trim().length >= 10 && formData.title.trim().length <= 100)) {
+      errors.push('Title must be between 10 and 100 characters.');
+    }
+    if (!(formData.description && formData.description.trim().length >= 50 && formData.description.trim().length <= 5000)) {
+      errors.push('Description must be between 50 and 5000 characters.');
+    }
+    const goalNumber = parseFloat(formData.goal);
+    if (!(formData.goal && !Number.isNaN(goalNumber) && goalNumber >= 100)) {
+      errors.push('Goal must be a valid number and at least 100.');
+    }
+    if (!formData.category) {
+      errors.push('Category is required.');
+    }
+    if (!formData.endDate) {
+      errors.push('End date is required.');
+    } else {
+      const end = new Date(`${formData.endDate}T00:00:00.000Z`);
+      if (Number.isNaN(end.getTime()) || end.getTime() <= Date.now()) {
+        errors.push('End date must be a valid future date.');
+      }
+    }
+
+    if (errors.length > 0) {
       toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
+        title: 'Validation Error',
+        description: errors.join(' '),
+        variant: 'destructive',
       });
       return;
     }
@@ -237,10 +261,23 @@ const CreateCampaign: React.FC = () => {
       };
 
       const response = await campaignService.createCampaign(campaignData);
-      
+
+      if (response.error) {
+        const details = (response as any).data?.details || [];
+        const detailText = Array.isArray(details)
+          ? details.map((d: any) => d.msg || d.message).join(', ')
+          : undefined;
+        toast({
+          title: 'Error',
+          description: detailText ? `${response.error}: ${detailText}` : response.error,
+          variant: 'destructive',
+        });
+        return;
+      }
+
       toast({
-        title: "Success!",
-        description: "Your campaign has been created successfully and is pending approval.",
+        title: 'Success!',
+        description: 'Your campaign has been created successfully and is pending approval.',
       });
 
       navigate('/leader/dashboard');
@@ -285,7 +322,7 @@ const CreateCampaign: React.FC = () => {
     switch (step) {
       case 0:
         return formData.title && formData.title.length >= 10 && formData.title.length <= 100 &&
-               formData.description && formData.description.length >= 10 && formData.description.length <= 500 &&
+               formData.description && formData.description.length >= 50 && formData.description.length <= 5000 &&
                formData.goal && parseFloat(formData.goal) >= 100 &&
                formData.category && formData.endDate;
       case 1:
@@ -455,12 +492,12 @@ const CreateCampaign: React.FC = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="description">Short Description *</Label>
+                  <Label htmlFor="description">Short Description (50-5000 chars) *</Label>
                   <Textarea
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Briefly describe your campaign in 1-2 sentences"
+                    placeholder="Briefly describe your campaign (at least 50 characters)"
                     rows={3}
                     className="mt-1"
                   />
