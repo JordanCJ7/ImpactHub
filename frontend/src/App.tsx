@@ -1,4 +1,3 @@
-
 import { Toaster } from './components/ui/sonner';
 import { TooltipProvider } from './components/ui/tooltip';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
@@ -17,6 +16,10 @@ import CampaignList from './pages/publicc/CampaignList';
 import DonationConfirmation from './pages/publicc/DonationConfirmation';
 import CampaignDetails from './pages/publicc/CampaignDetails';
 import Donate from './pages/publicc/Donate';
+import About from './pages/publicc/About';
+import Contact from './pages/publicc/Contact';
+import Help from './pages/publicc/Help';
+import TermsOfService from './pages/publicc/TermsOfService';
 
 // Donor Pages
 import DonorProfile from './pages/donor/DonorProfile';
@@ -70,6 +73,10 @@ const App = () => (
             <Route path="/donation-confirmation/:id" element={<DonationConfirmation />} />
             <Route path="/campaigns/:id" element={<CampaignDetails />} />
             <Route path="/donate/:id" element={<Donate />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/help" element={<Help />} />
+            <Route path="/policies" element={<TermsOfService />} />
 
             {/* Donor Routes */}
             <Route path="/donor/profile" element={
