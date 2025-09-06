@@ -185,43 +185,7 @@ const Login: React.FC = () => {
               </Button>
             </form>
 
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-muted-foreground">Or try demo accounts</span>
-                </div>
-              </div>
-              
-              <div className="mt-4 space-y-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
-                  onClick={() => handleDemoLogin('donor')}
-                  disabled={isLoading}
-                >
-                  Demo Donor Account
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
-                  onClick={() => handleDemoLogin('campaign-leader')}
-                  disabled={isLoading}
-                >
-                  Demo Campaign Leader
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
-                  onClick={() => handleDemoLogin('admin')}
-                  disabled={isLoading}
-                >
-                  Demo Admin Account
-                </Button>
-              </div>
-            </div>
+            {/* ...existing code... */}
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
