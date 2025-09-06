@@ -85,7 +85,7 @@ const Footer: React.FC = () => {
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center">
           <p className="text-gray-400 text-sm">
-            © 2024 ImpactHub. All rights reserved. Built with ❤️ for making a difference.
+            © 2025 ImpactHub. All rights reserved. Built with ❤️ for making a difference.
           </p>
         </div>
       </div>
