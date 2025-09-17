@@ -256,7 +256,7 @@ const getCurrentUser = async (req, res) => {
         
         userObj.avatarData = `data:${mimeType};base64,${avatarData.toString('base64')}`;
       } catch (avatarError) {
-        console.log('Could not load avatar file:', avatarError.message);
+        console.error('Could not load avatar file:', avatarError.message);
         // Don't fail the request if avatar can't be loaded
       }
     }
@@ -681,7 +681,7 @@ const uploadAvatar = async (req, res) => {
         await fs.unlink(oldAvatarPath);
       } catch (error) {
         // Ignore errors if file doesn't exist
-        console.log('Could not delete old avatar file:', error.message);
+        console.error('Could not delete old avatar file:', error.message);
       }
     }
 

@@ -46,9 +46,6 @@ const CampaignDetails: React.FC = () => {
           setCampaign(c);
           // initialize liked state from campaign analytics or local fallback
           setIsLiked(!!(((c?.analytics as any)?.liked ?? localLiked[id || ''])));
-            if (process.env.NODE_ENV === 'development') {
-              console.debug('CampaignDetails loaded', { id, serverLiked: (c?.analytics as any)?.liked, localFallback: localLiked[id || ''] });
-            }
         }
       } catch (err) {
         console.error('Failed to load campaign:', err);

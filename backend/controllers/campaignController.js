@@ -11,7 +11,6 @@ const getUserFromReq = async (req) => {
   try {
     const header = req.header('Authorization');
     if (!header) {
-      if (process.env.NODE_ENV !== 'production') console.debug('getUserFromReq: no Authorization header');
       return null;
     }
     const token = header.replace('Bearer ', '');
@@ -20,12 +19,8 @@ const getUserFromReq = async (req) => {
     const userId = decoded.id || decoded.userId;
     if (!userId) return null;
     const user = await User.findById(userId).select('supportedCampaigns');
-    if (process.env.NODE_ENV !== 'production') {
-      console.debug('getUserFromReq: decoded userId=', userId, 'supportedCampaignsCount=', (user && user.supportedCampaigns) ? user.supportedCampaigns.length : 0);
-    }
     return user;
   } catch (err) {
-    if (process.env.NODE_ENV !== 'production') console.debug('getUserFromReq: token decode error', err && err.message);
     return null;
   }
 };
@@ -80,7 +75,6 @@ const getAllCampaigns = async (req, res) => {
       const user = await getUserFromReq(req);
       if (user) {
         const ids = (user.supportedCampaigns || []).map(id => id.toString());
-        if (process.env.NODE_ENV !== 'production') console.debug('getAllCampaigns: marking liked for user', user._id ? user._id.toString() : '(unknown)', 'likedCount=', ids.length);
         // convert docs to plain objects and set analytics.liked
         const campaignsWithLiked = campaigns.map(c => {
           const obj = c.toObject ? c.toObject() : c;
@@ -100,7 +94,6 @@ const getAllCampaigns = async (req, res) => {
       }
     } catch (e) {
       // non-fatal: fall through to return campaigns as-is
-      if (process.env.NODE_ENV !== 'production') console.debug('getAllCampaigns: error marking liked campaigns', e && e.message);
     }
     
     const total = await Campaign.countDocuments(filter);

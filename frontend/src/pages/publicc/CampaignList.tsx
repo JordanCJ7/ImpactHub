@@ -81,21 +81,9 @@ const CampaignList: React.FC = () => {
         setCampaigns(initialized);
         setPagination(result.data.pagination || { current: 1, pages: 1, total: 0 });
 
-        if (process.env.NODE_ENV === 'development') {
-          console.debug('Fetched campaigns liked flags:', initialized.slice(0, 10).map(c => ({ id: c._id, liked: (c.analytics as any)?.liked })));
-          console.debug('Raw server response (first campaign):', fetched[0]?.analytics);
-          console.debug('User authenticated:', !!user);
-        }
-
         // If user is authenticated but no campaigns have liked flags from server, retry once after a short delay
         if (user && initialized.length > 0 && !initialized.some(c => typeof (c.analytics as any)?.liked !== 'undefined')) {
-          if (process.env.NODE_ENV === 'development') {
-            console.debug('No server liked flags detected despite auth, retrying in 1s...');
-          }
           setTimeout(() => {
-            if (process.env.NODE_ENV === 'development') {
-              console.debug('Retrying campaign fetch for liked flags...');
-            }
             fetchCampaigns();
           }, 1000);
         }
@@ -201,9 +189,6 @@ const CampaignList: React.FC = () => {
 
   return (
     <>
-      {process.env.NODE_ENV === 'development' && campaigns.length > 0 && (
-        <script>{`console.debug('CampaignList render sample liked:', ${JSON.stringify(campaigns.slice(0,5).map(c => ({ id: c._id, liked: (c.analytics as any)?.liked })))})`}</script>
-      )}
       <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <section className="bg-gradient-to-br from-indigo-50 via-white to-blue-50 pt-24 pb-16">

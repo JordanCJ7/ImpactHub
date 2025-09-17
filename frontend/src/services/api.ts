@@ -60,13 +60,6 @@ class ApiService {
         ...options,
       };
 
-      // Development: log outgoing requests and headers for debugging auth issues
-      if (process.env.NODE_ENV === 'development') {
-        try {
-          console.debug('API request ->', { url, headers: config.headers });
-        } catch (e) { /* ignore logging errors */ }
-      }
-
       const response = await fetch(url, config);
       const data = await response.json();
 
