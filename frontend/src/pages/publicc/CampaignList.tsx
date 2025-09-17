@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Search, Filter, Heart, Users, Clock, ArrowRight, MapPin, Loader2, AlertCircle } from 'lucide-react';
+import { Search, Filter, Users, Clock, ArrowRight, MapPin, Loader2, AlertCircle } from 'lucide-react';
 import { campaignService, type Campaign } from '@/services/campaigns';
+import { useAuth } from '@/contexts/AuthContext';
 
 const CampaignList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -16,6 +17,7 @@ const CampaignList: React.FC = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // like button removed for CampaignList (handled in other pages)
   const [pagination, setPagination] = useState({
     current: 1,
     pages: 1,
@@ -66,8 +68,37 @@ const CampaignList: React.FC = () => {
         setError(result.error);
         setCampaigns([]);
       } else if (result.data) {
-        setCampaigns(result.data.campaigns || []);
+        const fetched = result.data.campaigns || [];
+        // Use server-provided analytics.liked directly (no localStorage fallback)
+        const initialized = fetched.map((c: Campaign) => ({
+          ...c,
+          analytics: {
+            ...(c.analytics || {}),
+            liked: (c.analytics as any)?.liked || false
+          }
+        }));
+
+        setCampaigns(initialized);
         setPagination(result.data.pagination || { current: 1, pages: 1, total: 0 });
+
+        if (process.env.NODE_ENV === 'development') {
+          console.debug('Fetched campaigns liked flags:', initialized.slice(0, 10).map(c => ({ id: c._id, liked: (c.analytics as any)?.liked })));
+          console.debug('Raw server response (first campaign):', fetched[0]?.analytics);
+          console.debug('User authenticated:', !!user);
+        }
+
+        // If user is authenticated but no campaigns have liked flags from server, retry once after a short delay
+        if (user && initialized.length > 0 && !initialized.some(c => typeof (c.analytics as any)?.liked !== 'undefined')) {
+          if (process.env.NODE_ENV === 'development') {
+            console.debug('No server liked flags detected despite auth, retrying in 1s...');
+          }
+          setTimeout(() => {
+            if (process.env.NODE_ENV === 'development') {
+              console.debug('Retrying campaign fetch for liked flags...');
+            }
+            fetchCampaigns();
+          }, 1000);
+        }
       }
     } catch (err) {
       console.error('Error fetching campaigns:', err);
@@ -79,9 +110,13 @@ const CampaignList: React.FC = () => {
   };
 
   // Fetch campaigns on component mount and when filters change
+  const { user, loading: authLoading } = useAuth();
   useEffect(() => {
-    fetchCampaigns();
-  }, [selectedCategory, sortBy, pagination.current]);
+    // Wait for auth to finish loading before fetching to ensure proper Authorization headers
+    if (!authLoading) {
+      fetchCampaigns();
+    }
+  }, [selectedCategory, sortBy, pagination.current, user, authLoading]);
 
   // Debounced search
   useEffect(() => {
@@ -161,8 +196,15 @@ const CampaignList: React.FC = () => {
     return 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=250&fit=crop';
   };
 
+  // Toggle like handler - relies on server state only
+  // like toggle handler removed — liking is handled on CampaignDetails/DonorDashboard
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      {process.env.NODE_ENV === 'development' && campaigns.length > 0 && (
+        <script>{`console.debug('CampaignList render sample liked:', ${JSON.stringify(campaigns.slice(0,5).map(c => ({ id: c._id, liked: (c.analytics as any)?.liked })))})`}</script>
+      )}
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <section className="bg-gradient-to-br from-indigo-50 via-white to-blue-50 pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -294,7 +336,7 @@ const CampaignList: React.FC = () => {
                     <div className="space-y-4">
                       <div>
                         <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm font-medium text-gray-600">
+                            <span className="text-sm font-medium text-gray-600">
                             {formatCurrency(campaign.raised)} raised
                           </span>
                           <span className="text-sm text-gray-500">
@@ -321,9 +363,6 @@ const CampaignList: React.FC = () => {
                             View Campaign
                             <ArrowRight className="ml-2 h-4 w-4" />
                           </Link>
-                        </Button>
-                        <Button variant="outline" size="icon">
-                          <Heart className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
@@ -391,6 +430,7 @@ const CampaignList: React.FC = () => {
         </div>
       </section>
     </div>
+    </>
   );
 };
 

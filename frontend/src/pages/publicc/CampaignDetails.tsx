@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
+import { campaignService } from '@/services/campaigns';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,14 +9,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Heart, Share2, Flag, Users, Clock, MapPin, CheckCircle, Calendar, TrendingUp, ArrowLeft } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const CampaignDetails: React.FC = () => {
   const { id } = useParams();
   const [isLiked, setIsLiked] = useState(false);
   const [campaign, setCampaign] = useState<any | null>(null);
+  const [localLiked, setLocalLiked] = useState<Record<string, boolean>>(() => {
+    try {
+      const raw = localStorage.getItem('likedCampaigns');
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const progressPercentage = campaign ? (campaign.raised / campaign.goal) * 100 : 0;
   const daysLeft = campaign ? Math.max(0, Math.ceil((new Date(campaign.endDate).getTime() - Date.now()) / (1000*60*60*24))) : 0;
@@ -26,12 +37,18 @@ const CampaignDetails: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        const res = await (await import('@/services/campaigns')).campaignService.getCampaignById(id);
+        const res = await campaignService.getCampaignById(id);
         if (res.error) {
           setError(res.error);
           setCampaign(null);
         } else {
-          setCampaign(res.data || res);
+          const c: any = (res as any).data || res;
+          setCampaign(c);
+          // initialize liked state from campaign analytics or local fallback
+          setIsLiked(!!(((c?.analytics as any)?.liked ?? localLiked[id || ''])));
+            if (process.env.NODE_ENV === 'development') {
+              console.debug('CampaignDetails loaded', { id, serverLiked: (c?.analytics as any)?.liked, localFallback: localLiked[id || ''] });
+            }
         }
       } catch (err) {
         console.error('Failed to load campaign:', err);
@@ -41,7 +58,53 @@ const CampaignDetails: React.FC = () => {
       }
     };
     load();
-  }, [id]);
+  }, [id, user]);
+
+  // Persist localLiked when it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('likedCampaigns', JSON.stringify(localLiked));
+    } catch (e) {
+      // ignore
+    }
+  }, [localLiked]);
+
+  // Optimistic toggle handler for like/unlike
+  const handleToggleLike = async () => {
+    if (!id) return;
+    const currentlyLiked = isLiked;
+
+    // optimistic
+    setIsLiked(!currentlyLiked);
+    setLocalLiked(prev => ({ ...prev, [id]: !currentlyLiked }));
+
+    try {
+      const res: any = await campaignService.toggleLike(id, !!currentlyLiked);
+      if (res && res.error) {
+        // rollback
+        setIsLiked(currentlyLiked);
+        setLocalLiked(prev => ({ ...prev, [id]: currentlyLiked }));
+      }
+      if (res && res.data && (res.data as any).campaign) {
+        const updated = (res.data as any).campaign;
+        setCampaign(prev => ({ ...prev, ...updated }));
+        // Update local fallback: remove this id since server is authoritative
+        setLocalLiked(prev => {
+          const next = { ...prev };
+          delete next[id];
+          try { localStorage.setItem('likedCampaigns', JSON.stringify(next)); } catch (e) { /* ignore */ }
+          return next;
+        });
+        // set isLiked from authoritative value
+        setIsLiked(!!updated.analytics?.liked);
+      }
+    } catch (err) {
+      console.error('Like toggle failed:', err);
+      // rollback
+      setIsLiked(currentlyLiked);
+      setLocalLiked(prev => ({ ...prev, [id]: currentlyLiked }));
+    }
+  };
 
   if (loading) {
     return (
@@ -118,10 +181,10 @@ const CampaignDetails: React.FC = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setIsLiked(!isLiked)}
+                      onClick={handleToggleLike}
                       className={isLiked ? 'text-red-600' : ''}
                     >
-                      <Heart className={`h-4 w-4 mr-2 ${isLiked ? 'fill-current' : ''}`} />
+                      <Heart className="h-4 w-4 mr-2" style={{ fill: isLiked ? 'currentColor' : 'none' }} />
                       {isLiked ? 'Liked' : 'Like'}
                     </Button>
                     <Button variant="outline" size="sm">

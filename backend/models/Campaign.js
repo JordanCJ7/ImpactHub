@@ -191,6 +191,10 @@ const campaignSchema = new mongoose.Schema({
       type: Number,
       default: 0
     },
+    likes: {
+      type: Number,
+      default: 0
+    },
     conversionRate: {
       type: Number,
       default: 0

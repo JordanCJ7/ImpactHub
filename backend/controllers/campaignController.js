@@ -4,6 +4,31 @@ const Donation = require('../models/Donation');
 const User = require('../models/User');
 const AuditLog = require('../models/AuditLog');
 const Notification = require('../models/Notification');
+const jwt = require('jsonwebtoken');
+
+// Helper: try to get user (minimal fields) from Authorization header if present
+const getUserFromReq = async (req) => {
+  try {
+    const header = req.header('Authorization');
+    if (!header) {
+      if (process.env.NODE_ENV !== 'production') console.debug('getUserFromReq: no Authorization header');
+      return null;
+    }
+    const token = header.replace('Bearer ', '');
+    if (!token) return null;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const userId = decoded.id || decoded.userId;
+    if (!userId) return null;
+    const user = await User.findById(userId).select('supportedCampaigns');
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug('getUserFromReq: decoded userId=', userId, 'supportedCampaignsCount=', (user && user.supportedCampaigns) ? user.supportedCampaigns.length : 0);
+    }
+    return user;
+  } catch (err) {
+    if (process.env.NODE_ENV !== 'production') console.debug('getUserFromReq: token decode error', err && err.message);
+    return null;
+  }
+};
 
 // Get all campaigns with filtering and pagination
 const getAllCampaigns = async (req, res) => {
@@ -49,6 +74,34 @@ const getAllCampaigns = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .select('-impactReports'); // Exclude detailed reports for listing
+
+    // If request has a token, mark campaigns liked by this user
+    try {
+      const user = await getUserFromReq(req);
+      if (user) {
+        const ids = (user.supportedCampaigns || []).map(id => id.toString());
+        if (process.env.NODE_ENV !== 'production') console.debug('getAllCampaigns: marking liked for user', user._id ? user._id.toString() : '(unknown)', 'likedCount=', ids.length);
+        // convert docs to plain objects and set analytics.liked
+        const campaignsWithLiked = campaigns.map(c => {
+          const obj = c.toObject ? c.toObject() : c;
+          obj.analytics = obj.analytics || {};
+          obj.analytics.liked = ids.includes(obj._id.toString());
+          return obj;
+        });
+
+        return res.json({
+          campaigns: campaignsWithLiked,
+          pagination: {
+            current: page,
+            pages: totalPages,
+            total: total
+          }
+        });
+      }
+    } catch (e) {
+      // non-fatal: fall through to return campaigns as-is
+      if (process.env.NODE_ENV !== 'production') console.debug('getAllCampaigns: error marking liked campaigns', e && e.message);
+    }
     
     const total = await Campaign.countDocuments(filter);
     const totalPages = Math.ceil(total / limit);
@@ -70,7 +123,9 @@ const getAllCampaigns = async (req, res) => {
 // Search campaigns
 const searchCampaigns = async (req, res) => {
   try {
-    const { q, category, minAmount, maxAmount } = req.query;
+    // accept both `q` and `search` query params from different clients
+    const q = req.query.q || req.query.search;
+    const { category, minAmount, maxAmount } = req.query;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 12;
     const skip = (page - 1) * limit;
@@ -107,6 +162,34 @@ const searchCampaigns = async (req, res) => {
     const total = await Campaign.countDocuments(filter);
     const totalPages = Math.ceil(total / limit);
     
+    // Try to mark liked campaigns for requesting user (if token present)
+    try {
+      const user = await getUserFromReq(req);
+      if (user && user.supportedCampaigns && user.supportedCampaigns.length > 0) {
+        const ids = user.supportedCampaigns.map(id => id.toString());
+        const campaignsWithLiked = campaigns.map(c => {
+          const obj = c.toObject ? c.toObject() : c;
+          obj.analytics = obj.analytics || {};
+          obj.analytics.liked = ids.includes(obj._id.toString());
+          return obj;
+        });
+
+        return res.json({
+          campaigns: campaignsWithLiked,
+          pagination: {
+            current: page,
+            pages: totalPages,
+            total: total
+          },
+          query: q || '',
+          filters: { category, minAmount, maxAmount }
+        });
+      }
+    } catch (e) {
+      // non-fatal - fallthrough to return campaigns as-is
+      console.error('Error marking liked campaigns in search:', e);
+    }
+
     res.json({
       campaigns,
       pagination: {
@@ -183,7 +266,20 @@ const getCampaignById = async (req, res) => {
       return res.status(404).json({ error: 'Campaign not found' });
     }
     
-    res.json(campaign);
+    // Attempt to mark liked if token is present
+    try {
+      const user = await getUserFromReq(req);
+      const obj = campaign.toObject ? campaign.toObject() : campaign;
+      obj.analytics = obj.analytics || {};
+      if (user && user.supportedCampaigns && user.supportedCampaigns.find(id => id.toString() === obj._id.toString())) {
+        obj.analytics.liked = true;
+      } else {
+        obj.analytics.liked = obj.analytics.liked || false;
+      }
+      return res.json(obj);
+    } catch (e) {
+      return res.json(campaign);
+    }
   } catch (error) {
     console.error('Error fetching campaign:', error);
     res.status(500).json({ error: 'Failed to fetch campaign' });
@@ -887,13 +983,27 @@ const getSupportedCampaigns = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
+    // Use the user's supportedCampaigns list when available
+    const user = await User.findById(req.user._id).select('supportedCampaigns');
+    const ids = (user && user.supportedCampaigns) ? user.supportedCampaigns : [];
 
-    // For now, return empty array - would need to implement with donations
-    const campaigns = [];
-    const total = 0;
+    const campaigns = await Campaign.find({ _id: { $in: ids } })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = ids.length;
+
+    // mark all returned campaigns as liked
+    const campaignsWithLiked = campaigns.map(c => {
+      const obj = c.toObject ? c.toObject() : c;
+      obj.analytics = obj.analytics || {};
+      obj.analytics.liked = true;
+      return obj;
+    });
 
     res.json({
-      campaigns,
+      campaigns: campaignsWithLiked,
       pagination: {
         current: page,
         pages: Math.ceil(total / limit),
@@ -905,6 +1015,68 @@ const getSupportedCampaigns = async (req, res) => {
     res.status(500).json({
       error: 'Failed to fetch supported campaigns'
     });
+  }
+};
+
+// Like a campaign (adds to user's supportedCampaigns and increments campaign analytics.likes)
+const likeCampaign = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const campaignId = req.params.id;
+
+    const user = await User.findById(userId);
+    const campaign = await Campaign.findById(campaignId);
+    if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
+
+    // Add to user's supportedCampaigns if not already present
+    if (!user.supportedCampaigns) user.supportedCampaigns = [];
+    if (!user.supportedCampaigns.find(id => id.toString() === campaignId.toString())) {
+      user.supportedCampaigns.push(campaignId);
+      await user.save();
+    }
+
+    // Increment campaign likes
+    campaign.analytics = campaign.analytics || {};
+    campaign.analytics.likes = (campaign.analytics.likes || 0) + 1;
+    await campaign.save();
+    // Return campaign with liked flag for the requesting user
+    const campaignObj = campaign.toObject ? campaign.toObject() : campaign;
+    campaignObj.analytics = campaignObj.analytics || {};
+    campaignObj.analytics.liked = true;
+    res.json({ message: 'Liked', campaign: campaignObj });
+  } catch (error) {
+    console.error('Like campaign error:', error);
+    res.status(500).json({ error: 'Failed to like campaign' });
+  }
+};
+
+// Unlike a campaign (remove from user's supportedCampaigns and decrement likes)
+const unlikeCampaign = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const campaignId = req.params.id;
+
+    const user = await User.findById(userId);
+    const campaign = await Campaign.findById(campaignId);
+    if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
+
+    if (user && user.supportedCampaigns && user.supportedCampaigns.find(id => id.toString() === campaignId.toString())) {
+      user.supportedCampaigns = user.supportedCampaigns.filter(id => id.toString() !== campaignId.toString());
+      await user.save();
+    }
+
+    // Decrement campaign likes (not below 0)
+    campaign.analytics = campaign.analytics || {};
+    campaign.analytics.likes = Math.max(0, (campaign.analytics.likes || 0) - 1);
+    await campaign.save();
+    // Return campaign with liked flag set false for the requesting user
+    const campaignObj = campaign.toObject ? campaign.toObject() : campaign;
+    campaignObj.analytics = campaignObj.analytics || {};
+    campaignObj.analytics.liked = false;
+    res.json({ message: 'Unliked', campaign: campaignObj });
+  } catch (error) {
+    console.error('Unlike campaign error:', error);
+    res.status(500).json({ error: 'Failed to unlike campaign' });
   }
 };
 
@@ -1028,4 +1200,7 @@ module.exports = {
   exportCampaignData,
   getImpactReports,
   incrementShareCount
+  ,
+  likeCampaign,
+  unlikeCampaign
 };

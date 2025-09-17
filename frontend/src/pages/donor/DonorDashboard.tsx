@@ -11,6 +11,8 @@ import { Heart, TrendingUp, Users, Calendar, DollarSign, Award, Bell, Settings, 
 import { FileText } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { donationService, campaignService, analyticsService } from '@/services';
+import { useToast } from '@/hooks/use-toast';
+import { campaignService as campaignServiceDirect } from '@/services/campaigns';
 import type { Donation, UserAnalytics } from '@/services';
 
 const DonorDashboard: React.FC = () => {
@@ -20,6 +22,16 @@ const DonorDashboard: React.FC = () => {
   const [userAnalytics, setUserAnalytics] = useState<UserAnalytics | null>(null);
   const [recentDonations, setRecentDonations] = useState<Donation[]>([]);
   const [supportedCampaigns, setSupportedCampaigns] = useState<any[]>([]);
+  const [localLiked, setLocalLiked] = useState<Record<string, boolean>>(() => {
+    try {
+      const raw = localStorage.getItem('likedCampaigns');
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  });
+  const [likeInflight, setLikeInflight] = useState<Record<string, boolean>>({});
+  const { toast } = useToast();
   const [stats, setStats] = useState({
     totalDonated: 0,
     campaignsSupported: 0,
@@ -89,6 +101,86 @@ const DonorDashboard: React.FC = () => {
       setError('Failed to load dashboard data. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // After initial load, merge local liked IDs (fallback) into supportedCampaigns if server returned none for those ids
+  useEffect(() => {
+    const mergeLocalLikes = async () => {
+      try {
+        const likedIds = Object.keys(localLiked).filter(id => localLiked[id]);
+        if (likedIds.length === 0) return;
+
+        // If supportedCampaigns already contains those IDs, nothing to do
+        const missing = likedIds.filter(id => !supportedCampaigns.find(c => c._id === id));
+        if (missing.length === 0) return;
+
+        // Fetch missing campaigns in parallel (lightweight)
+        const fetches = missing.map(id => campaignServiceDirect.getCampaignById(id).then((res:any) => res.data || null).catch(() => null));
+        const results = await Promise.all(fetches);
+        const fetched = results.filter(Boolean);
+        if (fetched.length > 0) {
+          setSupportedCampaigns(prev => [...fetched, ...prev]);
+        }
+      } catch (err) {
+        // non-fatal
+        console.error('Failed merging local liked campaigns:', err);
+      }
+    };
+
+    mergeLocalLikes();
+  }, [localLiked]);
+
+  // Persist localLiked when changed
+  useEffect(() => {
+    try { localStorage.setItem('likedCampaigns', JSON.stringify(localLiked)); } catch (e) { /* ignore */ }
+  }, [localLiked]);
+
+  // Handler to toggle like from dashboard (will update local state and call API)
+  const handleToggleLikeFromDashboard = async (campaignId: string, currentlyLiked: boolean) => {
+    if (!user) {
+      toast({ title: 'Please sign in', description: 'Log in to like campaigns.' });
+      return;
+    }
+
+    if (likeInflight[campaignId]) return; // debounce
+    setLikeInflight(prev => ({ ...prev, [campaignId]: true }));
+
+    // optimistic update in supportedCampaigns
+    setSupportedCampaigns(prev => prev.map(c => c._id === campaignId ? ({ ...c, analytics: { ...c.analytics, liked: !currentlyLiked } }) : c));
+    setLocalLiked(prev => ({ ...prev, [campaignId]: !currentlyLiked }));
+
+    try {
+      const res: any = await campaignService.toggleLike(campaignId, !!currentlyLiked);
+      if (res && res.error) {
+  // rollback
+  setSupportedCampaigns(prev => prev.map(c => c._id === campaignId ? ({ ...c, analytics: { ...c.analytics, liked: currentlyLiked } }) : c));
+  setLocalLiked(prev => ({ ...prev, [campaignId]: currentlyLiked }));
+  toast({ title: 'Like failed', description: 'Failed to update like. Please try again.', variant: 'destructive' });
+      } else if (res && res.data && (res.data as any).campaign) {
+        // merge authoritative campaign
+        const updated = (res.data as any).campaign;
+        setSupportedCampaigns(prev => prev.map(c => c._id === campaignId ? ({ ...c, ...updated }) : c));
+        // Update local fallback: remove only this id
+        setLocalLiked(prev => {
+          const next = { ...prev };
+          delete next[campaignId];
+          try { localStorage.setItem('likedCampaigns', JSON.stringify(next)); } catch (e) { /* ignore */ }
+          return next;
+        });
+      }
+    } catch (err) {
+      console.error('Error toggling like from dashboard:', err);
+  // rollback
+  setSupportedCampaigns(prev => prev.map(c => c._id === campaignId ? ({ ...c, analytics: { ...c.analytics, liked: currentlyLiked } }) : c));
+  setLocalLiked(prev => ({ ...prev, [campaignId]: currentlyLiked }));
+  toast({ title: 'Network error', description: 'Network error while updating like', variant: 'destructive' });
+    } finally {
+      setLikeInflight(prev => {
+        const next = { ...prev };
+        delete next[campaignId];
+        return next;
+      });
     }
   };
 
@@ -278,11 +370,26 @@ const DonorDashboard: React.FC = () => {
                             <p className="text-sm text-blue-600 mt-2">Latest: {campaign.lastUpdate}</p>
                           )}
                         </div>
-                        <Button variant="outline" size="sm" asChild>
-                          <Link to={`/campaigns/${campaign._id}`}>
-                            <ArrowRight className="h-4 w-4" />
-                          </Link>
-                        </Button>
+                        <div className="flex flex-col items-end space-y-2">
+                          <Button
+                            variant={((campaign.analytics as any)?.liked ?? localLiked[campaign._id]) ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => handleToggleLikeFromDashboard(campaign._id, !!((campaign.analytics as any)?.liked ?? localLiked[campaign._id]))}
+                            disabled={!!likeInflight[campaign._id]}
+                          >
+                            <Heart
+                              className="h-4 w-4 mr-2"
+                              style={{ fill: ((campaign.analytics as any)?.liked ?? localLiked[campaign._id]) ? 'currentColor' : 'none' }}
+                            />
+                            {((campaign.analytics as any)?.liked ?? localLiked[campaign._id]) ? 'Liked' : 'Like'}
+                          </Button>
+
+                          <Button variant="outline" size="sm" asChild>
+                            <Link to={`/campaigns/${campaign._id}`}>
+                              <ArrowRight className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                        </div>
                       </div>
                     ))
                   ) : (

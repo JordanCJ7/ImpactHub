@@ -38,8 +38,11 @@ class ApiService {
       'Content-Type': 'application/json',
     };
 
-    if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`;
+    // If the in-memory token is not set, pick up any token from localStorage.
+    // This helps in cases where the ApiService instance was created before auth completed.
+    const token = this.token || localStorage.getItem('auth_token');
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
     }
 
     return headers;
@@ -56,6 +59,13 @@ class ApiService {
         headers: this.getHeaders(),
         ...options,
       };
+
+      // Development: log outgoing requests and headers for debugging auth issues
+      if (process.env.NODE_ENV === 'development') {
+        try {
+          console.debug('API request ->', { url, headers: config.headers });
+        } catch (e) { /* ignore logging errors */ }
+      }
 
       const response = await fetch(url, config);
       const data = await response.json();

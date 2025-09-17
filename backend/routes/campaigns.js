@@ -77,6 +77,10 @@ router.get('/:id/analytics', campaignController.getCampaignAnalytics);
 // Campaign interaction (view tracking)
 router.post('/:id/view', campaignController.recordView);
 router.post('/:id/share', campaignController.recordShare);
+// Like / Unlike endpoints (donors only)
+// Like / Unlike endpoints (donors only) - ensure auth runs before authorize so req.user is set
+router.post('/:id/like', auth, authorize(['donor', 'campaign-leader', 'admin']), campaignController.likeCampaign);
+router.delete('/:id/like', auth, authorize(['donor', 'campaign-leader', 'admin']), campaignController.unlikeCampaign);
 
 // Protected routes
 router.use(auth); // All routes below require authentication
