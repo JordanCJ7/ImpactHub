@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,51 +12,64 @@ import { Heart, Share2, Flag, Users, Clock, MapPin, CheckCircle, Calendar, Trend
 const CampaignDetails: React.FC = () => {
   const { id } = useParams();
   const [isLiked, setIsLiked] = useState(false);
+  const [campaign, setCampaign] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  // Mock campaign data - in real app, fetch based on ID
-  const campaign = {
-    id: 1,
-    title: "Clean Water for Rural Communities",
-    description: "Providing clean drinking water access to 10,000 people in remote villages through well construction and water purification systems.",
-    image: "/images/CleanWater.jpg",
-    raised: 75420,
-    goal: 100000,
-    donors: 1247,
-    daysLeft: 23,
-    category: "Health & Medical",
-    location: "Thanamalvila , Monaragala",
-    organizer: {
-      name: "Water for Life Foundation",
-      avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&crop=face",
-      verified: true,
-      description: "A non-profit organization dedicated to providing clean water access to underserved communities worldwide.",
-      founded: "2015",
-      projectsCompleted: 127
-    },
-    updates: [
-      {
-        id: 1,
-        title: "First Well Successfully Drilled!",
-        content: "Great news! We've completed drilling our first well in Kimani village. The water quality tests came back excellent, and the community is already benefiting from clean water access.",
-        date: "2024-01-15",
-        images: ["https://images.unsplash.com/photo-1590736969955-71cc94901144?w=400&h=300&fit=crop"]
-      },
-      {
-        id: 2,
-        title: "Solar Pump Installation Progress",
-        content: "Our team has installed solar-powered pumps in 3 locations. These sustainable systems will ensure reliable water access even during dry seasons.",
-        date: "2024-01-10",
-        images: ["https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400&h=300&fit=crop"]
+  const progressPercentage = campaign ? (campaign.raised / campaign.goal) * 100 : 0;
+  const daysLeft = campaign ? Math.max(0, Math.ceil((new Date(campaign.endDate).getTime() - Date.now()) / (1000*60*60*24))) : 0;
+
+  useEffect(() => {
+    const load = async () => {
+      if (!id) return;
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await (await import('@/services/campaigns')).campaignService.getCampaignById(id);
+        if (res.error) {
+          setError(res.error);
+          setCampaign(null);
+        } else {
+          setCampaign(res.data || res);
+        }
+      } catch (err) {
+        console.error('Failed to load campaign:', err);
+        setError('Failed to load campaign.');
+      } finally {
+        setLoading(false);
       }
-    ],
-    recentDonors: [
-      { name: "Kamani W.", amount: 5000, time: "2 hours ago", avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=50&h=50&fit=crop&crop=face" },
-      { name: "Minsara K.", amount: 2500, time: "5 hours ago", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop&crop=face" },
-      { name: "Eshini L.", amount: 1500, time: "1 day ago", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&h=50&fit=crop&crop=face" }
-    ]
-  };
+    };
+    load();
+  }, [id]);
 
-  const progressPercentage = (campaign.raised / campaign.goal) * 100;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <svg className="animate-spin h-8 w-8 text-indigo-600 mx-auto" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+          </svg>
+          <div className="mt-2 text-gray-600">Loading campaign...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !campaign) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-gray-900">Campaign not found</h3>
+          <p className="text-gray-600 mt-2">{error || 'This campaign may have been removed or is unavailable.'}</p>
+          <div className="mt-4">
+            <Button onClick={() => navigate('/campaigns')}>Back to campaigns</Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -79,9 +92,9 @@ const CampaignDetails: React.FC = () => {
             {/* Campaign Header */}
             <Card>
               <div className="relative">
-                <img src={campaign.image} alt={campaign.title} className="w-full h-64 md:h-80 object-cover rounded-t-lg" />
+                <img src={campaign.images && campaign.images.length > 0 ? (typeof campaign.images[0] === 'string' ? (campaign.images[0].startsWith('http') ? campaign.images[0] : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${campaign.images[0]}`) : campaign.images[0].url) : '/images/CleanWater.jpg'} alt={campaign.title} className="w-full h-64 md:h-80 object-cover rounded-t-lg" />
                 <div className="absolute top-4 left-4 flex gap-2">
-                  <Badge className="bg-green-600 text-white">Verified</Badge>
+                  {campaign.verified && <Badge className="bg-green-600 text-white">Verified</Badge>}
                   <Badge className="bg-blue-600 text-white">{campaign.category}</Badge>
                 </div>
               </div>
@@ -93,11 +106,11 @@ const CampaignDetails: React.FC = () => {
                     <div className="flex items-center space-x-4 text-sm text-gray-600">
                       <div className="flex items-center space-x-1">
                         <MapPin className="h-4 w-4" />
-                        <span>{campaign.location}</span>
+                        <span>{campaign.location ? (typeof campaign.location === 'string' ? campaign.location : [campaign.location.city, campaign.location.state, campaign.location.country].filter(Boolean).join(', ')) : ''}</span>
                       </div>
                       <div className="flex items-center space-x-1">
                         <Clock className="h-4 w-4" />
-                        <span>{campaign.daysLeft} days left</span>
+                        <span>{Math.max(0, Math.ceil((new Date(campaign.endDate).getTime() - Date.now()) / (1000*60*60*24)))} days left</span>
                       </div>
                     </div>
                   </div>
@@ -130,14 +143,14 @@ const CampaignDetails: React.FC = () => {
                 <CardHeader>
                   <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="story">Story</TabsTrigger>
-                    <TabsTrigger value="updates">Updates ({campaign.updates.length})</TabsTrigger>
-                    <TabsTrigger value="donors">Donors ({campaign.donors})</TabsTrigger>
+                    <TabsTrigger value="updates">Updates ({(campaign.updates || []).length})</TabsTrigger>
+                    <TabsTrigger value="donors">Donors ({campaign.analytics?.donorCount ?? campaign.donors ?? 0})</TabsTrigger>
                   </TabsList>
                 </CardHeader>
                 
                 <CardContent>
                   <TabsContent value="story" className="space-y-6">
-                    <div className="prose max-w-none">
+                      <div className="prose max-w-none">
                       <p className="text-lg text-gray-700 mb-6">{campaign.description}</p>
                       
                       <h3 className="text-xl font-semibold mb-4">About This Campaign</h3>
@@ -167,21 +180,21 @@ const CampaignDetails: React.FC = () => {
                   </TabsContent>
                   
                   <TabsContent value="updates" className="space-y-6">
-                    {campaign.updates.map((update) => (
-                      <div key={update.id} className="border-b pb-6 last:border-b-0">
+                    {(campaign.updates || []).map((update: any) => (
+                      <div key={update._id || update.id} className="border-b pb-6 last:border-b-0">
                         <div className="flex items-center space-x-2 mb-3">
                           <Calendar className="h-4 w-4 text-gray-500" />
-                          <span className="text-sm text-gray-500">{update.date}</span>
+                          <span className="text-sm text-gray-500">{new Date(update.createdAt || update.date).toLocaleDateString()}</span>
                         </div>
                         <h4 className="text-lg font-semibold mb-3">{update.title}</h4>
                         <p className="text-gray-700 mb-4">{update.content}</p>
-                        {update.images.length > 0 && (
+                        {(update.images || []).length > 0 && (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {update.images.map((image, index) => (
+                            {(update.images || []).map((image: string, index: number) => (
                               <img
                                 key={index}
-                                src={image}
-                                alt={`Update ${update.id} image ${index + 1}`}
+                                src={image.startsWith('http') ? image : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${image}`}
+                                alt={`Update ${update._id || update.id} image ${index + 1}`}
                                 className="rounded-lg w-full h-48 object-cover"
                               />
                             ))}
@@ -192,16 +205,16 @@ const CampaignDetails: React.FC = () => {
                   </TabsContent>
                   
                   <TabsContent value="donors" className="space-y-4">
-                    {campaign.recentDonors.map((donor, index) => (
+                    {((campaign.recentDonors && campaign.recentDonors.length > 0) ? campaign.recentDonors : (campaign.analytics && campaign.analytics.recentDonors) || []).map((donor: any, index: number) => (
                       <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center space-x-3">
                           <Avatar>
-                            <AvatarImage src={donor.avatar} alt={donor.name} />
-                            <AvatarFallback>{donor.name.charAt(0)}</AvatarFallback>
+                            <AvatarImage src={donor.avatar ? (donor.avatar.startsWith('http') ? donor.avatar : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${donor.avatar}`) : undefined} alt={donor.name} />
+                            <AvatarFallback>{donor.name?.charAt(0) || 'D'}</AvatarFallback>
                           </Avatar>
                           <div>
                             <div className="font-medium">{donor.name}</div>
-                            <div className="text-sm text-gray-500">{donor.time}</div>
+                            <div className="text-sm text-gray-500">{donor.time || new Date(donor.createdAt || Date.now()).toLocaleString()}</div>
                           </div>
                         </div>
                         <div className="text-lg font-semibold text-green-600">
@@ -232,18 +245,18 @@ const CampaignDetails: React.FC = () => {
                 <Progress value={progressPercentage} className="h-3" />
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>{Math.round(progressPercentage)}% funded</span>
-                  <span>{campaign.daysLeft} days left</span>
+                  <span>{daysLeft} days left</span>
                 </div>
               </CardHeader>
               
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div>
-                    <div className="text-2xl font-bold text-gray-900">{campaign.donors}</div>
+                    <div className="text-2xl font-bold text-gray-900">{campaign.analytics?.donorCount ?? campaign.donors ?? 0}</div>
                     <div className="text-sm text-gray-600">donors</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-gray-900">{campaign.daysLeft}</div>
+                    <div className="text-2xl font-bold text-gray-900">{daysLeft}</div>
                     <div className="text-sm text-gray-600">days left</div>
                   </div>
                 </div>
@@ -251,7 +264,7 @@ const CampaignDetails: React.FC = () => {
                 <Separator />
                 
                 <Button asChild className="w-full" size="lg">
-                  <Link to={`/donate/${campaign.id}`}>
+                  <Link to={`/donate/${campaign._id || campaign.id}`}>
                     Donate Now
                   </Link>
                 </Button>
@@ -271,20 +284,20 @@ const CampaignDetails: React.FC = () => {
               <CardContent>
                 <div className="flex items-start space-x-3">
                   <Avatar>
-                    <AvatarImage src={campaign.organizer.avatar} alt={campaign.organizer.name} />
-                    <AvatarFallback>{campaign.organizer.name.charAt(0)}</AvatarFallback>
+                    <AvatarImage src={campaign.organizer?.avatar ? (campaign.organizer.avatar.startsWith('http') ? campaign.organizer.avatar : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${campaign.organizer.avatar}`) : undefined} alt={campaign.organizer?.name || 'Organizer'} />
+                    <AvatarFallback>{campaign.organizer?.name?.charAt(0) || 'O'}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
                     <div className="flex items-center space-x-2">
-                      <h4 className="font-semibold">{campaign.organizer.name}</h4>
-                      {campaign.organizer.verified && (
+                      <h4 className="font-semibold">{campaign.organizer?.name || 'Organizer'}</h4>
+                      {campaign.organizer?.verified && (
                         <CheckCircle className="h-4 w-4 text-green-600" />
                       )}
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">{campaign.organizer.description}</p>
+                    <p className="text-sm text-gray-600 mt-1">{campaign.organizer?.description}</p>
                     <div className="flex items-center space-x-4 mt-3 text-sm text-gray-500">
-                      <span>Founded {campaign.organizer.founded}</span>
-                      <span>{campaign.organizer.projectsCompleted} projects completed</span>
+                      <span>Founded {campaign.organizer?.founded}</span>
+                      <span>{campaign.organizer?.projectsCompleted ?? 0} projects completed</span>
                     </div>
                   </div>
                 </div>

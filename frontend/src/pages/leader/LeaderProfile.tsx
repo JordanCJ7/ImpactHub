@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -94,25 +95,25 @@ const LeaderProfile: React.FC = () => {
         leaderLevel: 'Rising Star'
       });
 
-      // Load campaign history (placeholder for now)
-      setCampaignHistory([
-        {
-          id: 1,
-          title: "Clean Water for Rural Communities",
-          status: "Active",
-          raised: 8500,
-          goal: 15000,
-          date: "2024-01-15"
-        },
-        {
-          id: 2,
-          title: "Education Support Program",
-          status: "Completed",
-          raised: 6500,
-          goal: 6000,
-          date: "2023-11-20"
+      // Load campaign history from API for this leader
+      try {
+        const myCampaignsRes = await campaignService.getMyCampaigns(1, 20);
+        if (!myCampaignsRes.error && myCampaignsRes.data && Array.isArray(myCampaignsRes.data.campaigns)) {
+          setCampaignHistory(myCampaignsRes.data.campaigns);
+          setStats(prev => ({
+            ...prev,
+            totalRaised: myCampaignsRes.data.campaigns.reduce((acc: number, c: any) => acc + (c.raised || 0), 0),
+            campaignCount: myCampaignsRes.data.campaigns.length,
+            activeCampaigns: myCampaignsRes.data.campaigns.filter((c: any) => c.status === 'active').length
+          }));
+        } else {
+          // fallback to empty
+          setCampaignHistory([]);
         }
-      ]);
+      } catch (campErr) {
+        console.error('Failed to load leader campaigns:', campErr);
+        setCampaignHistory([]);
+      }
 
     } catch (err) {
       console.error('Error loading profile data:', err);
@@ -535,8 +536,8 @@ const LeaderProfile: React.FC = () => {
                           </span>
                         </div>
                       </div>
-                      <Button variant="outline" size="sm">
-                        View Details
+                      <Button asChild variant="outline" size="sm">
+                        <Link to={`/campaigns/${campaign._id || campaign.id}`}>View Details</Link>
                       </Button>
                     </div>
                   ))}
