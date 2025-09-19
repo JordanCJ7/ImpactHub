@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileText, Search } from 'lucide-react';
 import { campaignService, type DraftCampaignSummary } from '@/services/campaigns';
+import { useToast } from '@/hooks/use-toast';
 
 const LeaderDrafts: React.FC = () => {
   const [drafts, setDrafts] = useState<DraftCampaignSummary[]>([]);
@@ -27,6 +28,38 @@ const LeaderDrafts: React.FC = () => {
     };
     load();
   }, []);
+
+  const { toast } = useToast();
+
+  const reload = async () => {
+    try {
+      setLoading(true);
+      const res = await campaignService.getMyDrafts();
+      if (!(res as any).error) {
+        setDrafts((res as any).data?.drafts || []);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const ok = window.confirm('Delete this draft? This action cannot be undone.');
+    if (!ok) return;
+    try {
+      setLoading(true);
+      const res = await campaignService.deleteDraft(id);
+      if ((res as any)?.error) {
+        throw new Error((res as any).error || 'Failed to delete draft');
+      }
+      toast({ title: 'Deleted', description: 'Draft removed successfully.' });
+      await reload();
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to delete draft.', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filtered = drafts
     .filter((d) => {
@@ -117,6 +150,9 @@ const LeaderDrafts: React.FC = () => {
                       )}
                       <Button variant="outline" size="sm" asChild>
                         <Link to={`/leader/create?draft=${d._id}`}>Continue</Link>
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(d._id)}>
+                        Delete
                       </Button>
                     </div>
                   </div>

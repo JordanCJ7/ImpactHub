@@ -988,17 +988,33 @@ const getDraftCampaigns = async (req, res) => {
   }
 };
 
-// Delete campaign (placeholder)
+// Delete campaign
 const deleteCampaign = async (req, res) => {
   try {
-    res.status(501).json({
-      error: 'Campaign deletion not yet implemented'
-    });
+    const campaignId = req.params.id;
+
+    const campaign = await Campaign.findById(campaignId);
+    if (!campaign) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+
+    // Allow deletion by admin or the campaign creator (owner)
+    const userId = req.user && (req.user._id || req.user.id);
+    const isAdmin = req.user && req.user.role === 'admin';
+    const isOwner = userId && campaign.creator && campaign.creator.toString() === userId.toString();
+
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ error: 'Not authorized to delete this campaign' });
+    }
+
+    await Campaign.findByIdAndDelete(campaignId);
+
+    // TODO: consider cascading deletes for related resources (images, donations, updates)
+
+    res.json({ message: 'Campaign deleted successfully' });
   } catch (error) {
     console.error('Delete campaign error:', error);
-    res.status(500).json({
-      error: 'Failed to delete campaign'
-    });
+    res.status(500).json({ error: 'Failed to delete campaign' });
   }
 };
 

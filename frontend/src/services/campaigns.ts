@@ -391,6 +391,11 @@ class CampaignService {
     return apiService.get<{ drafts: DraftCampaignSummary[] }>(`/campaigns/user/drafts?_=${ts}`);
   }
 
+  // Delete a draft (campaign leader or admin)
+  async deleteDraft(id: string) {
+    return apiService.delete(`/campaigns/${id}`);
+  }
+
   async publishCampaign(id: string, data?: Partial<CreateCampaignData>) {
     // Update with any provided data and set status active
     return apiService.put(`/campaigns/${id}`, { ...(data || {}), status: 'active' });
