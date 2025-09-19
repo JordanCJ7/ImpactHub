@@ -169,16 +169,7 @@ const LeaderDashboard: React.FC = () => {
                   Create Campaign
                 </Link>
               </Button>
-              {/* Test button for edit route */}
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  console.log('Test edit route');
-                  window.location.href = '/leader/edit/test123';
-                }}
-              >
-                Test Edit
-              </Button>
+              {/* header actions */}
             </div>
           </div>
         </div>
@@ -263,15 +254,10 @@ const LeaderDashboard: React.FC = () => {
                               <Eye className="h-4 w-4" />
                             </Link>
                           </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => {
-                              console.log('Edit button clicked for campaign:', campaign.id, campaign.title);
-                              window.location.href = `/leader/edit/${campaign.id}`;
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
+                          <Button variant="outline" size="sm" asChild>
+                            <Link to={`/leader/edit/${campaign.id}`}>
+                              <Edit className="h-4 w-4" />
+                            </Link>
                           </Button>
                         </div>
                       </div>
