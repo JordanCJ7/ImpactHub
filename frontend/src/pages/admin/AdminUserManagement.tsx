@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { adminService } from '@/services/admin';
 import type { User } from '@/services/admin';
 
@@ -10,6 +12,8 @@ const AdminUserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'active' | 'blocked'>('all');
+  const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'campaign-leader' | 'donor'>('all');
 
   useEffect(() => {
     loadUsers();
@@ -44,9 +48,21 @@ const AdminUserManagement = () => {
   };
 
   const filteredUsers = Array.isArray(users) ? users.filter(user => {
-    if (filter === 'all') return true;
-    if (filter === 'active') return user.isActive && !user.isBanned;
-    if (filter === 'blocked') return user.isBanned || !user.isActive;
+    // Status filter
+    if (filter === 'active' && !(user.isActive && !user.isBanned)) return false;
+    if (filter === 'blocked' && !(user.isBanned || !user.isActive)) return false;
+
+    // Role filter
+    if (roleFilter !== 'all' && user.role !== roleFilter) return false;
+
+    // Search filter (name or email)
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      const matchesName = user.name?.toLowerCase().includes(q);
+      const matchesEmail = user.email?.toLowerCase().includes(q);
+      if (!matchesName && !matchesEmail) return false;
+    }
+
     return true;
   }) : [];
 
@@ -79,6 +95,34 @@ const AdminUserManagement = () => {
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-6">User Management</h1>
       
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex items-center gap-3 w-full md:w-1/2">
+          <Input
+            placeholder="Search users by name or email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full"
+          />
+        </div>
+
+        <div className="flex items-center gap-3 w-full md:w-1/3">
+          <Select value={roleFilter} onValueChange={(value) => setRoleFilter(value as any)}>
+            <SelectTrigger className="w-full">
+              <SelectValue>{roleFilter === 'all' ? 'All roles' : roleFilter}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All roles</SelectItem>
+              <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="campaign-leader">Campaign Leader</SelectItem>
+              <SelectItem value="donor">Donor</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+      </div>
+
+      <br />
+
       <Tabs value={filter} onValueChange={(value) => setFilter(value as any)}>
         <TabsList>
           <TabsTrigger value="all">All Users</TabsTrigger>
