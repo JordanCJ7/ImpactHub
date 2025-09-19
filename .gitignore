@@ -82,7 +82,6 @@ dist
 
 # Gatsby files
 .cache/
-# public
 
 # Vuepress build output
 .vuepress/dist
@@ -134,7 +133,7 @@ backend/data/
 *.sqlite
 
 # Uploads
-backend/uploads/
+# backend/uploads/
 backend/public/uploads/
 
 # IDE and Editor files
