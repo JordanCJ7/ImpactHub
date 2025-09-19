@@ -1,25 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+// Removed unused Tabs/Badge imports
 import { Progress } from '@/components/ui/progress';
 import { 
   Upload, 
   Save, 
-  Eye, 
   ArrowLeft, 
   ArrowRight, 
   CheckCircle,
   AlertCircle,
   Camera,
   X,
-  Plus,
   Loader2
 } from 'lucide-react';
 import { campaignService } from '@/services/campaigns';
@@ -29,12 +26,14 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const CreateCampaign: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
   const [uploadedImages, setUploadedImages] = useState<Array<{
     filename: string;
     url: string;
@@ -89,6 +88,50 @@ const CreateCampaign: React.FC = () => {
       }));
     }
   }, [user]);
+
+  // Load draft if provided via query param
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const draftId = params.get('draft');
+    if (draftId) {
+      (async () => {
+        try {
+          const res = await campaignService.getCampaignById(draftId);
+          const c = (res as any).data || res;
+          if (c && (c.status === 'draft' || c.status === 'active')) {
+            setCurrentDraftId(draftId);
+            // Map API campaign to form fields
+            setFormData(prev => ({
+              ...prev,
+              title: c.title || '',
+              description: c.description || '',
+              shortDescription: c.shortDescription || '',
+              story: c.story || '',
+              goal: (c.goal ?? c.targetAmount ?? '').toString(),
+              category: c.category || '',
+              endDate: c.endDate ? new Date(c.endDate).toISOString().slice(0,10) : '',
+              location: typeof c.location === 'string' ? { country: '', state: '', city: c.location } : (c.location || { country: '', state: '', city: '' }),
+              images: Array.isArray(c.images) ? (typeof c.images[0] === 'string' ? c.images : c.images.map((img: any) => img.url)) : [],
+              tags: c.tags || [],
+              beneficiaries: c.beneficiaries || { count: 0, description: '' },
+              organizationName: c.organizationName || prev.organizationName,
+              organizationEmail: c.organizationEmail || prev.organizationEmail,
+              timeline: c.timeline || '',
+              budget: c.budget || '',
+              risks: c.risks || '',
+              features: c.features || prev.features,
+              seo: c.seo || prev.seo
+            }));
+            // Also set uploadedImages from urls for display/removal consistency
+            const urls = Array.isArray(c.images) ? (typeof c.images[0] === 'string' ? c.images : c.images.map((img: any) => img.url)) : [];
+            setUploadedImages(urls.map((url: string) => ({ filename: url.split('/').pop() || url, url, originalName: url.split('/').pop() || 'image', size: 0 })));
+          }
+        } catch (e) {
+          // ignore
+        }
+      })();
+    }
+  }, [location.search]);
 
   const steps = [
     { title: 'Basic Info', description: 'Campaign title, goal, and category' },
@@ -240,43 +283,7 @@ const CreateCampaign: React.FC = () => {
 
   const handleSubmit = async () => {
     // Validate all steps against backend rules before submitting
-    const errors: string[] = [];
-    if (!(formData.title && formData.title.trim().length >= 10 && formData.title.trim().length <= 100)) {
-      errors.push('Title must be between 10 and 100 characters.');
-    }
-    if (!(formData.description && formData.description.trim().length >= 50 && formData.description.trim().length <= 5000)) {
-      errors.push('Description must be between 50 and 5000 characters.');
-    }
-    if (!formData.organizationName || formData.organizationName.trim().length < 2) {
-      errors.push('Organization name is required and must be at least 2 characters.');
-    }
-    if (!formData.organizationEmail || !formData.organizationEmail.includes('@')) {
-      errors.push('Valid organization email is required.');
-    }
-    const goalNumber = parseFloat(formData.goal);
-    if (!(formData.goal && !Number.isNaN(goalNumber) && goalNumber >= 100)) {
-      errors.push('Goal must be a valid number and at least 100.');
-    }
-    if (!formData.category) {
-      errors.push('Category is required.');
-    }
-    if (!formData.endDate) {
-      errors.push('End date is required.');
-    } else {
-      const end = new Date(`${formData.endDate}T00:00:00.000Z`);
-      if (Number.isNaN(end.getTime()) || end.getTime() <= Date.now()) {
-        errors.push('End date must be a valid future date.');
-      }
-    }
-    if (!formData.story || formData.story.trim().length < 10) {
-      errors.push('Campaign story is required and must be at least 10 characters.');
-    }
-    if (!formData.timeline || formData.timeline.trim().length < 10) {
-      errors.push('Implementation timeline is required.');
-    }
-    if (!formData.budget || formData.budget.trim().length < 10) {
-      errors.push('Budget breakdown is required.');
-    }
+    const errors = validateAllFields();
 
     if (errors.length > 0) {
       toast({
@@ -321,7 +328,13 @@ const CreateCampaign: React.FC = () => {
         }
       };
 
-      const response = await campaignService.createCampaign(campaignData);
+      let response;
+      if (currentDraftId) {
+        // Publish existing draft
+        response = await campaignService.publishCampaign(currentDraftId, campaignData);
+      } else {
+        response = await campaignService.createCampaign(campaignData);
+      }
 
       if (response.error) {
         const details = (response as any).data?.details || [];
@@ -337,8 +350,8 @@ const CreateCampaign: React.FC = () => {
       }
 
       toast({
-        title: 'Success!',
-        description: 'Your campaign has been created successfully and is pending approval.',
+        title: 'Published!',
+        description: 'Your campaign has been submitted and is now active (pending admin approval workflows).',
       });
 
       navigate('/leader/dashboard');
@@ -359,20 +372,106 @@ const CreateCampaign: React.FC = () => {
     }
   };
 
+  // Centralized validation used for Publish and Save Draft enablement
+  const validateAllFields = (): string[] => {
+    const errors: string[] = [];
+    if (!(formData.title && formData.title.trim().length >= 10 && formData.title.trim().length <= 100)) {
+      errors.push('Title must be between 10 and 100 characters.');
+    }
+    if (!(formData.description && formData.description.trim().length >= 50 && formData.description.trim().length <= 5000)) {
+      errors.push('Description must be between 50 and 5000 characters.');
+    }
+    if (!formData.organizationName || formData.organizationName.trim().length < 2) {
+      errors.push('Organization name is required and must be at least 2 characters.');
+    }
+    if (!formData.organizationEmail || !formData.organizationEmail.includes('@')) {
+      errors.push('Valid organization email is required.');
+    }
+    const goalNumber = parseFloat(formData.goal);
+    if (!(formData.goal && !Number.isNaN(goalNumber) && goalNumber >= 100)) {
+      errors.push('Goal must be a valid number and at least 100.');
+    }
+    if (!formData.category) {
+      errors.push('Category is required.');
+    }
+    if (!formData.endDate) {
+      errors.push('End date is required.');
+    } else {
+      const end = new Date(`${formData.endDate}T00:00:00.000Z`);
+      if (Number.isNaN(end.getTime()) || end.getTime() <= Date.now()) {
+        errors.push('End date must be a valid future date.');
+      }
+    }
+    if (!formData.story || formData.story.trim().length < 10) {
+      errors.push('Campaign story is required and must be at least 10 characters.');
+    }
+    if (!formData.timeline || formData.timeline.trim().length < 10) {
+      errors.push('Implementation timeline is required.');
+    }
+    if (!formData.budget || formData.budget.trim().length < 10) {
+      errors.push('Budget breakdown is required.');
+    }
+    return errors;
+  };
+
   const handleSaveDraft = async () => {
     setIsSavingDraft(true);
     try {
-      // For draft saving, we could implement a separate endpoint
-      // For now, just show a success message
+      const draftPayload: any = {
+        // Send whatever is currently filled; backend accepts partials
+        title: formData.title || undefined,
+        description: formData.description || undefined,
+        shortDescription: formData.shortDescription || undefined,
+        story: formData.story || undefined,
+        goal: formData.goal ? parseFloat(formData.goal) : undefined,
+        category: formData.category || undefined,
+        endDate: formData.endDate ? `${formData.endDate}T00:00:00.000Z` : undefined,
+        location: formData.location?.country || formData.location?.city || formData.location?.state ? {
+          country: formData.location.country,
+          state: formData.location.state,
+          city: formData.location.city,
+        } : undefined,
+        beneficiaries: (formData.beneficiaries.description || formData.beneficiaries.count) ? {
+          count: formData.beneficiaries.count,
+          description: formData.beneficiaries.description
+        } : undefined,
+        images: formData.images && formData.images.length > 0 ? formData.images : undefined,
+        tags: formData.tags && formData.tags.length > 0 ? formData.tags : undefined,
+        organizationName: formData.organizationName || undefined,
+        organizationEmail: formData.organizationEmail || undefined,
+        timeline: formData.timeline || undefined,
+        budget: formData.budget || undefined,
+        risks: formData.risks || undefined,
+        features: formData.features,
+        seo: {
+          metaTitle: formData.seo.metaTitle || undefined,
+          metaDescription: formData.seo.metaDescription || undefined,
+          keywords: formData.seo.keywords && formData.seo.keywords.length > 0 ? formData.seo.keywords : undefined,
+        }
+      };
+
+      let res;
+      if (currentDraftId) {
+        // Save changes to existing draft
+        res = await campaignService.updateCampaign(currentDraftId, draftPayload);
+      } else {
+        res = await campaignService.createDraft(draftPayload);
+        const createdId = (res as any).data?.campaign?._id;
+        if (createdId) setCurrentDraftId(createdId);
+      }
+      if ((res as any)?.error) {
+        throw new Error((res as any).error);
+      }
+
       toast({
-        title: "Draft Saved",
-        description: "Your campaign draft has been saved.",
+        title: 'Draft Saved',
+        description: 'Your campaign draft has been saved. You can continue later from your dashboard.',
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to save draft.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to save draft.',
+        variant: 'destructive',
       });
     } finally {
       setIsSavingDraft(false);
@@ -414,24 +513,7 @@ const CreateCampaign: React.FC = () => {
                 <p className="text-gray-600">Step {currentStep + 1} of {steps.length}: {steps[currentStep].title}</p>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
-              <Button 
-                variant="outline" 
-                onClick={handleSaveDraft}
-                disabled={isSavingDraft || isSubmitting}
-              >
-                {isSavingDraft ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
-                {isSavingDraft ? 'Saving...' : 'Save Draft'}
-              </Button>
-              <Button variant="outline">
-                <Eye className="h-4 w-4 mr-2" />
-                Preview
-              </Button>
-            </div>
+            {/* Removed Save Draft & Preview controls from header */}
           </div>
         </div>
       </div>
@@ -994,17 +1076,32 @@ const CreateCampaign: React.FC = () => {
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           ) : (
-            <Button 
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Upload className="h-4 w-4 mr-2" />
-              )}
-              {isSubmitting ? 'Publishing...' : 'Publish Campaign'}
-            </Button>
+            <div className="flex items-center gap-3">
+              {/* Save Draft only on final step and only when all details are valid */}
+              <Button 
+                variant="outline"
+                onClick={handleSaveDraft}
+                disabled={isSavingDraft || isSubmitting || validateAllFields().length > 0}
+              >
+                {isSavingDraft ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                {isSavingDraft ? 'Saving...' : 'Save Draft'}
+              </Button>
+              <Button 
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4 mr-2" />
+                )}
+                {isSubmitting ? 'Publishing...' : 'Publish Campaign'}
+              </Button>
+            </div>
           )}
         </div>
       </div>

@@ -154,6 +154,17 @@ export interface CampaignAnalytics {
   };
 }
 
+export interface DraftCampaignSummary {
+  _id: string;
+  title?: string;
+  status: 'draft';
+  endDate?: string;
+  goal?: number;
+  category?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 class CampaignService {
   // Get all campaigns
   async getCampaigns(filters?: CampaignFilters) {
@@ -364,6 +375,25 @@ class CampaignService {
   // Reject campaign (admin only)
   async rejectCampaign(id: string, reason: string) {
     return apiService.put(`/campaigns/${id}/reject`, { reason });
+  }
+
+  // Drafts
+  async createDraft(draftData: Partial<CreateCampaignData>) {
+    return apiService.post<{ campaign: { _id: string; status: 'draft'; createdAt: string } }>(
+      '/campaigns/drafts',
+      draftData
+    );
+  }
+
+  async getMyDrafts() {
+    // Add cache buster to avoid stale 304 responses during active editing
+    const ts = Date.now();
+    return apiService.get<{ drafts: DraftCampaignSummary[] }>(`/campaigns/user/drafts?_=${ts}`);
+  }
+
+  async publishCampaign(id: string, data?: Partial<CreateCampaignData>) {
+    // Update with any provided data and set status active
+    return apiService.put(`/campaigns/${id}`, { ...(data || {}), status: 'active' });
   }
 }
 

@@ -1,5 +1,6 @@
 const { validationResult } = require('express-validator');
 const Campaign = require('../models/Campaign');
+const mongoose = require('mongoose');
 const Donation = require('../models/Donation');
 const User = require('../models/User');
 const AuditLog = require('../models/AuditLog');
@@ -517,7 +518,9 @@ const recordShare = async (req, res) => {
   }
 };
 
-// Create campaign
+// Create campaign (Publish new campaign)
+// Note: This endpoint is intended for publishing a full campaign. It will set status to 'active'.
+// Use the dedicated draft endpoints to save partial progress.
 const createCampaign = async (req, res) => {
   try {
     console.log('User:', req.user ? req.user.email : 'null');
@@ -598,7 +601,7 @@ const createCampaign = async (req, res) => {
       organizationEmail: req.user.profile?.organization?.email || req.user.email,
       endDate: endDateObj,
       duration,
-      status: 'draft', // Start as draft, can be activated later
+      status: 'active', // Publish as active by default per requirement
       approvalStatus: 'pending'
     };
 
@@ -721,17 +724,267 @@ const createCampaign = async (req, res) => {
   }
 };
 
-// Update campaign (placeholder)
+// Update campaign (supports continuing a draft or editing by owner/admin)
 const updateCampaign = async (req, res) => {
   try {
-    res.status(501).json({
-      error: 'Campaign update not yet implemented'
+    const campaign = await Campaign.findById(req.params.id);
+    if (!campaign) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+
+    // Only creator or admin can update
+    if (campaign.creator.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to update this campaign' });
+    }
+
+    const {
+      title,
+      description,
+      shortDescription,
+      story,
+      goal,
+      category,
+      images,
+      endDate,
+      location,
+      beneficiaries,
+      tags,
+      organizationName,
+      organizationEmail,
+      timeline,
+      budget,
+      risks,
+      features,
+      seo,
+      status
+    } = req.body;
+
+    const updates = {};
+
+    if (title !== undefined) updates.title = title;
+    if (description !== undefined) updates.description = description;
+    if (shortDescription !== undefined) updates.shortDescription = shortDescription;
+    if (story !== undefined) updates.story = story;
+    if (goal !== undefined) {
+      const parsedGoal = parseFloat(goal);
+      if (isNaN(parsedGoal) || parsedGoal < 100) {
+        return res.status(400).json({ error: 'Goal must be a valid number and at least 100' });
+      }
+      updates.goal = parsedGoal;
+    }
+    if (category !== undefined) updates.category = category;
+    if (endDate !== undefined) {
+      const endDateObj = new Date(endDate);
+      if (isNaN(endDateObj.getTime())) {
+        return res.status(400).json({ error: 'Invalid end date' });
+      }
+      updates.endDate = endDateObj;
+    }
+    if (location !== undefined) {
+      if (location && (location.country || location.city || location.state)) {
+        updates.location = [location.city, location.state, location.country].filter(Boolean).join(', ');
+      } else if (typeof location === 'string') {
+        updates.location = location;
+      }
+    }
+    if (beneficiaries !== undefined) updates.beneficiaries = beneficiaries;
+    if (Array.isArray(tags)) {
+      updates.tags = tags.filter(tag => tag && tag.trim().length > 0).map(tag => tag.trim());
+    }
+    if (organizationName !== undefined) updates.organizationName = organizationName;
+    if (organizationEmail !== undefined) updates.organizationEmail = organizationEmail;
+    if (timeline !== undefined) updates.timeline = timeline;
+    if (budget !== undefined) updates.budget = budget;
+    if (risks !== undefined) updates.risks = risks;
+    if (Array.isArray(images)) {
+      updates.images = images.map((url, index) => ({ url, isPrimary: index === 0 }));
+    }
+    if (features !== undefined) {
+      updates.features = {
+        allowAnonymousDonations: features.allowAnonymousDonations !== false,
+        allowRecurringDonations: features.allowRecurringDonations === true,
+        sendUpdatesToDonors: features.sendUpdatesToDonors !== false,
+        allowComments: features.allowComments !== false
+      };
+    }
+    if (seo !== undefined) {
+      updates.seo = {};
+      if (seo.metaTitle) updates.seo.metaTitle = seo.metaTitle;
+      if (seo.metaDescription) updates.seo.metaDescription = seo.metaDescription;
+      if (seo.keywords && Array.isArray(seo.keywords) && seo.keywords.length > 0) {
+        updates.seo.keywords = seo.keywords.filter(kw => kw && kw.trim().length > 0);
+      }
+    }
+
+    // Handle status transition: allow publishing drafts
+    if (status) {
+      if (status === 'active') {
+        updates.status = 'active';
+      } else if (['draft', 'pending', 'completed', 'suspended', 'cancelled'].includes(status)) {
+        updates.status = status;
+      }
+    }
+
+    const publishingNow = updates.status === 'active';
+    // If saving a draft (not publishing), bypass validation completely using direct update
+    if (campaign.status === 'draft' && !publishingNow) {
+      const now = new Date();
+      const updateDoc = { $set: { ...updates, updatedAt: now } };
+      const updated = await Campaign.findByIdAndUpdate(campaign._id, updateDoc, { new: true, runValidators: false });
+      return res.json({
+        message: 'Campaign updated successfully',
+        campaign: {
+          _id: updated._id,
+          status: updated.status,
+          updatedAt: updated.updatedAt
+        }
+      });
+    }
+
+    // Otherwise perform a normal save with validation (e.g., when publishing)
+    Object.assign(campaign, updates);
+    await campaign.save();
+
+    res.json({
+      message: 'Campaign updated successfully',
+      campaign: {
+        _id: campaign._id,
+        status: campaign.status,
+        updatedAt: campaign.updatedAt
+      }
     });
   } catch (error) {
     console.error('Update campaign error:', error);
-    res.status(500).json({
-      error: 'Failed to update campaign'
+    res.status(500).json({ error: 'Failed to update campaign' });
+  }
+};
+
+// Create a draft campaign (minimal validation, status=draft)
+const createDraftCampaign = async (req, res) => {
+  try {
+    const {
+      title,
+      description,
+      story,
+      goal,
+      category,
+      images,
+      endDate,
+      location,
+      beneficiaries,
+      tags,
+      organizationName,
+      organizationEmail,
+      timeline,
+      budget,
+      risks,
+      features,
+      seo
+    } = req.body;
+
+    const draftData = {
+      // Ensure creator is stored as an ObjectId even when bypassing Mongoose validators
+      creator: (req.user && (req.user._id || req.user.id)) ? new mongoose.Types.ObjectId(req.user._id || req.user.id) : undefined,
+      organizationName: organizationName || req.user.profile?.organization?.name || req.user.organizationName || req.user.name,
+      organizationEmail: organizationEmail || req.user.profile?.organization?.email || req.user.email,
+      status: 'draft',
+      approvalStatus: 'pending'
+    };
+
+    if (title) draftData.title = title;
+    if (description) draftData.description = description;
+    if (story) draftData.story = story;
+    if (goal !== undefined) {
+      const parsedGoal = parseFloat(goal);
+      if (!isNaN(parsedGoal)) draftData.goal = parsedGoal;
+    }
+    if (category) draftData.category = category;
+    if (endDate) {
+      const endDateObj = new Date(endDate);
+      if (!isNaN(endDateObj.getTime())) draftData.endDate = endDateObj;
+    }
+    if (location) {
+      if (location && (location.country || location.city || location.state)) {
+        draftData.location = [location.city, location.state, location.country].filter(Boolean).join(', ');
+      } else if (typeof location === 'string') {
+        draftData.location = location;
+      }
+    }
+    if (beneficiaries) draftData.beneficiaries = beneficiaries;
+    if (Array.isArray(tags)) draftData.tags = tags.filter(t => t && t.trim()).map(t => t.trim());
+    if (Array.isArray(images)) draftData.images = images.map((url, index) => ({ url, isPrimary: index === 0 }));
+    if (timeline) draftData.timeline = timeline;
+    if (budget) draftData.budget = budget;
+    if (risks) draftData.risks = risks;
+    if (features) {
+      draftData.features = {
+        allowAnonymousDonations: features.allowAnonymousDonations !== false,
+        allowRecurringDonations: features.allowRecurringDonations === true,
+        sendUpdatesToDonors: features.sendUpdatesToDonors !== false,
+        allowComments: features.allowComments !== false
+      };
+    }
+    if (seo) {
+      draftData.seo = {};
+      if (seo.metaTitle) draftData.seo.metaTitle = seo.metaTitle;
+      if (seo.metaDescription) draftData.seo.metaDescription = seo.metaDescription;
+      if (seo.keywords && Array.isArray(seo.keywords) && seo.keywords.length > 0) {
+        draftData.seo.keywords = seo.keywords.filter(kw => kw && kw.trim().length > 0);
+      }
+    }
+
+    // Insert draft directly to bypass all Mongoose validations & hooks
+    const now = new Date();
+    draftData.createdAt = now;
+    draftData.updatedAt = now;
+    const insertResult = await Campaign.collection.insertOne(draftData);
+
+    res.status(201).json({
+      message: 'Draft saved',
+      campaign: {
+        _id: insertResult.insertedId,
+        status: 'draft',
+        createdAt: now
+      }
     });
+  } catch (error) {
+    console.error('Create draft error:', error);
+    res.status(500).json({ error: 'Failed to save draft' });
+  }
+};
+
+// Get current user's draft campaigns
+const getDraftCampaigns = async (req, res) => {
+  try {
+    // Support both ObjectId and string forms of creator for historical drafts
+    const rawUserId = (req.user && (req.user._id || req.user.id)) ? (req.user._id || req.user.id).toString() : null;
+
+    const orClauses = [];
+    if (rawUserId) {
+      // Match drafts saved with string creator
+      orClauses.push({ creator: rawUserId });
+      // Match drafts saved with ObjectId creator (most current flow)
+      if (mongoose.isValidObjectId(rawUserId)) {
+        orClauses.push({ creator: new mongoose.Types.ObjectId(rawUserId) });
+      }
+    }
+
+    const query = { status: 'draft' };
+    if (orClauses.length > 0) {
+      query.$or = orClauses;
+    } else {
+      // Should never happen because route is protected, but keep safe default
+      query.creator = null; // yields empty result set without throwing
+    }
+
+    const drafts = await Campaign.find(query)
+      .sort({ updatedAt: -1, createdAt: -1 })
+      .select('title status updatedAt createdAt endDate goal category');
+
+    res.json({ drafts });
+  } catch (error) {
+    console.error('Get drafts error:', error);
+    res.status(500).json({ error: 'Failed to fetch drafts' });
   }
 };
 
@@ -866,7 +1119,7 @@ const addCampaignUpdate = async (req, res) => {
     }
 
     const update = {
-      _id: require('mongoose').Types.ObjectId(),
+      _id: new mongoose.Types.ObjectId(),
       title,
       content,
       images: images || [],
@@ -1240,5 +1493,7 @@ module.exports = {
   incrementShareCount
   ,
   likeCampaign,
-  unlikeCampaign
+  unlikeCampaign,
+  createDraftCampaign,
+  getDraftCampaigns
 };

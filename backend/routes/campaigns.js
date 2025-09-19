@@ -124,6 +124,8 @@ router.get('/trending', campaignController.getTrendingCampaigns);
 router.get('/urgent', campaignController.getUrgentCampaigns);
 router.get('/categories', campaignController.getCampaignsByCategory);
 router.get('/search', campaignController.searchCampaigns);
+// Register authenticated list of drafts BEFORE generic :id route to avoid conflicts
+router.get('/user/drafts', auth, authorize(['campaign-leader', 'admin']), campaignController.getDraftCampaigns);
 router.get('/:id', campaignController.getCampaignById);
 router.get('/:id/updates', campaignController.getCampaignUpdates);
 router.get('/:id/donations', campaignController.getCampaignDonations);
@@ -146,6 +148,14 @@ router.post('/',
   createCampaignValidation, 
   campaignController.createCampaign
 );
+
+// Drafts: create and list
+router.post('/drafts',
+  authorize(['campaign-leader', 'admin']),
+  // Minimal validation for drafts (optional fields allowed)
+  campaignController.createDraftCampaign
+);
+
 
 router.put('/:id', 
   authorize(['campaign-leader', 'admin']), 

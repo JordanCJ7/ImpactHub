@@ -30,6 +30,7 @@ import DonationHistory from './pages/donor/DonationHistory';
 import LeaderDashboard from './pages/leader/LeaderDashboard';
 import LeaderProfile from './pages/leader/LeaderProfile';
 import CreateCampaign from './pages/leader/CreateCampaign';
+import LeaderDrafts from './pages/leader/LeaderDrafts';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -112,6 +113,11 @@ const App = () => (
                     <LeaderProfile />
                   </ProtectedRoute>
                 } />
+                  <Route path="/leader/drafts" element={
+                    <ProtectedRoute allowedRoles={['campaign-leader']}>
+                      <LeaderDrafts />
+                    </ProtectedRoute>
+                  } />
                  <Route path="/leader/create" element={
                    <ProtectedRoute allowedRoles={['campaign-leader']}>
                      <CreateCampaign />

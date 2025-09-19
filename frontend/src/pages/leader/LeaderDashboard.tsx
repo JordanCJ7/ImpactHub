@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,10 +19,31 @@ import {
   BarChart3,
   Clock,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  FileText
 } from 'lucide-react';
+import { campaignService, type DraftCampaignSummary } from '@/services/campaigns';
 
 const LeaderDashboard: React.FC = () => {
+  const [drafts, setDrafts] = useState<DraftCampaignSummary[] | null>(null);
+  const [loadingDrafts, setLoadingDrafts] = useState(false);
+
+  useEffect(() => {
+    const loadDrafts = async () => {
+      try {
+        setLoadingDrafts(true);
+        const res = await campaignService.getMyDrafts();
+        if (!(res as any).error) {
+          setDrafts((res as any).data?.drafts || []);
+        }
+      } catch (e) {
+        setDrafts([]);
+      } finally {
+        setLoadingDrafts(false);
+      }
+    };
+    loadDrafts();
+  }, []);
   const stats = [
     { icon: Target, label: "Active Campaigns", value: "3", change: "+1 this month", color: "text-blue-600" },
     { icon: DollarSign, label: "Total Raised", value: "LKR 47,250", change: "LKR 8,500 this month", color: "text-green-600" },
@@ -282,6 +303,42 @@ const LeaderDashboard: React.FC = () => {
                     View Analytics
                   </Link>
                 </Button>
+
+                {/* Drafts Quick Action */}
+                <div className="pt-2 border-t">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-gray-600" />
+                      <span className="text-sm font-medium">Drafts</span>
+                    </div>
+                    <Button size="sm" variant="link" className="px-0" asChild>
+                      <Link to="/leader/drafts">View all drafts</Link>
+                    </Button>
+                  </div>
+                  {loadingDrafts ? (
+                    <div className="text-sm text-gray-500">Loading drafts...</div>
+                  ) : drafts && drafts.length > 0 ? (
+                    <div className="space-y-2">
+                      {drafts.map((d) => {
+                        const updated = d.updatedAt ? new Date(d.updatedAt) : (d.createdAt ? new Date(d.createdAt) : null);
+                        const updatedLabel = updated && !isNaN(updated.getTime()) ? updated.toLocaleDateString() : 'N/A';
+                        return (
+                          <div key={d._id} className="flex items-center justify-between text-sm p-2 rounded hover:bg-gray-50">
+                            <div className="truncate">
+                              <div className="font-medium truncate">{d.title || 'Untitled Draft'}</div>
+                              <div className="text-xs text-gray-500">Updated {updatedLabel}</div>
+                            </div>
+                            <Button size="sm" variant="outline" asChild>
+                              <Link to={`/leader/create?draft=${d._id}`}>Continue</Link>
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-500">No drafts yet.</div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
