@@ -23,6 +23,7 @@ import {
   FileText
 } from 'lucide-react';
 import { campaignService, type DraftCampaignSummary } from '@/services/campaigns';
+import { resolveCampaignImageUrl } from '@/lib/imageUtils';
 
 const LeaderDashboard: React.FC = () => {
   const [drafts, setDrafts] = useState<DraftCampaignSummary[] | null>(null);
@@ -59,21 +60,23 @@ const LeaderDashboard: React.FC = () => {
             id: c._id,
             title: c.title,
             status: c.status || 'paused',
-            raised: c.raised || c.amountRaised || 0,
-            goal: c.goal || c.target || 0,
-            donors: c.donorsCount || (c.donations ? c.donations.length : 0),
-            daysLeft: c.endsAt ? Math.max(0, Math.ceil((new Date(c.endsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0,
-            image: c.image || c.coverImage || `/images/CleanWater.jpg`,
+            raised: c.raised || c.amountRaised || c.currentAmount || 0,
+            goal: c.goal || c.target || c.targetAmount || 0,
+            donors: c.donorsCount || (c.donations ? c.donations.length : (c.analytics && (c.analytics.donorCount || c.analytics.topDonation) ? c.analytics.donorCount : 0)),
+            daysLeft: c.endDate || c.endsAt ? Math.max(0, Math.ceil((new Date(c.endDate || c.endsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0,
+            // Resolve image using shared helper so relative paths and objects are handled consistently
+            image: resolveCampaignImageUrl(c),
             lastUpdate: c.updatedAt ? new Date(c.updatedAt).toLocaleDateString() : (c.createdAt ? new Date(c.createdAt).toLocaleDateString() : ''),
             engagement: c.engagement || 0,
             raw: c
           })));
+          console.log('Loaded campaigns:', data.map(c => ({ id: c._id, title: c.title })));
 
           // try to fetch recent donations via service if available
-          if (campaignService.getRecentDonations) {
+          if ((campaignService as any).getRecentDonations) {
             try {
               setLoadingDonations(true);
-              const dRes = await campaignService.getRecentDonations();
+              const dRes = await (campaignService as any).getRecentDonations();
               if (!(dRes as any).error) {
                 setRecentDonations((dRes as any).data?.donations || []);
               }
@@ -166,6 +169,16 @@ const LeaderDashboard: React.FC = () => {
                   Create Campaign
                 </Link>
               </Button>
+              {/* Test button for edit route */}
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  console.log('Test edit route');
+                  window.location.href = '/leader/edit/test123';
+                }}
+              >
+                Test Edit
+              </Button>
             </div>
           </div>
         </div>
@@ -250,10 +263,15 @@ const LeaderDashboard: React.FC = () => {
                               <Eye className="h-4 w-4" />
                             </Link>
                           </Button>
-                          <Button variant="outline" size="sm" asChild>
-                            <Link to={`/leader/edit/${campaign.id}`}>
-                              <Edit className="h-4 w-4" />
-                            </Link>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              console.log('Edit button clicked for campaign:', campaign.id, campaign.title);
+                              window.location.href = `/leader/edit/${campaign.id}`;
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>

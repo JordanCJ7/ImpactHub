@@ -31,6 +31,8 @@ import LeaderDashboard from './pages/leader/LeaderDashboard';
 import LeaderProfile from './pages/leader/LeaderProfile';
 import CreateCampaign from './pages/leader/CreateCampaign';
 import LeaderDrafts from './pages/leader/LeaderDrafts';
+import MyCampaigns from './pages/leader/MyCampaigns';
+import EditCampaign from './pages/leader/EditCampaign';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -108,9 +110,19 @@ const App = () => (
                     <LeaderDashboard />
                   </ProtectedRoute>
                 } />
+                <Route path="/leader" element={
+                  <ProtectedRoute allowedRoles={['campaign-leader']}>
+                    <LeaderDashboard />
+                  </ProtectedRoute>
+                } />
                 <Route path="/leader/profile" element={
                   <ProtectedRoute allowedRoles={['campaign-leader']}>
                     <LeaderProfile />
+                  </ProtectedRoute>
+                } />
+                <Route path="/leader/campaigns" element={
+                  <ProtectedRoute allowedRoles={['campaign-leader']}>
+                    <MyCampaigns />
                   </ProtectedRoute>
                 } />
                   <Route path="/leader/drafts" element={
@@ -121,6 +133,11 @@ const App = () => (
                  <Route path="/leader/create" element={
                    <ProtectedRoute allowedRoles={['campaign-leader']}>
                      <CreateCampaign />
+                   </ProtectedRoute>
+                 } />
+                 <Route path="/leader/edit/:id" element={
+                   <ProtectedRoute allowedRoles={['campaign-leader']}>
+                     <EditCampaign />
                    </ProtectedRoute>
                  } />
 
