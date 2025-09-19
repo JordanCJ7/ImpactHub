@@ -1,47 +1,63 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Heart, Users, Target, Award, ArrowRight, TrendingUp, Globe, Shield } from 'lucide-react';
+import { campaignService } from '@/services/campaigns';
+import { resolveCampaignImageUrl } from '@/lib/imageUtils';
 
 const Home: React.FC = () => {
-  const featuredCampaigns = [
-    {
-      id: 1,
-      title: "Clean Water for Rural Communities",
-      description: "Providing clean drinking water access to 10,000 people in remote villages.",
-      image: "/images/CleanWater.jpg",
-      raised: 75420,
-      goal: 100000,
-      donors: 1247,
-      daysLeft: 23,
-      category: "Health"
-    },
-    {
-      id: 2,
-      title: "Education for Every Child",
-      description: "Building schools and providing educational resources for underprivileged children.",
-      image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&h=250&fit=crop",
-      raised: 42350,
-      goal: 75000,
-      donors: 892,
-      daysLeft: 45,
-      category: "Education"
-    },
-    {
-      id: 3,
-      title: "Emergency Food Relief",
-      description: "Providing emergency food supplies to families affected by natural disasters.",
-      image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=400&h=250&fit=crop",
-      raised: 28900,
-      goal: 50000,
-      donors: 567,
-      daysLeft: 12,
-      category: "Emergency"
-    }
-  ];
+  const [featuredCampaigns, setFeaturedCampaigns] = useState<any[]>([]);
+  const [loadingFeatured, setLoadingFeatured] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadFeatured = async () => {
+      setLoadingFeatured(true);
+      try {
+        // Prefer a random endpoint if available
+        let res: any;
+        if ((campaignService as any).getRandomCampaigns) {
+          res = await (campaignService as any).getRandomCampaigns(3);
+        } else if ((campaignService as any).getCampaigns) {
+          // fallback: fetch a page of campaigns and pick 3 at random
+          const allRes = await (campaignService as any).getCampaigns({ page: 1, limit: 20 });
+          const list = (allRes && allRes.data && (allRes.data.campaigns || allRes.data)) || [];
+          // shuffle and slice
+          for (let i = list.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [list[i], list[j]] = [list[j], list[i]];
+          }
+          res = { data: { campaigns: list.slice(0, 3) } };
+        }
+
+        const campaigns = (res && res.data && (res.data.campaigns || res.data)) || [];
+        if (!mounted) return;
+        // Normalize shape and resolve images
+        const normalized = campaigns.slice(0, 3).map((c: any) => ({
+          id: c._id || c.id,
+          title: c.title,
+          description: c.description || c.summary || '',
+          image: resolveCampaignImageUrl(c) || c.image || '',
+          raised: c.amountRaised || c.raised || c.currentAmount || 0,
+          goal: c.goal || c.target || c.targetAmount || 0,
+          donors: c.donorsCount || (c.donations ? c.donations.length : 0),
+          daysLeft: c.endDate ? Math.max(0, Math.ceil((new Date(c.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0,
+          category: c.category || (c.tags && c.tags[0]) || 'General'
+        }));
+        setFeaturedCampaigns(normalized);
+      } catch (err) {
+        console.error('Failed loading featured campaigns', err);
+        setFeaturedCampaigns([]);
+      } finally {
+        if (mounted) setLoadingFeatured(false);
+      }
+    };
+    loadFeatured();
+    return () => { mounted = false; };
+  }, []);
 
   const stats = [
     { icon: Heart, label: "Total Raised", value: "LKR 2.4M", color: "text-red-600" },
@@ -114,51 +130,53 @@ const Home: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-            {featuredCampaigns.map((campaign) => (
-              <Card key={campaign.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                <div className="relative">
-                  <img
-                    src={campaign.image}
-                    alt={campaign.title}
-                    className="w-full h-48 object-cover"
-                  />
-                  <Badge className="absolute top-3 left-3 bg-white text-gray-900">
-                    {campaign.category}
-                  </Badge>
-                </div>
-                <CardHeader>
-                  <CardTitle className="text-lg">{campaign.title}</CardTitle>
-                  <CardDescription>{campaign.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium text-gray-600">
-                          LKR {campaign.raised.toLocaleString()} raised
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          LKR{campaign.goal.toLocaleString()} goal
-                        </span>
+            {loadingFeatured ? (
+              <div className="col-span-3 text-center py-10">Loading featured campaigns...</div>
+            ) : featuredCampaigns && featuredCampaigns.length > 0 ? (
+              featuredCampaigns.map((campaign) => (
+                <Card key={campaign.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                  <div className="relative">
+                    {campaign.image ? (
+                      <img src={campaign.image} alt={campaign.title} className="w-full h-48 object-cover" />
+                    ) : (
+                      <div className="w-full h-48 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                        {campaign.title ? campaign.title.substring(0, 2).toUpperCase() : 'CA'}
                       </div>
-                      <Progress value={(campaign.raised / campaign.goal) * 100} className="h-2" />
-                    </div>
-                    
-                    <div className="flex justify-between items-center text-sm text-gray-600">
-                      <span>{campaign.donors} donors</span>
-                      <span>{campaign.daysLeft} days left</span>
-                    </div>
-                    
-                    <Button asChild className="w-full">
-                      <Link to={`/campaigns/${campaign.id}`}>
-                        View Campaign
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Link>
-                    </Button>
+                    )}
+                    <Badge className="absolute top-3 left-3 bg-white text-gray-900">
+                      {campaign.category}
+                    </Badge>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                  <CardHeader>
+                    <CardTitle className="text-lg">{campaign.title}</CardTitle>
+                    <CardDescription>{campaign.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-medium text-gray-600">LKR {campaign.raised.toLocaleString()} raised</span>
+                          <span className="text-sm text-gray-500">LKR{campaign.goal.toLocaleString()} goal</span>
+                        </div>
+                        <Progress value={(campaign.raised / (campaign.goal || 1)) * 100} className="h-2" />
+                      </div>
+                      <div className="flex justify-between items-center text-sm text-gray-600">
+                        <span>{campaign.donors} donors</span>
+                        <span>{campaign.daysLeft} days left</span>
+                      </div>
+                      <Button asChild className="w-full">
+                        <Link to={`/campaigns/${campaign.id}`}>
+                          View Campaign
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <div className="col-span-3 text-center py-10">No featured campaigns available.</div>
+            )}
           </div>
 
           <div className="text-center">
