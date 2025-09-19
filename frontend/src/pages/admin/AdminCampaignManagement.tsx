@@ -149,14 +149,14 @@ const AdminCampaignManagement = () => {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
+                  <div className="flex flex-col md:flex-row md:items-start gap-4 mb-4">
+                    <div className="flex-1 md:flex-none">
                       <p className="text-sm font-medium">Created</p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(campaign.createdAt).toLocaleDateString()}
                       </p>
                     </div>
-                    <div>
+                    <div className="flex-1 md:flex-none">
                       <p className="text-sm font-medium">End Date</p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(campaign.endDate).toLocaleDateString()}
