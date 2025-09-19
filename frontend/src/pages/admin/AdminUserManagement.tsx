@@ -18,10 +18,13 @@ const AdminUserManagement = () => {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const usersData = await adminService.getUsers();
+      const response = await adminService.getUsers();
+      // Handle different response structures
+      const usersData = Array.isArray(response) ? response : (response as any)?.users || [];
       setUsers(usersData);
     } catch (error) {
       console.error('Failed to load users:', error);
+      setUsers([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -40,12 +43,12 @@ const AdminUserManagement = () => {
     }
   };
 
-  const filteredUsers = users.filter(user => {
+  const filteredUsers = Array.isArray(users) ? users.filter(user => {
     if (filter === 'all') return true;
     if (filter === 'active') return user.isActive && !user.isBanned;
     if (filter === 'blocked') return user.isBanned || !user.isActive;
     return true;
-  });
+  }) : [];
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
