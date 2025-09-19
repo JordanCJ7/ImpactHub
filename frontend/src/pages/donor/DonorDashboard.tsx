@@ -11,6 +11,7 @@ import { Heart, TrendingUp, Users, Calendar, DollarSign, Award, Bell, Settings, 
 import { FileText } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { donationService, campaignService, analyticsService } from '@/services';
+import { resolveCampaignImageUrl } from '@/lib/imageUtils';
 import { useToast } from '@/hooks/use-toast';
 import { campaignService as campaignServiceDirect } from '@/services/campaigns';
 import type { Donation, UserAnalytics } from '@/services';
@@ -345,12 +346,22 @@ const DonorDashboard: React.FC = () => {
               <CardContent>
                 <div className="space-y-6">
                   {supportedCampaigns.length > 0 ? (
-                    supportedCampaigns.map((campaign) => (
-                      <div key={campaign._id} className="flex items-start space-x-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                        <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold flex-shrink-0">
-                          {campaign.title ? campaign.title.substring(0, 2).toUpperCase() : 'CA'}
-                        </div>
-                        <div className="flex-1 min-w-0">
+                    supportedCampaigns.map((campaign) => {
+                      const imageUrl = resolveCampaignImageUrl(campaign);
+                      return (
+                        <div key={campaign._id} className="flex items-start space-x-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                          {imageUrl ? (
+                            <img
+                              src={imageUrl}
+                              alt={campaign.title || 'Campaign image'}
+                              className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold flex-shrink-0">
+                              {campaign.title ? campaign.title.substring(0, 2).toUpperCase() : 'CA'}
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-gray-900 mb-1">{campaign.title}</h4>
                           <p className="text-sm text-gray-600 mb-2">
                             Your contribution: <span className="font-medium text-green-600">{formatCurrency(campaign.donatedAmount || 0)}</span>
@@ -391,7 +402,8 @@ const DonorDashboard: React.FC = () => {
                           </Button>
                         </div>
                       </div>
-                    ))
+                      );
+                    })
                   ) : (
                     <div className="text-center py-8">
                       <Target className="h-12 w-12 text-gray-300 mx-auto mb-4" />
