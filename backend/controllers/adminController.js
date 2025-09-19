@@ -669,8 +669,40 @@ const getAuditReport = async (req, res) => {
 
 const getPlatformOverview = async (req, res) => {
   try {
-    res.status(501).json({ error: 'Platform overview not yet implemented' });
+    // Basic platform statistics
+    const totalUsers = await User.countDocuments();
+    const totalCampaigns = await Campaign.countDocuments();
+    const totalDonations = await Donation.countDocuments();
+
+    // Sum total donation amount
+    const totalAmountAgg = await Donation.aggregate([
+      { $match: { status: { $in: ['completed', 'verified', 'succeeded'] } } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const totalAmount = (totalAmountAgg[0] && totalAmountAgg[0].total) || 0;
+
+    // Users by role
+    const usersByRoleAgg = await User.aggregate([
+      { $group: { _id: '$role', count: { $sum: 1 } } }
+    ]);
+
+    // Campaigns by status
+    const campaignsByStatusAgg = await Campaign.aggregate([
+      { $group: { _id: '$status', count: { $sum: 1 } } }
+    ]);
+
+    res.json({
+      stats: {
+        totalUsers,
+        totalCampaigns,
+        totalDonations,
+        totalAmount,
+        usersByRole: usersByRoleAgg,
+        campaignsByStatus: campaignsByStatusAgg
+      }
+    });
   } catch (error) {
+    console.error('getPlatformOverview error:', error);
     res.status(500).json({ error: 'Failed to fetch platform overview' });
   }
 };
