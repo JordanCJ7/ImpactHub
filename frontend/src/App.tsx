@@ -31,6 +31,11 @@ import LeaderDashboard from './pages/leader/LeaderDashboard';
 import LeaderProfile from './pages/leader/LeaderProfile';
 import CreateCampaign from './pages/leader/CreateCampaign';
 
+// Admin Pages
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminUserManagement from './pages/admin/AdminUserManagement';
+import AdminCampaignManagement from './pages/admin/AdminCampaignManagement';
+
 // Development/Testing Pages
 import IntegrationTest from '@/pages/IntegrationTest';
 
@@ -115,7 +120,22 @@ const App = () => (
             {/* Admin Routes */}
             <Route path="/admin/dashboard" element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <div>Admin Dashboard - Coming Soon</div>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/users" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminUserManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/campaigns" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminCampaignManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminDashboard />
               </ProtectedRoute>
             } />
 

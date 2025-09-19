@@ -568,7 +568,7 @@ const updateSystemSettings = async (req, res) => {
 const getPendingCampaigns = async (req, res) => {
   try {
     const campaigns = await Campaign.find({ status: 'pending' })
-      .populate('creator', 'name email')
+      .populate('creator', 'name email organizationName')
       .sort({ createdAt: -1 });
     res.json({ campaigns });
   } catch (error) {
@@ -586,8 +586,35 @@ const suspendCampaign = async (req, res) => {
 
 const getAllDonations = async (req, res) => {
   try {
-    res.status(501).json({ error: 'Donation management not yet implemented' });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+    const status = req.query.status;
+
+    let filter = {};
+    if (status) {
+      filter.status = status;
+    }
+
+    const donations = await Donation.find(filter)
+      .populate('campaign', 'title creator')
+      .populate('campaign.creator', 'name email')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Donation.countDocuments(filter);
+
+    res.json({
+      donations,
+      pagination: {
+        current: page,
+        pages: Math.ceil(total / limit),
+        total
+      }
+    });
   } catch (error) {
+    console.error('Get all donations error:', error);
     res.status(500).json({ error: 'Failed to fetch donations' });
   }
 };
