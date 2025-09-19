@@ -123,18 +123,43 @@ const getUserById = async (req, res) => {
 // Update user status
 const updateUserStatus = async (req, res) => {
   try {
-    const { status } = req.body;
-    const userId = req.params.id;
+    let { status } = req.body || {};
+    // Backwards-compat: accept legacy boolean payloads
+    const legacyIsBanned = typeof req.body.isBanned !== 'undefined' ? req.body.isBanned : undefined;
+    const legacyIsActive = typeof req.body.isActive !== 'undefined' ? req.body.isActive : undefined;
+    const legacyBanReason = typeof req.body.banReason !== 'undefined' ? req.body.banReason : undefined;
 
-    if (!['active', 'suspended', 'banned'].includes(status)) {
+    // Map legacy booleans to a status string if status wasn't provided
+    if (!status && typeof legacyIsBanned !== 'undefined') {
+      if (legacyIsBanned) status = 'banned';
+      else if (typeof legacyIsActive !== 'undefined' ? legacyIsActive : !legacyIsBanned) status = 'active';
+    }
+    const userId = req.params.id;
+    if (!status || !['active', 'suspended', 'banned'].includes(status)) {
       return res.status(400).json({
         error: 'Invalid status. Must be active, suspended, or banned'
       });
     }
 
+    // Build update object: support both status string and legacy boolean fields
+    const updateObj = {};
+    if (status) updateObj.status = status;
+    if (typeof legacyIsBanned !== 'undefined') updateObj.isBanned = !!legacyIsBanned;
+    if (typeof legacyIsActive !== 'undefined') updateObj.isActive = !!legacyIsActive;
+    if (typeof legacyBanReason !== 'undefined') updateObj.banReason = legacyBanReason;
+
+    // If status provided but boolean fields not provided, derive boolean fields from status
+    if (status && typeof legacyIsBanned === 'undefined' && typeof legacyIsActive === 'undefined') {
+      updateObj.isBanned = status === 'banned';
+      updateObj.isActive = status === 'active';
+      if (status === 'suspended') {
+        updateObj.isActive = false;
+      }
+    }
+
     const user = await User.findByIdAndUpdate(
       userId,
-      { status },
+      updateObj,
       { new: true }
     ).select('-password');
 
@@ -145,15 +170,22 @@ const updateUserStatus = async (req, res) => {
     }
 
     // Log the action
-    await AuditLog.logAction({
-      user: req.user._id,
-      action: 'user_status_updated',
-      resource: 'user',
-      resourceId: userId,
-      details: { newStatus: status },
-      ipAddress: req.ip,
-      userAgent: req.get('User-Agent')
-    });
+    try {
+      if (req.user && req.user._id) {
+        await AuditLog.logAction({
+          user: req.user._id,
+          action: 'user_updated',
+          resource: 'user',
+          resourceId: userId,
+          details: { newStatus: status },
+          ipAddress: req.ip,
+          userAgent: req.get('User-Agent')
+        });
+      }
+    } catch (auditError) {
+      console.warn('AuditLog failed:', auditError);
+      // don't fail the main operation if audit logging fails
+    }
 
     res.json({
       message: 'User status updated successfully',
@@ -191,16 +223,22 @@ const updateUserRole = async (req, res) => {
       });
     }
 
-    // Log the action
-    await AuditLog.logAction({
-      user: req.user._id,
-      action: 'user_role_updated',
-      resource: 'user',
-      resourceId: userId,
-      details: { newRole: role },
-      ipAddress: req.ip,
-      userAgent: req.get('User-Agent')
-    });
+    // Log the action (don't let audit failures crash the request)
+    try {
+      if (req.user && req.user._id) {
+        await AuditLog.logAction({
+          user: req.user._id,
+          action: 'user_updated',
+          resource: 'user',
+          resourceId: userId,
+          details: { newRole: role },
+          ipAddress: req.ip,
+          userAgent: req.get('User-Agent')
+        });
+      }
+    } catch (auditErr) {
+      console.warn('AuditLog failed:', auditErr);
+    }
 
     res.json({
       message: 'User role updated successfully',

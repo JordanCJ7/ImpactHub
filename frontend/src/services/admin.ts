@@ -128,20 +128,21 @@ class AdminService {
   }
 
   async blockUser(id: string) {
-    const response = await apiService.put(`/admin/users/${id}/status`, { 
-      isBanned: true, 
-      isActive: false,
-      banReason: 'Blocked by admin' 
+    // Backend expects a `status` string (active|suspended|banned)
+    const response = await apiService.put(`/admin/users/${id}/status`, {
+      status: 'banned',
+      banReason: 'Blocked by admin'
     });
+    if (response.error) throw response;
     return response.data;
   }
 
   async unblockUser(id: string) {
-    const response = await apiService.put(`/admin/users/${id}/status`, { 
-      isBanned: false, 
-      isActive: true,
-      banReason: null 
+    const response = await apiService.put(`/admin/users/${id}/status`, {
+      status: 'active',
+      banReason: null
     });
+    if (response.error) throw response;
     return response.data;
   }
 
@@ -152,6 +153,7 @@ class AdminService {
 
   async updateUserStatus(id: string, status: { isActive?: boolean; isBanned?: boolean; banReason?: string }) {
     const response = await apiService.put(`/admin/users/${id}/status`, status);
+    if (response.error) throw response;
     return response.data;
   }
 

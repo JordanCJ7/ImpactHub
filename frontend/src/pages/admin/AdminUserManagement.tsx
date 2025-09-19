@@ -6,12 +6,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { adminService } from '@/services/admin';
+import { useToast } from '@/hooks/use-toast';
 import type { User } from '@/services/admin';
 
 const AdminUserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoadingMap, setActionLoadingMap] = useState<Record<string, boolean>>({});
   const [filter, setFilter] = useState<'all' | 'active' | 'blocked'>('all');
+  const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'campaign-leader' | 'donor'>('all');
 
@@ -36,14 +39,20 @@ const AdminUserManagement = () => {
 
   const handleUserStatusChange = async (userId: string, action: 'block' | 'unblock') => {
     try {
+      setActionLoadingMap(prev => ({ ...prev, [userId]: true }));
       if (action === 'block') {
-        await adminService.blockUser(userId);
+        const result = await adminService.blockUser(userId) as any;
+        toast({ title: 'User blocked', description: (result && result.message) || 'User was blocked' });
       } else {
-        await adminService.unblockUser(userId);
+        const result = await adminService.unblockUser(userId) as any;
+        toast({ title: 'User unblocked', description: (result && result.message) || 'User was unblocked' });
       }
-      loadUsers(); // Refresh the list
-    } catch (error) {
+      await loadUsers(); // Refresh the list
+    } catch (error: any) {
       console.error(`Failed to ${action} user:`, error);
+      toast({ title: 'Action failed', description: error?.error || error?.message || 'Failed to update user status' });
+    } finally {
+      setActionLoadingMap(prev => ({ ...prev, [userId]: false }));
     }
   };
 
@@ -199,16 +208,20 @@ const AdminUserManagement = () => {
                         variant="destructive"
                         size="sm"
                         onClick={() => handleUserStatusChange(user._id, 'block')}
+                        disabled={!!actionLoadingMap[user._id]}
+                        aria-busy={!!actionLoadingMap[user._id]}
                       >
-                        Block User
+                        {actionLoadingMap[user._id] ? 'Processing…' : 'Block User'}
                       </Button>
                     ) : (
                       <Button
                         variant="default"
                         size="sm"
                         onClick={() => handleUserStatusChange(user._id, 'unblock')}
+                        disabled={!!actionLoadingMap[user._id]}
+                        aria-busy={!!actionLoadingMap[user._id]}
                       >
-                        Unblock User
+                        {actionLoadingMap[user._id] ? 'Processing…' : 'Unblock User'}
                       </Button>
                     )}
                     <Button variant="outline" size="sm">
