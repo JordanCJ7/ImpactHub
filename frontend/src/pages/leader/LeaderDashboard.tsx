@@ -27,6 +27,10 @@ import { campaignService, type DraftCampaignSummary } from '@/services/campaigns
 const LeaderDashboard: React.FC = () => {
   const [drafts, setDrafts] = useState<DraftCampaignSummary[] | null>(null);
   const [loadingDrafts, setLoadingDrafts] = useState(false);
+  const [campaigns, setCampaigns] = useState<any[] | null>(null);
+  const [loadingCampaigns, setLoadingCampaigns] = useState(false);
+  const [recentDonations, setRecentDonations] = useState<any[] | null>(null);
+  const [loadingDonations, setLoadingDonations] = useState(false);
 
   useEffect(() => {
     const loadDrafts = async () => {
@@ -43,6 +47,72 @@ const LeaderDashboard: React.FC = () => {
       }
     };
     loadDrafts();
+    // load campaigns and recent donations for leader
+    const loadCampaigns = async () => {
+      try {
+        setLoadingCampaigns(true);
+        const res = await campaignService.getMyCampaigns();
+        if (!(res as any).error) {
+          // normalize campaigns for UI
+          const data = (res as any).data?.campaigns || [];
+          setCampaigns(data.map((c: any) => ({
+            id: c._id,
+            title: c.title,
+            status: c.status || 'paused',
+            raised: c.raised || c.amountRaised || 0,
+            goal: c.goal || c.target || 0,
+            donors: c.donorsCount || (c.donations ? c.donations.length : 0),
+            daysLeft: c.endsAt ? Math.max(0, Math.ceil((new Date(c.endsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0,
+            image: c.image || c.coverImage || `/images/CleanWater.jpg`,
+            lastUpdate: c.updatedAt ? new Date(c.updatedAt).toLocaleDateString() : (c.createdAt ? new Date(c.createdAt).toLocaleDateString() : ''),
+            engagement: c.engagement || 0,
+            raw: c
+          })));
+
+          // try to fetch recent donations via service if available
+          if (campaignService.getRecentDonations) {
+            try {
+              setLoadingDonations(true);
+              const dRes = await campaignService.getRecentDonations();
+              if (!(dRes as any).error) {
+                setRecentDonations((dRes as any).data?.donations || []);
+              }
+            } catch (e) {
+              // fallback to deriving from campaigns
+            } finally {
+              setLoadingDonations(false);
+            }
+          }
+
+          // if recent donations still empty, derive from campaigns
+          if (!recentDonations) {
+            const derived: any[] = [];
+            (data || []).forEach((c: any) => {
+              if (c.donations && Array.isArray(c.donations)) {
+                c.donations.slice(-3).forEach((don: any) => {
+                  derived.push({
+                    id: don._id || `${c._id}-${don._id || Math.random()}`,
+                    donor: don.name || don.donorName || (don.user && don.user.name) || 'Anonymous',
+                    amount: don.amount || don.value || 0,
+                    campaign: c.title,
+                    time: don.createdAt ? new Date(don.createdAt).toLocaleString() : '',
+                    avatar: (don.user && don.user.avatar) || don.avatar || ''
+                  });
+                });
+              }
+            });
+            if (derived.length > 0) setRecentDonations(derived.slice(0, 5));
+          }
+        } else {
+          setCampaigns([]);
+        }
+      } catch (e) {
+        setCampaigns([]);
+      } finally {
+        setLoadingCampaigns(false);
+      }
+    };
+    loadCampaigns();
   }, []);
   const stats = [
     { icon: Target, label: "Active Campaigns", value: "3", change: "+1 this month", color: "text-blue-600" },
@@ -51,71 +121,9 @@ const LeaderDashboard: React.FC = () => {
     { icon: TrendingUp, label: "Avg. Donation", value: "LKR 530", change: "+12% this month", color: "text-orange-600" }
   ];
 
-  const campaigns = [
-    {
-      id: 1,
-      title: "Clean Water for Rural Communities",
-      status: "active",
-      raised: 75420,
-      goal: 100000,
-      donors: 1247,
-      daysLeft: 23,
-      image: "/images/CleanWater.jpg",
-      lastUpdate: "2 days ago",
-      engagement: 94
-    },
-    {
-      id: 2,
-      title: "Education for Every Child",
-      status: "active",
-      raised: 42350,
-      goal: 75000,
-      donors: 892,
-      daysLeft: 45,
-      image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=300&h=200&fit=crop",
-      lastUpdate: "1 week ago",
-      engagement: 87
-    },
-    {
-      id: 3,
-      title: "Emergency Food Relief",
-      status: "completed",
-      raised: 50000,
-      goal: 50000,
-      donors: 567,
-      daysLeft: 0,
-      image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=300&h=200&fit=crop",
-      lastUpdate: "Completed",
-      engagement: 92
-    }
-  ];
+  // campaigns state is fetched from API
 
-  const recentDonations = [
-    {
-      id: 1,
-      donor: "Kamani Weerasinha",
-      amount: 5000,
-      campaign: "Clean Water for Rural Communities",
-      time: "2 hours ago",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=50&h=50&fit=crop&crop=face"
-    },
-    {
-      id: 2,
-      donor: "Minsara Kaushalya",
-      amount: 2500,
-      campaign: "Education for Every Child",
-      time: "5 hours ago",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop&crop=face"
-    },
-    {
-      id: 3,
-      donor: "Eshini Liyanapathiranage",
-      amount: 1000,
-      campaign: "Clean Water for Rural Communities",
-      time: "1 day ago",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&h=50&fit=crop&crop=face"
-    }
-  ];
+  // recentDonations is derived from API when available
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -201,50 +209,58 @@ const LeaderDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  {campaigns.map((campaign) => (
-                    <div key={campaign.id} className="flex items-start space-x-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                      <img
-                        src={campaign.image}
-                        alt={campaign.title}
-                        className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-gray-900">{campaign.title}</h4>
-                          <Badge className={getStatusColor(campaign.status)}>
-                            {getStatusIcon(campaign.status)}
-                            <span className="ml-1 capitalize">{campaign.status}</span>
-                          </Badge>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">LKR{campaign.raised.toLocaleString()} raised</span>
-                            <span className="text-sm text-gray-500">
-                              {campaign.status === 'completed' ? 'Goal reached!' : `${campaign.daysLeft} days left`}
-                            </span>
+                  {loadingCampaigns ? (
+                    <div className="p-4 text-sm text-gray-500">Loading campaigns...</div>
+                  ) : campaigns && campaigns.length > 0 ? (
+                    campaigns.map((campaign) => (
+                      <div key={campaign.id} className="flex items-start space-x-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                        <img
+                          src={campaign.image}
+                          alt={campaign.title}
+                          className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-semibold text-gray-900">{campaign.title}</h4>
+                            <Badge className={getStatusColor(campaign.status)}>
+                              {getStatusIcon(campaign.status)}
+                              <span className="ml-1 capitalize">{campaign.status}</span>
+                            </Badge>
                           </div>
-                          <Progress value={(campaign.raised / campaign.goal) * 100} className="h-2" />
-                          <div className="flex justify-between items-center text-sm text-gray-600">
-                            <span>{campaign.donors} donors</span>
-                            <span>Engagement: {campaign.engagement}%</span>
+                          
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-600">LKR{(campaign.raised || 0).toLocaleString()} raised</span>
+                              <span className="text-sm text-gray-500">
+                                {campaign.status === 'completed' ? 'Goal reached!' : `${campaign.daysLeft} days left`}
+                              </span>
+                            </div>
+                            <Progress value={campaign.goal ? (campaign.raised / campaign.goal) * 100 : 0} className="h-2" />
+                            <div className="flex justify-between items-center text-sm text-gray-600">
+                              <span>{campaign.donors} donors</span>
+                              <span>Engagement: {campaign.engagement}%</span>
+                            </div>
                           </div>
+                          
+                          <p className="text-sm text-gray-500 mt-2">Last update: {campaign.lastUpdate}</p>
                         </div>
-                        
-                        <p className="text-sm text-gray-500 mt-2">Last update: {campaign.lastUpdate}</p>
+                        <div className="flex flex-col space-y-2">
+                          <Button variant="outline" size="sm" asChild>
+                            <Link to={`/campaigns/${campaign.id}`}>
+                              <Eye className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                          <Button variant="outline" size="sm" asChild>
+                            <Link to={`/leader/edit/${campaign.id}`}>
+                              <Edit className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex flex-col space-y-2">
-                        <Button variant="outline" size="sm" asChild>
-                          <Link to={`/campaigns/${campaign.id}`}>
-                            <Eye className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <div className="p-4 text-sm text-gray-500">No campaigns found.</div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -256,24 +272,33 @@ const LeaderDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentDonations.map((donation) => (
-                    <div key={donation.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <Avatar>
-                          <AvatarImage src={donation.avatar} alt={donation.donor} />
-                          <AvatarFallback>{donation.donor.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h4 className="font-medium text-gray-900">{donation.donor}</h4>
-                          <p className="text-sm text-gray-500">{donation.campaign}</p>
-                          <p className="text-xs text-gray-400">{donation.time}</p>
+                  {loadingDonations ? (
+                    <div className="p-4 text-sm text-gray-500">Loading donations...</div>
+                  ) : recentDonations && recentDonations.length > 0 ? (
+                    recentDonations.map((donation) => (
+                      <div key={donation.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <Avatar>
+                            {donation.avatar ? (
+                              <AvatarImage src={donation.avatar} alt={donation.donor} />
+                            ) : (
+                              <AvatarFallback>{(donation.donor || 'A').charAt(0)}</AvatarFallback>
+                            )}
+                          </Avatar>
+                          <div>
+                            <h4 className="font-medium text-gray-900">{donation.donor}</h4>
+                            <p className="text-sm text-gray-500">{donation.campaign}</p>
+                            <p className="text-xs text-gray-400">{donation.time}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold text-green-600">LKR{(donation.amount || 0).toLocaleString()}</div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-semibold text-green-600">LKR{donation.amount}</div>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <div className="p-4 text-sm text-gray-500">No recent donations.</div>
+                  )}
                 </div>
               </CardContent>
             </Card>
