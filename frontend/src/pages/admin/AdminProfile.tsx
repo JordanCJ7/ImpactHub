@@ -142,7 +142,26 @@ const AdminProfile: React.FC = () => {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16">
-                  <AvatarImage src={profile.avatar || undefined} alt={profile.firstName || 'Admin'} />
+                  {(() => {
+                    const ctxUser: any = user as any;
+                    // Prefer base64 avatarData if available (this is what Navbar uses)
+                    if (ctxUser?.avatarData) {
+                      return <AvatarImage src={ctxUser.avatarData} alt={profile.firstName || 'Admin'} />;
+                    }
+
+                    const maybeUrl = profile.avatar || ctxUser?.avatar;
+                    if (!maybeUrl) return null;
+
+                    // If it's a relative path (starts with '/'), prefix with API base (strip possible '/api')
+                    let src = maybeUrl as string;
+                    if (src.startsWith('/')) {
+                      const apiBaseRaw = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+                      const apiBase = apiBaseRaw.replace(/\/api\/?$/, '');
+                      src = `${apiBase}${src}`;
+                    }
+
+                    return <AvatarImage src={src} alt={profile.firstName || 'Admin'} />;
+                  })()}
                   <AvatarFallback>{(profile.firstName || 'A').charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div>
