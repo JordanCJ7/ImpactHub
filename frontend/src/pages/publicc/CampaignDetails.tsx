@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { resolveCampaignImageUrl, resolveImageUrl } from '@/lib/imageUtils';
 import { Separator } from '@/components/ui/separator';
 import { Heart, Share2, Flag, Users, Clock, MapPin, CheckCircle, Calendar, TrendingUp, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -152,7 +153,7 @@ const CampaignDetails: React.FC = () => {
             {/* Campaign Header */}
             <Card>
               <div className="relative">
-                <img src={campaign.images && campaign.images.length > 0 ? (typeof campaign.images[0] === 'string' ? (campaign.images[0].startsWith('http') ? campaign.images[0] : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${campaign.images[0]}`) : campaign.images[0].url) : '/images/CleanWater.jpg'} alt={campaign.title} className="w-full h-64 md:h-80 object-cover rounded-t-lg" />
+                <img src={resolveCampaignImageUrl(campaign)} alt={campaign.title} className="w-full h-64 md:h-80 object-cover rounded-t-lg" />
                 <div className="absolute top-4 left-4 flex gap-2">
                   {campaign.verified && <Badge className="bg-green-600 text-white">Verified</Badge>}
                   <Badge className="bg-blue-600 text-white">{campaign.category}</Badge>
@@ -213,29 +214,69 @@ const CampaignDetails: React.FC = () => {
                       <div className="prose max-w-none">
                       <p className="text-lg text-gray-700 mb-6">{campaign.description}</p>
                       
-                      <h3 className="text-xl font-semibold mb-4">About This Campaign</h3>
-                      <p className="text-gray-700 mb-4">
-                        Access to clean water is a fundamental human right, yet millions of people in rural communities 
-                        still lack this basic necessity. Our comprehensive water project aims to transform the lives of 
-                        10,000 people across 15 remote villages in Thanamalvila.
-                      </p>
+                      {campaign.story && (
+                        <>
+                          <h3 className="text-xl font-semibold mb-4">Campaign Story</h3>
+                          <div className="text-gray-700 mb-6 whitespace-pre-wrap">{campaign.story}</div>
+                        </>
+                      )}
                       
-                      <h4 className="text-lg font-semibold mb-3">Our Approach:</h4>
-                      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-6">
-                        <li>Drilling deep water wells in strategic locations</li>
-                        <li>Installing solar-powered water pumps</li>
-                        <li>Building water storage and distribution systems</li>
-                        <li>Training local technicians for maintenance</li>
-                        <li>Establishing community water committees</li>
-                      </ul>
+                      {campaign.beneficiaries && (campaign.beneficiaries.description || campaign.beneficiaries.count > 0) && (
+                        <>
+                          <h3 className="text-xl font-semibold mb-4">Who Will Benefit</h3>
+                          <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                            {campaign.beneficiaries.count > 0 && (
+                              <div className="flex items-center text-blue-800 mb-2">
+                                <Users className="h-5 w-5 mr-2" />
+                                <span className="font-semibold">{campaign.beneficiaries.count.toLocaleString()} people will benefit</span>
+                              </div>
+                            )}
+                            {campaign.beneficiaries.description && (
+                              <p className="text-blue-700">{campaign.beneficiaries.description}</p>
+                            )}
+                          </div>
+                        </>
+                      )}
                       
-                      <h4 className="text-lg font-semibold mb-3">Expected Impact:</h4>
-                      <ul className="list-disc pl-6 space-y-2 text-gray-700">
-                        <li>10,000 people will have access to clean water within 500 meters of their homes</li>
-                        <li>2,500 children will have more time for education</li>
-                        <li>40% reduction in waterborne diseases</li>
-                        <li>Economic opportunities through saved time and improved health</li>
-                      </ul>
+                      {campaign.timeline && (
+                        <>
+                          <h3 className="text-xl font-semibold mb-4">Project Timeline</h3>
+                          <div className="bg-gray-50 p-4 rounded-lg mb-6">
+                            <div className="whitespace-pre-wrap text-gray-700">{campaign.timeline}</div>
+                          </div>
+                        </>
+                      )}
+                      
+                      {campaign.budget && (
+                        <>
+                          <h3 className="text-xl font-semibold mb-4">Budget Breakdown</h3>
+                          <div className="bg-green-50 p-4 rounded-lg mb-6">
+                            <div className="whitespace-pre-wrap text-gray-700">{campaign.budget}</div>
+                          </div>
+                        </>
+                      )}
+                      
+                      {campaign.risks && (
+                        <>
+                          <h3 className="text-xl font-semibold mb-4">Risks & Mitigation</h3>
+                          <div className="bg-yellow-50 p-4 rounded-lg mb-6">
+                            <div className="whitespace-pre-wrap text-gray-700">{campaign.risks}</div>
+                          </div>
+                        </>
+                      )}
+                      
+                      {campaign.tags && campaign.tags.length > 0 && (
+                        <>
+                          <h3 className="text-xl font-semibold mb-4">Campaign Tags</h3>
+                          <div className="flex flex-wrap gap-2 mb-6">
+                            {campaign.tags.map((tag: string, index: number) => (
+                              <Badge key={index} variant="outline" className="bg-gray-100">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </div>
                   </TabsContent>
                   
@@ -250,10 +291,10 @@ const CampaignDetails: React.FC = () => {
                         <p className="text-gray-700 mb-4">{update.content}</p>
                         {(update.images || []).length > 0 && (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {(update.images || []).map((image: string, index: number) => (
+                            {(update.images || []).map((image: any, index: number) => (
                               <img
                                 key={index}
-                                src={image.startsWith('http') ? image : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${image}`}
+                                src={resolveImageUrl(image)}
                                 alt={`Update ${update._id || update.id} image ${index + 1}`}
                                 className="rounded-lg w-full h-48 object-cover"
                               />
@@ -269,7 +310,7 @@ const CampaignDetails: React.FC = () => {
                       <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center space-x-3">
                           <Avatar>
-                            <AvatarImage src={donor.avatar ? (donor.avatar.startsWith('http') ? donor.avatar : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${donor.avatar}`) : undefined} alt={donor.name} />
+                            <AvatarImage src={donor.avatar ? resolveImageUrl(donor.avatar) : undefined} alt={donor.name} />
                             <AvatarFallback>{donor.name?.charAt(0) || 'D'}</AvatarFallback>
                           </Avatar>
                           <div>
@@ -344,7 +385,7 @@ const CampaignDetails: React.FC = () => {
               <CardContent>
                 <div className="flex items-start space-x-3">
                   <Avatar>
-                    <AvatarImage src={campaign.organizer?.avatar ? (campaign.organizer.avatar.startsWith('http') ? campaign.organizer.avatar : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${campaign.organizer.avatar}`) : undefined} alt={campaign.organizer?.name || 'Organizer'} />
+                    <AvatarImage src={campaign.organizer?.avatar ? resolveImageUrl(campaign.organizer.avatar) : undefined} alt={campaign.organizer?.name || 'Organizer'} />
                     <AvatarFallback>{campaign.organizer?.name?.charAt(0) || 'O'}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">

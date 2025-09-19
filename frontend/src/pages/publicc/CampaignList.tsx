@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Search, Filter, Users, Clock, ArrowRight, MapPin, Loader2, AlertCircle } from 'lucide-react';
 import { campaignService, type Campaign } from '@/services/campaigns';
+import { resolveCampaignImageUrl } from '@/lib/imageUtils';
 import { useAuth } from '@/contexts/AuthContext';
 
 const CampaignList: React.FC = () => {
@@ -159,29 +160,7 @@ const CampaignList: React.FC = () => {
 
   // Helper function to get campaign image
   const getCampaignImage = (campaign: Campaign) => {
-    if (campaign.images && campaign.images.length > 0) {
-      // Handle both string array (old format) and object array (new format)
-      const firstImage = campaign.images[0];
-      let imageUrl: string;
-      
-      if (typeof firstImage === 'string') {
-        imageUrl = firstImage;
-      } else if (typeof firstImage === 'object' && firstImage.url) {
-        imageUrl = firstImage.url;
-      } else {
-        // Fallback if format is unexpected
-        return 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=250&fit=crop';
-      }
-      
-      // If the image URL starts with http, use it directly, otherwise prepend the base URL
-      if (imageUrl.startsWith('http')) {
-        return imageUrl;
-      } else {
-        return `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${imageUrl}`;
-      }
-    }
-    // Fallback image
-    return 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=250&fit=crop';
+    return resolveCampaignImageUrl(campaign);
   };
 
   // Toggle like handler - relies on server state only

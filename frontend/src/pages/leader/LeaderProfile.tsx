@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { resolveImageUrl } from '@/lib/imageUtils';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { User, Mail, Phone, MapPin, Camera, Bell, Shield, Target, Award, Settings, Save, Loader2, AlertCircle } from 'lucide-react';
@@ -81,7 +82,7 @@ const LeaderProfile: React.FC = () => {
           bio: user.profile?.bio || '',
           location: user.profile?.address ? `${user.profile.address.city || ''}, ${user.profile.address.state || ''}, ${user.profile.address.country || ''}`.replace(/^, |, $/, '') : '',
           organizationName: user.profile?.organization?.name || '',
-          organizationEmail: user.profile?.organization?.website || '',
+          organizationEmail: user.profile?.organization?.email || '',
           joinDate: new Date(user.profile?.dateOfBirth || Date.now()).toLocaleDateString(),
           avatar: user.avatar || ''
         });
@@ -141,7 +142,7 @@ const LeaderProfile: React.FC = () => {
           },
           organization: {
             name: profile.organizationName,
-            website: profile.organizationEmail
+            email: profile.organizationEmail
           }
         }
       };
@@ -301,7 +302,7 @@ const LeaderProfile: React.FC = () => {
               <div className="relative">
                 <Avatar className="h-20 w-20">
                   <AvatarImage 
-                    src={profile.avatar ? `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${profile.avatar}` : undefined} 
+                    src={profile.avatar ? resolveImageUrl(profile.avatar) : undefined} 
                     alt={`${profile.firstName} ${profile.lastName}`} 
                   />
                   <AvatarFallback className="text-lg">
