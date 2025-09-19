@@ -35,6 +35,7 @@ import CreateCampaign from './pages/leader/CreateCampaign';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUserManagement from './pages/admin/AdminUserManagement';
 import AdminCampaignManagement from './pages/admin/AdminCampaignManagement';
+import AdminProfile from './pages/admin/AdminProfile';
 
 // Development/Testing Pages
 import IntegrationTest from '@/pages/IntegrationTest';
@@ -131,6 +132,11 @@ const App = () => (
             <Route path="/admin/campaigns" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <AdminCampaignManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/profile" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminProfile />
               </ProtectedRoute>
             } />
             <Route path="/admin" element={

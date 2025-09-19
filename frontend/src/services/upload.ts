@@ -88,6 +88,32 @@ class UploadService {
     return `${baseUrl}/uploads/campaigns/${filename}`;
   }
 
+  // Upload a single avatar file (used by profile uploader)
+  async uploadAvatar(file: File): Promise<{ data?: { url: string }; error?: string }> {
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/uploads/avatar`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        return { error: data.message || 'Failed to upload avatar' };
+      }
+
+      return { data };
+    } catch (error) {
+      console.error('Upload avatar error:', error);
+      return { error: 'Network error. Please check your connection.' };
+    }
+  }
+
   // Validate image file
   validateImageFile(file: File): { valid: boolean; error?: string } {
     // Check file type

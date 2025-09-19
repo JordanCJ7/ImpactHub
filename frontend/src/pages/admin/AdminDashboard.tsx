@@ -228,7 +228,7 @@ const AdminDashboard: React.FC = () => {
                 Admin Dashboard
               </h1>
               <p className="text-gray-600">
-                Welcome back, {user?.name}. Manage your platform efficiently.
+                Welcome back, {user?.name}. <br /> Manage your platform efficiently.
               </p>
             </div>
             <div className="flex items-center space-x-3">
