@@ -520,7 +520,6 @@ const recordShare = async (req, res) => {
 // Create campaign
 const createCampaign = async (req, res) => {
   try {
-    console.log('Create campaign request body:', req.body);
     console.log('User:', req.user ? req.user.email : 'null');
 
     const errors = validationResult(req);
@@ -535,6 +534,7 @@ const createCampaign = async (req, res) => {
     const {
       title,
       description,
+      shortDescription,
       story,
       goal,
       category,
@@ -542,11 +542,17 @@ const createCampaign = async (req, res) => {
       endDate,
       location,
       beneficiaries,
+      tags,
+      organizationName,
+      organizationEmail,
+      timeline,
+      budget,
+      risks,
       features,
       seo
     } = req.body;
 
-    console.log('Parsed data:', { title, description, goal, category, endDate });
+    console.log('Parsed data:', { title, description, goal, category, endDate, organizationName, organizationEmail });
 
     // Validate and parse goal
     const parsedGoal = parseFloat(goal);
@@ -579,7 +585,7 @@ const createCampaign = async (req, res) => {
 
     console.log('Calculated duration:', duration);
 
-    // Create campaign object
+    // Create campaign object with all required fields
     const campaignData = {
       title,
       description,
@@ -587,23 +593,42 @@ const createCampaign = async (req, res) => {
       goal: parsedGoal,
       category,
       creator: req.user.id,
-      organizationName: req.user.organizationName || req.user.profile?.organization?.name || req.user.name,
-      organizationEmail: req.user.email,
+      // Auto-populate organization data from user profile
+      organizationName: req.user.profile?.organization?.name || req.user.organizationName || req.user.name,
+      organizationEmail: req.user.profile?.organization?.email || req.user.email,
       endDate: endDateObj,
       duration,
       status: 'draft', // Start as draft, can be activated later
       approvalStatus: 'pending'
     };
 
-    console.log('Campaign data to save:', campaignData);
-
     // Add optional fields
+    if (shortDescription) {
+      campaignData.shortDescription = shortDescription;
+    }
+
     if (location && (location.country || location.city || location.state)) {
       campaignData.location = [location.city, location.state, location.country].filter(Boolean).join(', ');
     }
 
-    if (beneficiaries && beneficiaries.description) {
-      campaignData.beneficiaries = beneficiaries.description;
+    if (beneficiaries) {
+      campaignData.beneficiaries = beneficiaries;
+    }
+
+    if (tags && Array.isArray(tags) && tags.length > 0) {
+      campaignData.tags = tags.filter(tag => tag && tag.trim().length > 0).map(tag => tag.trim());
+    }
+
+    if (timeline) {
+      campaignData.timeline = timeline;
+    }
+
+    if (budget) {
+      campaignData.budget = budget;
+    }
+
+    if (risks) {
+      campaignData.risks = risks;
     }
 
     if (images && images.length > 0) {
@@ -611,6 +636,26 @@ const createCampaign = async (req, res) => {
         url,
         isPrimary: index === 0
       }));
+    }
+
+    // Handle features object
+    if (features) {
+      campaignData.features = {
+        allowAnonymousDonations: features.allowAnonymousDonations !== false,
+        allowRecurringDonations: features.allowRecurringDonations === true,
+        sendUpdatesToDonors: features.sendUpdatesToDonors !== false,
+        allowComments: features.allowComments !== false
+      };
+    }
+
+    // Handle SEO object
+    if (seo) {
+      campaignData.seo = {};
+      if (seo.metaTitle) campaignData.seo.metaTitle = seo.metaTitle;
+      if (seo.metaDescription) campaignData.seo.metaDescription = seo.metaDescription;
+      if (seo.keywords && Array.isArray(seo.keywords) && seo.keywords.length > 0) {
+        campaignData.seo.keywords = seo.keywords.filter(kw => kw && kw.trim().length > 0);
+      }
     }
 
     console.log('Final campaign data:', campaignData);

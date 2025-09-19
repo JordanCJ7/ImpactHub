@@ -95,7 +95,7 @@ const userSchema = new mongoose.Schema({
     dateOfBirth: Date,
     organization: {
       name: String,
-      website: String,
+      email: String,
       description: String,
       registrationNumber: String
     }

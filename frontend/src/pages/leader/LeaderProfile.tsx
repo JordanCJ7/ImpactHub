@@ -128,19 +128,43 @@ const LeaderProfile: React.FC = () => {
       setSaving(true);
       setError(null);
 
-      const updatedProfile = {
+      // Structure the data correctly for the backend
+      const updateData = {
         name: `${profile.firstName} ${profile.lastName}`.trim(),
-        email: profile.email, // Add email to updateData
-        phone: profile.phone,
-        bio: profile.bio,
-        location: profile.location,
-        organizationName: profile.organizationName,
-        organizationEmail: profile.organizationEmail
+        profile: {
+          bio: profile.bio,
+          phone: profile.phone,
+          address: {
+            city: profile.location.split(',')[0]?.trim() || '',
+            state: profile.location.split(',')[1]?.trim() || '',
+            country: profile.location.split(',')[2]?.trim() || ''
+          },
+          organization: {
+            name: profile.organizationName,
+            website: profile.organizationEmail
+          }
+        }
       };
 
-      await authService.updateProfile(updatedProfile, profile.email);
-      updateUser({ ...user, ...updatedProfile });
-      setIsEditing(false);
+      // Use the auth/me endpoint instead of users/profile/:email for consistency
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/auth/me`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify(updateData)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Update local state and global user context
+        updateUser(data.user);
+        setIsEditing(false);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to update profile');
+      }
       
     } catch (err) {
       console.error('Error saving profile:', err);

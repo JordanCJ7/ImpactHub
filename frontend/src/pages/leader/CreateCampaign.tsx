@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,10 +25,12 @@ import {
 import { campaignService } from '@/services/campaigns';
 import { uploadService } from '@/services/upload';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const CreateCampaign: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
@@ -43,6 +45,8 @@ const CreateCampaign: React.FC = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    shortDescription: '',
+    story: '',
     goal: '',
     category: '',
     endDate: '',
@@ -51,16 +55,40 @@ const CreateCampaign: React.FC = () => {
       state: '',
       city: ''
     },
-    story: '',
     images: [] as string[],
+    tags: [] as string[],
     beneficiaries: {
       count: 0,
       description: ''
     },
+    organizationName: '',
+    organizationEmail: '',
     timeline: '',
     budget: '',
-    risks: ''
+    risks: '',
+    features: {
+      allowAnonymousDonations: true,
+      allowRecurringDonations: false,
+      sendUpdatesToDonors: true,
+      allowComments: true
+    },
+    seo: {
+      metaTitle: '',
+      metaDescription: '',
+      keywords: [] as string[]
+    }
   });
+
+  // Auto-populate organization fields from user data
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        organizationName: user.profile?.organization?.name || user.name || '',
+        organizationEmail: user.profile?.organization?.email || user.email || ''
+      }));
+    }
+  }, [user]);
 
   const steps = [
     { title: 'Basic Info', description: 'Campaign title, goal, and category' },
@@ -219,6 +247,12 @@ const CreateCampaign: React.FC = () => {
     if (!(formData.description && formData.description.trim().length >= 50 && formData.description.trim().length <= 5000)) {
       errors.push('Description must be between 50 and 5000 characters.');
     }
+    if (!formData.organizationName || formData.organizationName.trim().length < 2) {
+      errors.push('Organization name is required and must be at least 2 characters.');
+    }
+    if (!formData.organizationEmail || !formData.organizationEmail.includes('@')) {
+      errors.push('Valid organization email is required.');
+    }
     const goalNumber = parseFloat(formData.goal);
     if (!(formData.goal && !Number.isNaN(goalNumber) && goalNumber >= 100)) {
       errors.push('Goal must be a valid number and at least 100.');
@@ -233,6 +267,15 @@ const CreateCampaign: React.FC = () => {
       if (Number.isNaN(end.getTime()) || end.getTime() <= Date.now()) {
         errors.push('End date must be a valid future date.');
       }
+    }
+    if (!formData.story || formData.story.trim().length < 10) {
+      errors.push('Campaign story is required and must be at least 10 characters.');
+    }
+    if (!formData.timeline || formData.timeline.trim().length < 10) {
+      errors.push('Implementation timeline is required.');
+    }
+    if (!formData.budget || formData.budget.trim().length < 10) {
+      errors.push('Budget breakdown is required.');
     }
 
     if (errors.length > 0) {
@@ -249,15 +292,33 @@ const CreateCampaign: React.FC = () => {
       const campaignData = {
         title: formData.title,
         description: formData.description,
+        shortDescription: formData.shortDescription || undefined,
         story: formData.story,
-        goal: parseFloat(formData.goal), // Convert to number
+        goal: parseFloat(formData.goal),
         category: formData.category,
         endDate: formData.endDate ? `${formData.endDate}T00:00:00.000Z` : '',
-        location: formData.location.country ? formData.location : undefined,
-        beneficiaries: formData.beneficiaries.description ? formData.beneficiaries : undefined,
+        location: {
+          country: formData.location.country,
+          state: formData.location.state,
+          city: formData.location.city
+        },
+        beneficiaries: {
+          count: formData.beneficiaries.count || 0,
+          description: formData.beneficiaries.description || ''
+        },
         images: formData.images.length > 0 ? formData.images : undefined,
-        organizationName: 'Test Organization', // Add required field
-        organizationEmail: 'test@example.com' // Add required field
+        tags: formData.tags.length > 0 ? formData.tags : undefined,
+        organizationName: formData.organizationName,
+        organizationEmail: formData.organizationEmail,
+        timeline: formData.timeline,
+        budget: formData.budget,
+        risks: formData.risks || undefined,
+        features: formData.features,
+        seo: {
+          metaTitle: formData.seo.metaTitle || undefined,
+          metaDescription: formData.seo.metaDescription || undefined,
+          keywords: formData.seo.keywords.length > 0 ? formData.seo.keywords : undefined
+        }
       };
 
       const response = await campaignService.createCampaign(campaignData);
@@ -324,11 +385,14 @@ const CreateCampaign: React.FC = () => {
         return formData.title && formData.title.length >= 10 && formData.title.length <= 100 &&
                formData.description && formData.description.length >= 50 && formData.description.length <= 5000 &&
                formData.goal && parseFloat(formData.goal) >= 100 &&
-               formData.category && formData.endDate;
+               formData.category && formData.endDate &&
+               formData.organizationName && formData.organizationName.trim().length >= 2 &&
+               formData.organizationEmail && formData.organizationEmail.includes('@');
       case 1:
         return formData.story && formData.story.length >= 10;
       case 2:
-        return formData.timeline && formData.budget;
+        return formData.timeline && formData.timeline.trim().length >= 10 &&
+               formData.budget && formData.budget.trim().length >= 10;
       default:
         return true;
     }
@@ -502,6 +566,64 @@ const CreateCampaign: React.FC = () => {
                     className="mt-1"
                   />
                 </div>
+
+                <div>
+                  <Label htmlFor="shortDescription">Short Summary (Optional)</Label>
+                  <Textarea
+                    id="shortDescription" 
+                    value={formData.shortDescription}
+                    onChange={(e) => setFormData(prev => ({ ...prev, shortDescription: e.target.value }))}
+                    placeholder="A brief one-line summary for preview cards (max 200 characters)"
+                    rows={2}
+                    maxLength={200}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="organizationName">Organization Name (Auto-filled from your profile)</Label>
+                  <Input
+                    id="organizationName"
+                    value={formData.organizationName}
+                    readOnly
+                    className="bg-gray-50"
+                    placeholder="Please update your organization name in your profile settings"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    This is automatically filled from your profile. Update your profile to change this.
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="organizationEmail">Organization Contact Email (Auto-filled)</Label>
+                  <Input
+                    id="organizationEmail"
+                    type="email"
+                    value={formData.organizationEmail}
+                    readOnly
+                    className="bg-gray-50"
+                    placeholder="Update your organization email in your profile"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Uses your organization email from profile, or defaults to your email.
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="tags">Tags (Optional)</Label>
+                  <Input
+                    id="tags"
+                    value={formData.tags.join(', ')}
+                    onChange={(e) => {
+                      const tags = e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+                      setFormData(prev => ({ ...prev, tags: tags.slice(0, 10) })); // Limit to 10 tags
+                    }}
+                    placeholder="Enter tags separated by commas (e.g., healthcare, emergency, children)"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Add relevant tags to help people find your campaign. Max 10 tags.
+                  </p>
+                </div>
               </div>
             )}
 
@@ -591,6 +713,22 @@ const CreateCampaign: React.FC = () => {
                 </div>
 
                 <div>
+                  <Label htmlFor="beneficiaries-count">Number of Beneficiaries</Label>
+                  <Input
+                    id="beneficiaries-count"
+                    type="number"
+                    min="0"
+                    value={formData.beneficiaries.count}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      beneficiaries: { ...prev.beneficiaries, count: parseInt(e.target.value) || 0 }
+                    }))}
+                    placeholder="How many people will benefit?"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
                   <Label htmlFor="beneficiaries">Who Will Benefit?</Label>
                   <Textarea
                     id="beneficiaries"
@@ -645,6 +783,127 @@ const CreateCampaign: React.FC = () => {
                     className="mt-1"
                   />
                 </div>
+
+                {/* Campaign Features */}
+                <div className="border rounded-lg p-4">
+                  <h3 className="text-lg font-semibold mb-4">Campaign Settings</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Allow Anonymous Donations</Label>
+                        <p className="text-sm text-gray-600">Let donors choose to donate anonymously</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={formData.features.allowAnonymousDonations}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          features: { ...prev.features, allowAnonymousDonations: e.target.checked }
+                        }))}
+                        className="h-4 w-4"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Allow Recurring Donations</Label>
+                        <p className="text-sm text-gray-600">Enable monthly recurring donations</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={formData.features.allowRecurringDonations}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          features: { ...prev.features, allowRecurringDonations: e.target.checked }
+                        }))}
+                        className="h-4 w-4"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Send Updates to Donors</Label>
+                        <p className="text-sm text-gray-600">Automatically notify donors about campaign progress</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={formData.features.sendUpdatesToDonors}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          features: { ...prev.features, sendUpdatesToDonors: e.target.checked }
+                        }))}
+                        className="h-4 w-4"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Allow Comments</Label>
+                        <p className="text-sm text-gray-600">Let supporters leave encouraging messages</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={formData.features.allowComments}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          features: { ...prev.features, allowComments: e.target.checked }
+                        }))}
+                        className="h-4 w-4"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* SEO Settings */}
+                <div className="border rounded-lg p-4">
+                  <h3 className="text-lg font-semibold mb-4">SEO & Discovery (Optional)</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="metaTitle">Meta Title</Label>
+                      <Input
+                        id="metaTitle"
+                        value={formData.seo.metaTitle}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          seo: { ...prev.seo, metaTitle: e.target.value }
+                        }))}
+                        placeholder="Custom title for search engines (defaults to campaign title)"
+                        maxLength={60}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="metaDescription">Meta Description</Label>
+                      <Textarea
+                        id="metaDescription"
+                        value={formData.seo.metaDescription}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          seo: { ...prev.seo, metaDescription: e.target.value }
+                        }))}
+                        placeholder="Brief description for search engine results"
+                        maxLength={160}
+                        rows={3}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="keywords">SEO Keywords</Label>
+                      <Input
+                        id="keywords"
+                        value={formData.seo.keywords.join(', ')}
+                        onChange={(e) => {
+                          const keywords = e.target.value.split(',').map(kw => kw.trim()).filter(kw => kw.length > 0);
+                          setFormData(prev => ({
+                            ...prev,
+                            seo: { ...prev.seo, keywords: keywords.slice(0, 10) }
+                          }));
+                        }}
+                        placeholder="Enter keywords separated by commas"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -670,15 +929,34 @@ const CreateCampaign: React.FC = () => {
                       <div><span className="text-gray-600">End Date:</span> {formData.endDate}</div>
                       <div><span className="text-gray-600">Category:</span> {formData.category}</div>
                       <div><span className="text-gray-600">Location:</span> {[formData.location.city, formData.location.state, formData.location.country].filter(Boolean).join(', ')}</div>
+                      <div><span className="text-gray-600">Organization:</span> {formData.organizationName}</div>
+                      <div><span className="text-gray-600">Org Email:</span> {formData.organizationEmail}</div>
+                      {formData.tags.length > 0 && <div><span className="text-gray-600">Tags:</span> {formData.tags.join(', ')}</div>}
                     </div>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Content</h4>
+                    <h4 className="font-semibold text-gray-900 mb-2">Content & Planning</h4>
                     <div className="space-y-2 text-sm">
                       <div><span className="text-gray-600">Description:</span> {formData.description.substring(0, 100)}...</div>
                       <div><span className="text-gray-600">Story length:</span> {formData.story.length} characters</div>
-                      <div><span className="text-gray-600">Beneficiaries:</span> {formData.beneficiaries.description.substring(0, 100)}...</div>
+                      <div><span className="text-gray-600">Timeline:</span> {formData.timeline.length > 0 ? '✓ Provided' : '✗ Missing'}</div>
+                      <div><span className="text-gray-600">Budget:</span> {formData.budget.length > 0 ? '✓ Provided' : '✗ Missing'}</div>
+                      <div><span className="text-gray-600">Risks:</span> {formData.risks.length > 0 ? '✓ Provided' : 'Not specified'}</div>
+                      <div><span className="text-gray-600">Beneficiaries:</span> {formData.beneficiaries.count > 0 ? `${formData.beneficiaries.count} people` : 'Count not specified'}</div>
+                      {formData.beneficiaries.description && <div><span className="text-gray-600">Who benefits:</span> {formData.beneficiaries.description.substring(0, 50)}...</div>}
+                      <div><span className="text-gray-600">Images:</span> {formData.images.length} uploaded</div>
                     </div>
+                  </div>
+                </div>
+
+                {/* Campaign Features Summary */}
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-2">Campaign Settings</h4>
+                  <div className="text-sm space-y-1">
+                    <div>Anonymous donations: {formData.features.allowAnonymousDonations ? 'Enabled' : 'Disabled'}</div>
+                    <div>Recurring donations: {formData.features.allowRecurringDonations ? 'Enabled' : 'Disabled'}</div>
+                    <div>Donor updates: {formData.features.sendUpdatesToDonors ? 'Enabled' : 'Disabled'}</div>
+                    <div>Comments: {formData.features.allowComments ? 'Enabled' : 'Disabled'}</div>
                   </div>
                 </div>
 

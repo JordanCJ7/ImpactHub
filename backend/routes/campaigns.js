@@ -15,6 +15,16 @@ const createCampaignValidation = [
     .trim()
     .isLength({ min: 50, max: 5000 })
     .withMessage('Description must be between 50 and 5000 characters'),
+  body('shortDescription')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Short description cannot exceed 200 characters'),
+  body('story')
+    .optional()
+    .trim()
+    .isLength({ max: 10000 })
+    .withMessage('Story cannot exceed 10000 characters'),
   body('goal')
     .isNumeric()
     .isFloat({ min: 100 })
@@ -27,6 +37,7 @@ const createCampaignValidation = [
   body('endDate')
     .isISO8601()
     .withMessage('Please provide a valid end date'),
+  // Organization fields are now optional since they're auto-populated from user profile
   body('organizationName')
     .optional()
     .trim()
@@ -35,7 +46,51 @@ const createCampaignValidation = [
   body('organizationEmail')
     .optional()
     .isEmail()
-    .withMessage('Please provide a valid organization email')
+    .withMessage('Please provide a valid organization email'),
+  body('timeline')
+    .trim()
+    .isLength({ min: 10, max: 2000 })
+    .withMessage('Timeline must be between 10 and 2000 characters'),
+  body('budget')
+    .trim()
+    .isLength({ min: 10, max: 2000 })
+    .withMessage('Budget breakdown must be between 10 and 2000 characters'),
+  body('risks')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Risk assessment cannot exceed 2000 characters'),
+  body('tags')
+    .optional()
+    .isArray()
+    .withMessage('Tags must be an array'),
+  body('tags.*')
+    .optional()
+    .trim()
+    .isLength({ max: 30 })
+    .withMessage('Each tag cannot exceed 30 characters'),
+  body('beneficiaries')
+    .optional()
+    .isObject()
+    .withMessage('Beneficiaries must be an object'),
+  body('beneficiaries.count')
+    .optional()
+    .isNumeric()
+    .isInt({ min: 0 })
+    .withMessage('Beneficiaries count must be a non-negative number'),
+  body('beneficiaries.description')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Beneficiaries description cannot exceed 500 characters'),
+  body('features')
+    .optional()
+    .isObject()
+    .withMessage('Features must be an object'),
+  body('seo')
+    .optional()
+    .isObject()
+    .withMessage('SEO must be an object')
 ];
 
 const updateCampaignValidation = [
