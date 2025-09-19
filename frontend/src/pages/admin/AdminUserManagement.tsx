@@ -157,8 +157,27 @@ const AdminUserManagement = () => {
                       <p className="text-2xl font-bold">${user.stats?.totalDonated?.toLocaleString() || 0}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium">Campaigns Created</p>
-                      <p className="text-2xl font-bold">{user.stats?.campaignsCreated || 0}</p>
+                      {user.role === 'campaign-leader' ? (
+                        <>
+                          <p className="text-sm font-medium">Campaigns Created</p>
+                          <p className="text-2xl font-bold">{user.stats?.campaignsCreated || 0}</p>
+                        </>
+                      ) : user.role === 'donor' ? (
+                        <>
+                          <p className="text-sm font-medium">Donor Level</p>
+                          <p className="text-2xl font-bold">{user.stats?.donorLevel || 'Supporter'}</p>
+                        </>
+                      ) : user.role === 'admin' ? (
+                        <>
+                          <p className="text-sm font-medium">Admin Since</p>
+                          <p className="text-2xl font-bold">{new Date(user.createdAt).toLocaleDateString()}</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-sm font-medium">Role Info</p>
+                          <p className="text-2xl font-bold">{user.stats?.campaignsCreated ?? 0}</p>
+                        </>
+                      )}
                     </div>
                     <div>
                       <p className="text-sm font-medium">Account Created</p>
