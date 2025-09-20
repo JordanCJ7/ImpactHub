@@ -84,9 +84,9 @@ const Donate: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white border-b">
+      <div className="bg-card border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <Button variant="ghost" asChild>
             <Link to={`/campaigns/${id}`}>
@@ -152,7 +152,7 @@ const Donate: React.FC = () => {
 
                     {donationAmount === "custom" && (
                       <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                           type="number"
                           placeholder="Enter amount"
@@ -318,6 +318,7 @@ const Donate: React.FC = () => {
                 {/* Donate Button */}
                 <Button
                   className="w-full h-12 text-lg"
+                  variant="primaryGradient"
                   onClick={handleDonate}
                   disabled={
                     !selectedAmount || selectedAmount <= 0 || isProcessing
@@ -333,7 +334,7 @@ const Donate: React.FC = () => {
                   )}
                 </Button>
 
-                <p className="text-xs text-gray-500 text-center">
+                <p className="text-xs text-muted-foreground text-center">
                   Your payment information is secure and encrypted. We never
                   store your card details.
                 </p>
@@ -354,7 +355,7 @@ const Donate: React.FC = () => {
                   <h3 className="font-semibold text-lg mb-2">
                     {campaign.title}
                   </h3>
-                  <p className="text-sm text-gray-600 mb-4">
+                  <p className="text-sm text-muted-foreground mb-4">
                     by {campaign.organizer}
                   </p>
 
@@ -387,7 +388,7 @@ const Donate: React.FC = () => {
                   </div>
 
                   {coverFees && (
-                    <div className="flex justify-between text-sm text-gray-600">
+                    <div className="flex justify-between text-sm text-muted-foreground">
                       <span>Processing fee</span>
                       <span>Rs. {processingFee.toFixed(2)}</span>
                     </div>
@@ -400,7 +401,7 @@ const Donate: React.FC = () => {
                     <span>Rs. {totalAmount.toFixed(2)}</span>
                   </div>
 
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-muted-foreground">
                     {coverFees
                       ? "100%"
                       : Math.round(
@@ -419,7 +420,7 @@ const Donate: React.FC = () => {
               <CardContent className="text-center p-4">
                 <Lock className="h-8 w-8 text-green-600 mx-auto mb-2" />
                 <h4 className="font-semibold mb-1">Secure Donation</h4>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-muted-foreground">
                   Your payment is protected by bank-level security and
                   encryption.
                 </p>

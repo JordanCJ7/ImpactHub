@@ -133,9 +133,9 @@ const CampaignDetails: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Back Button */}
-      <div className="bg-white border-b">
+  <div className="bg-card border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <Button variant="ghost" asChild>
             <Link to="/campaigns">
@@ -337,14 +337,14 @@ const CampaignDetails: React.FC = () => {
             {/* Donation Card */}
             <Card className="sticky top-4">
               <CardHeader>
-                <div className="text-3xl font-bold text-gray-900">
+                <div className="text-3xl font-bold text-foreground">
                   LKR {campaign.raised.toLocaleString()}
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-muted-foreground">
                   raised of LKR {campaign.goal.toLocaleString()} goal
                 </div>
                 <Progress value={progressPercentage} className="h-3" />
-                <div className="flex justify-between text-sm text-gray-600">
+                <div className="flex justify-between text-sm text-muted-foreground">
                   <span>{Math.round(progressPercentage)}% funded</span>
                   <span>{daysLeft} days left</span>
                 </div>
@@ -353,18 +353,18 @@ const CampaignDetails: React.FC = () => {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div>
-                    <div className="text-2xl font-bold text-gray-900">{campaign.analytics?.donorCount ?? campaign.donors ?? 0}</div>
-                    <div className="text-sm text-gray-600">donors</div>
+                    <div className="text-2xl font-bold text-foreground">{campaign.analytics?.donorCount ?? campaign.donors ?? 0}</div>
+                    <div className="text-sm text-muted-foreground">donors</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-gray-900">{daysLeft}</div>
-                    <div className="text-sm text-gray-600">days left</div>
+                    <div className="text-2xl font-bold text-foreground">{daysLeft}</div>
+                    <div className="text-sm text-muted-foreground">days left</div>
                   </div>
                 </div>
                 
                 <Separator />
                 
-                <Button asChild className="w-full" size="lg">
+                <Button asChild className="w-full" size="lg" variant="primaryGradient">
                   <Link to={`/donate/${campaign._id || campaign.id}`}>
                     Donate Now
                   </Link>
@@ -395,8 +395,8 @@ const CampaignDetails: React.FC = () => {
                         <CheckCircle className="h-4 w-4 text-green-600" />
                       )}
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">{campaign.organizer?.description}</p>
-                    <div className="flex items-center space-x-4 mt-3 text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground mt-1">{campaign.organizer?.description}</p>
+                    <div className="flex items-center space-x-4 mt-3 text-sm text-muted-foreground">
                       <span>Founded {campaign.organizer?.founded}</span>
                       <span>{campaign.organizer?.projectsCompleted ?? 0} projects completed</span>
                     </div>

@@ -498,9 +498,9 @@ const CreateCampaign: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+  <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white border-b">
+  <div className="bg-card border-b">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -668,7 +668,7 @@ const CreateCampaign: React.FC = () => {
                     id="organizationName"
                     value={formData.organizationName}
                     readOnly
-                    className="bg-gray-50"
+                    className="bg-muted"
                     placeholder="Please update your organization name in your profile settings"
                   />
                   <p className="text-sm text-gray-500 mt-1">
@@ -683,7 +683,7 @@ const CreateCampaign: React.FC = () => {
                     type="email"
                     value={formData.organizationEmail}
                     readOnly
-                    className="bg-gray-50"
+                    className="bg-muted"
                     placeholder="Update your organization email in your profile"
                   />
                   <p className="text-sm text-gray-500 mt-1">

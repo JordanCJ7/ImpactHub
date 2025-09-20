@@ -10,6 +10,7 @@ import { Search, Filter, Users, Clock, ArrowRight, MapPin, Loader2, AlertCircle 
 import { campaignService, type Campaign } from '@/services/campaigns';
 import { resolveCampaignImageUrl } from '@/lib/imageUtils';
 import { useAuth } from '@/contexts/AuthContext';
+import Section from '@/components/common/Section';
 
 const CampaignList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -168,18 +169,16 @@ const CampaignList: React.FC = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
       {/* Header */}
-      <section className="bg-gradient-to-br from-indigo-50 via-white to-blue-50 pt-24 pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Discover <span className="bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">Campaigns</span>
-            </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Browse through thousands of verified campaigns and find causes that matter to you. Every donation makes a difference.
-            </p>
-          </div>
+      <Section
+        className="pt-24 pb-16 bg-gradient-to-br from-indigo-50 via-white to-blue-50 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-900"
+        title={<>
+          Discover <span className="bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">Campaigns</span>
+        </> as unknown as string}
+        subtitle="Browse through thousands of verified campaigns and find causes that matter to you. Every donation makes a difference."
+        center
+      >
 
           {/* Search and Filters */}
           <div className="max-w-4xl mx-auto">
@@ -233,12 +232,10 @@ const CampaignList: React.FC = () => {
               )}
             </div>
           </div>
-        </div>
-      </section>
+      </Section>
 
       {/* Campaign Grid */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <Section>
           {/* Loading State */}
           {loading && (
             <div className="flex items-center justify-center py-12">
@@ -262,8 +259,8 @@ const CampaignList: React.FC = () => {
           {/* Campaign Grid */}
           {!loading && !error && campaigns.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {campaigns.map((campaign) => (
-                <Card key={campaign._id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300 group">
+                {campaigns.map((campaign, idx) => (
+                  <Card key={campaign._id} className={`overflow-hidden hover:shadow-md transition-shadow duration-200 animate-in fade-in-50 slide-in-from-bottom-4`} style={{ animationDelay: `${Math.min(idx, 6) * 60}ms` }}>
                   <div className="relative">
                     <img
                       src={getCampaignImage(campaign)}
@@ -300,17 +297,17 @@ const CampaignList: React.FC = () => {
                     <div className="space-y-4">
                       <div>
                         <div className="flex justify-between items-center mb-2">
-                            <span className="text-sm font-medium text-gray-600">
+                            <span className="text-sm font-medium text-muted-foreground">
                             {formatCurrency(campaign.raised)} raised
                           </span>
-                          <span className="text-sm text-gray-500">
+                          <span className="text-sm text-muted-foreground">
                             {formatCurrency(campaign.goal)} goal
                           </span>
                         </div>
                         <Progress value={getProgressPercentage(campaign.raised, campaign.goal)} className="h-2" />
                       </div>
                       
-                      <div className="flex justify-between items-center text-sm text-gray-600">
+                      <div className="flex justify-between items-center text-sm text-muted-foreground">
                         <div className="flex items-center space-x-1">
                           <Users className="h-4 w-4" />
                           <span>{campaign.analytics?.donorCount || 0} donors</span>
@@ -322,10 +319,15 @@ const CampaignList: React.FC = () => {
                       </div>
                       
                       <div className="flex gap-2">
-                        <Button asChild className="flex-1">
+                        <Button asChild className="flex-1" variant="primaryGradient">
                           <Link to={`/campaigns/${campaign._id}`}>
                             View Campaign
                             <ArrowRight className="ml-2 h-4 w-4" />
+                          </Link>
+                        </Button>
+                        <Button asChild variant="primaryGradient">
+                          <Link to={`/donate/${campaign._id}`}>
+                            Donate
                           </Link>
                         </Button>
                       </div>
@@ -339,9 +341,9 @@ const CampaignList: React.FC = () => {
           {/* Empty State */}
           {!loading && !error && campaigns.length === 0 && (
             <div className="text-center py-12">
-              <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No campaigns found</h3>
-              <p className="text-gray-600 mb-6">
+              <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">No campaigns found</h3>
+              <p className="text-muted-foreground mb-6">
                 {searchQuery || selectedCategory !== 'all' 
                   ? 'Try adjusting your search terms or filters to find more campaigns.'
                   : 'No campaigns are currently available. Check back soon!'
@@ -391,8 +393,7 @@ const CampaignList: React.FC = () => {
               </div>
             </div>
           )}
-        </div>
-      </section>
+      </Section>
     </div>
     </>
   );

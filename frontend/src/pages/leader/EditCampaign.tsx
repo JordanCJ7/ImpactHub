@@ -290,7 +290,7 @@ const EditCampaign: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+  <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading campaign...</p>
@@ -301,7 +301,7 @@ const EditCampaign: React.FC = () => {
 
   if (!campaign) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+  <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Campaign Not Found</h2>
@@ -316,9 +316,9 @@ const EditCampaign: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+  <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white border-b">
+  <div className="bg-card border-b">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">

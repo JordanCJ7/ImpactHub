@@ -264,23 +264,23 @@ const DonorDashboard: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading your dashboard...</p>
+          <p className="text-muted-foreground">Loading your dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+  <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white border-b">
+  <div className="bg-card border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-foreground">
                 Welcome back, {user?.name?.split(' ')[0] || 'Friend'}!
               </h1>
-              <p className="text-gray-600">Here's your impact summary and recent activity.</p>
+              <p className="text-muted-foreground">Here's your impact summary and recent activity.</p>
             </div>
             <div className="flex items-center space-x-3">
               <Button variant="outline" asChild>
@@ -315,13 +315,13 @@ const DonorDashboard: React.FC = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">{stat.label}</p>
+                    <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
                     <div className="flex items-center space-x-2">
-                      <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                      <p className="text-2xl font-bold text-foreground">{stat.value}</p>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">{stat.change}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{stat.change}</p>
                   </div>
-                  <div className={`p-2 rounded-lg bg-gray-50`}>
+                  <div className={`p-2 rounded-lg bg-muted`}>
                     <stat.icon className={`h-6 w-6 ${stat.color}`} />
                   </div>
                 </div>
@@ -349,7 +349,7 @@ const DonorDashboard: React.FC = () => {
                     supportedCampaigns.map((campaign) => {
                       const imageUrl = resolveCampaignImageUrl(campaign);
                       return (
-                        <div key={campaign._id} className="flex items-start space-x-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                        <div key={campaign._id} className="flex items-start space-x-4 p-4 border rounded-lg hover:bg-muted transition-colors">
                           {imageUrl ? (
                             <img
                               src={imageUrl}
@@ -362,15 +362,15 @@ const DonorDashboard: React.FC = () => {
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-gray-900 mb-1">{campaign.title}</h4>
-                          <p className="text-sm text-gray-600 mb-2">
+                          <h4 className="font-semibold text-foreground mb-1">{campaign.title}</h4>
+                          <p className="text-sm text-muted-foreground mb-2">
                             Your contribution: <span className="font-medium text-green-600">{formatCurrency(campaign.donatedAmount || 0)}</span>
                           </p>
                           
                           <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                              <span className="text-sm text-gray-600">{formatCurrency(campaign.amountRaised || 0)} raised</span>
-                              <span className="text-sm text-gray-500">
+                              <span className="text-sm text-muted-foreground">{formatCurrency(campaign.amountRaised || 0)} raised</span>
+                              <span className="text-sm text-muted-foreground">
                                 {campaign.endDate ? Math.max(0, Math.ceil((new Date(campaign.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 'N/A'} days left
                               </span>
                             </div>
@@ -407,7 +407,7 @@ const DonorDashboard: React.FC = () => {
                   ) : (
                     <div className="text-center py-8">
                       <Target className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-500">No campaigns supported yet</p>
+                      <p className="text-muted-foreground">No campaigns supported yet</p>
                       <Button className="mt-4" asChild>
                         <Link to="/campaigns">Explore Campaigns</Link>
                       </Button>
@@ -437,12 +437,12 @@ const DonorDashboard: React.FC = () => {
                             <Heart className="h-6 w-6 text-blue-600" />
                           </div>
                           <div>
-                            <h4 className="font-medium text-gray-900">{donation.campaign.title}</h4>
-                            <p className="text-sm text-gray-500">{formatDate(donation.createdAt)}</p>
+                            <h4 className="font-medium text-foreground">{donation.campaign.title}</h4>
+                            <p className="text-sm text-muted-foreground">{formatDate(donation.createdAt)}</p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-semibold text-gray-900">{formatCurrency(donation.amount)}</div>
+                          <div className="font-semibold text-foreground">{formatCurrency(donation.amount)}</div>
                           <Badge className={getStatusColor(donation.status)}>
                             {donation.status.charAt(0).toUpperCase() + donation.status.slice(1)}
                           </Badge>
@@ -452,7 +452,7 @@ const DonorDashboard: React.FC = () => {
                   ) : (
                     <div className="text-center py-8">
                       <Heart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-500">No donations yet</p>
+                      <p className="text-muted-foreground">No donations yet</p>
                       <Button className="mt-4" asChild>
                         <Link to="/campaigns">Make Your First Donation</Link>
                       </Button>
@@ -478,7 +478,7 @@ const DonorDashboard: React.FC = () => {
                   <div className="text-3xl font-bold text-blue-600">
                     {stats.peopleImpacted.toLocaleString()}
                   </div>
-                  <div className="text-sm text-gray-600">Lives Touched</div>
+                  <div className="text-sm text-muted-foreground">Lives Touched</div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 text-center">
@@ -486,13 +486,13 @@ const DonorDashboard: React.FC = () => {
                     <div className="text-xl font-bold text-green-600">
                       {userAnalytics?.impactMetrics?.communitiesReached || 0}
                     </div>
-                    <div className="text-xs text-gray-600">Communities</div>
+                    <div className="text-xs text-muted-foreground">Communities</div>
                   </div>
                   <div>
                     <div className="text-xl font-bold text-purple-600">
                       {userAnalytics?.impactMetrics?.projectsSupported || stats.campaignsSupported}
                     </div>
-                    <div className="text-xs text-gray-600">Projects</div>
+                    <div className="text-xs text-muted-foreground">Projects</div>
                   </div>
                 </div>
 
@@ -513,11 +513,11 @@ const DonorDashboard: React.FC = () => {
               <CardContent>
                 <div className="space-y-3">
                   {achievements.slice(0, 3).map((achievement, index) => (
-                    <div key={index} className={`flex items-center space-x-3 p-3 rounded-lg ${achievement.earned ? 'bg-yellow-50' : 'bg-gray-50'}`}>
+                    <div key={index} className={`flex items-center space-x-3 p-3 rounded-lg ${achievement.earned ? 'bg-yellow-50' : 'bg-muted'}`}>
                       <Award className={`h-5 w-5 ${achievement.earned ? 'text-yellow-600' : 'text-gray-400'}`} />
                       <div className="flex-1">
                         <h4 className="font-medium text-sm">{achievement.title}</h4>
-                        <p className="text-xs text-gray-600">{achievement.description}</p>
+                        <p className="text-xs text-muted-foreground">{achievement.description}</p>
                       </div>
                     </div>
                   ))}

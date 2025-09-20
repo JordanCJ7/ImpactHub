@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Heart, Users, Target, Award, ArrowRight, TrendingUp, Globe, Shield } from 'lucide-react';
 import { campaignService } from '@/services/campaigns';
 import { resolveCampaignImageUrl } from '@/lib/imageUtils';
+import { Skeleton } from '@/components/ui/skeleton';
+import Section from '@/components/common/Section';
 
 const Home: React.FC = () => {
   const [featuredCampaigns, setFeaturedCampaigns] = useState<any[]>([]);
@@ -67,10 +69,9 @@ const Home: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-indigo-50 via-white to-blue-50 pt-16 pb-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <Section className="pt-16 pb-20 bg-gradient-to-br from-indigo-50 via-white to-blue-50 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-900" center>
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
               Make a <span className="bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">Difference</span> Today
@@ -81,7 +82,7 @@ const Home: React.FC = () => {
             
             {/* Role-based Login Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <Button size="lg" asChild className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700">
+              <Button size="lg" asChild variant="primaryGradient">
                 <Link to="/login?role=donor">
                   <Heart className="mr-2 h-5 w-5" />
                   Login as Donor
@@ -114,24 +115,27 @@ const Home: React.FC = () => {
               ))}
             </div>
           </div>
-        </div>
-      </section>
+      </Section>
 
       {/* Featured Campaigns */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Featured Campaigns
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Discover campaigns that are making a real impact in communities around the world.
-            </p>
-          </div>
+      <Section className="py-20 bg-white dark:bg-zinc-950" title="Featured Campaigns" subtitle="Discover campaigns that are making a real impact in communities around the world." center>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
             {loadingFeatured ? (
-              <div className="col-span-3 text-center py-10">Loading featured campaigns...</div>
+              <>
+                {[1,2,3].map((i) => (
+                  <Card key={i} className="overflow-hidden">
+                    <Skeleton className="w-full h-48" />
+                    <div className="p-6 space-y-4">
+                      <Skeleton className="h-5 w-3/4" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-2/3" />
+                      <Skeleton className="h-2 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  </Card>
+                ))}
+              </>
             ) : featuredCampaigns && featuredCampaigns.length > 0 ? (
               featuredCampaigns.map((campaign) => (
                 <Card key={campaign.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
@@ -143,7 +147,7 @@ const Home: React.FC = () => {
                         {campaign.title ? campaign.title.substring(0, 2).toUpperCase() : 'CA'}
                       </div>
                     )}
-                    <Badge className="absolute top-3 left-3 bg-white text-gray-900">
+                    <Badge className="absolute top-3 left-3 bg-white/95 text-gray-900 backdrop-blur border">
                       {campaign.category}
                     </Badge>
                   </div>
@@ -164,7 +168,7 @@ const Home: React.FC = () => {
                         <span>{campaign.donors} donors</span>
                         <span>{campaign.daysLeft} days left</span>
                       </div>
-                      <Button asChild className="w-full">
+                      <Button asChild className="w-full" variant="primaryGradient">
                         <Link to={`/campaigns/${campaign.id}`}>
                           View Campaign
                           <ArrowRight className="ml-2 h-4 w-4" />
@@ -180,32 +184,22 @@ const Home: React.FC = () => {
           </div>
 
           <div className="text-center">
-            <Button size="lg" variant="outline" asChild>
+            <Button size="lg" variant="soft" asChild>
               <Link to="/campaigns">
                 View All Campaigns
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
           </div>
-        </div>
-      </section>
+      </Section>
 
       {/* How It Works */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              How It Works
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Making a difference is simple. Follow these easy steps to start your impact journey.
-            </p>
-          </div>
+      <Section className="py-20 bg-gray-50 dark:bg-zinc-900" title="How It Works" subtitle="Making a difference is simple. Follow these easy steps to start your impact journey." center>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 mb-6">
-                <Users className="h-8 w-8 text-indigo-600" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-500/20 mb-6">
+                <Users className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Discover Campaigns</h3>
               <p className="text-gray-600">
@@ -214,8 +208,8 @@ const Home: React.FC = () => {
             </div>
 
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 mb-6">
-                <Heart className="h-8 w-8 text-indigo-600" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-500/20 mb-6">
+                <Heart className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Make a Donation</h3>
               <p className="text-gray-600">
@@ -224,8 +218,8 @@ const Home: React.FC = () => {
             </div>
 
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 mb-6">
-                <TrendingUp className="h-8 w-8 text-indigo-600" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-500/20 mb-6">
+                <TrendingUp className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Track Impact</h3>
               <p className="text-gray-600">
@@ -233,11 +227,10 @@ const Home: React.FC = () => {
               </p>
             </div>
           </div>
-        </div>
-      </section>
+      </Section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-indigo-600 to-blue-600">
+      <Section className="py-20 bg-gradient-to-r from-[hsl(var(--brand-from))] to-[hsl(var(--brand-to))]" center>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
             Ready to Make a Difference?
@@ -257,7 +250,7 @@ const Home: React.FC = () => {
             </Button>
           </div>
         </div>
-      </section>
+      </Section>
     </div>
   );
 };

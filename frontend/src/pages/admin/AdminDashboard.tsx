@@ -153,7 +153,7 @@ const AdminDashboard: React.FC = () => {
       case 'rejected':
         return 'bg-red-100 text-red-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-foreground';
     }
   };
 
@@ -166,7 +166,7 @@ const AdminDashboard: React.FC = () => {
       case 'donor':
         return 'bg-green-100 text-green-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-foreground';
     }
   };
 
@@ -208,26 +208,26 @@ const AdminDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-indigo-600" />
-          <p className="text-gray-600">Loading admin dashboard...</p>
+          <p className="text-muted-foreground">Loading admin dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white border-b shadow-sm">
+      <div className="bg-card border-b shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-foreground">
                 Admin Dashboard
               </h1>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Welcome back, {user?.name}. <br /> Manage your platform efficiently.
               </p>
             </div>
@@ -282,11 +282,11 @@ const AdminDashboard: React.FC = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">{stat.title}</p>
+                    <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
                     <div className="flex items-center space-x-2">
-                      <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                      <p className="text-2xl font-bold text-foreground">{stat.value}</p>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">{stat.change}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{stat.change}</p>
                   </div>
                   <div className={`p-3 rounded-lg ${stat.bgColor}`}>
                     <stat.icon className={`h-6 w-6 ${stat.color}`} />
@@ -332,11 +332,11 @@ const AdminDashboard: React.FC = () => {
                             {campaign.title.substring(0, 2).toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-gray-900 mb-1">{campaign.title}</h4>
-                            <p className="text-sm text-gray-600 mb-2">
+                            <h4 className="font-semibold text-foreground mb-1">{campaign.title}</h4>
+                            <p className="text-sm text-muted-foreground mb-2">
                               by {campaign.creator.name}
                             </p>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-muted-foreground">
                               Goal: {formatCurrency(campaign.goal)}
                             </p>
                           </div>
@@ -366,7 +366,7 @@ const AdminDashboard: React.FC = () => {
                     ) : (
                       <div className="text-center py-8">
                         <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-                        <p className="text-gray-500">No pending campaigns</p>
+                        <p className="text-muted-foreground">No pending campaigns</p>
                       </div>
                     )}
                   </div>
@@ -391,10 +391,10 @@ const AdminDashboard: React.FC = () => {
                               <DollarSign className="h-5 w-5 text-green-600" />
                             </div>
                             <div>
-                              <p className="font-medium text-gray-900">
+                              <p className="font-medium text-foreground">
                                 {formatCurrency(donation.amount)}
                               </p>
-                              <p className="text-sm text-gray-500">
+                              <p className="text-sm text-muted-foreground">
                                 to {donation.campaign.title}
                               </p>
                             </div>
@@ -403,7 +403,7 @@ const AdminDashboard: React.FC = () => {
                             <Badge className={getStatusColor(donation.status)}>
                               {donation.status}
                             </Badge>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                               {formatDate(donation.createdAt)}
                             </p>
                           </div>
@@ -411,8 +411,8 @@ const AdminDashboard: React.FC = () => {
                       ))
                     ) : (
                       <div className="text-center py-8">
-                        <Activity className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500">No recent donations</p>
+                        <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <p className="text-muted-foreground">No recent donations</p>
                       </div>
                     )}
                   </div>
@@ -450,8 +450,8 @@ const AdminDashboard: React.FC = () => {
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <h4 className="font-medium text-gray-900">{user.name}</h4>
-                            <p className="text-sm text-gray-500">{user.email}</p>
+                            <h4 className="font-medium text-foreground">{user.name}</h4>
+                            <p className="text-sm text-muted-foreground">{user.email}</p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-3">
@@ -466,8 +466,8 @@ const AdminDashboard: React.FC = () => {
                     ))
                   ) : (
                     <div className="text-center py-8">
-                      <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-500">No users found</p>
+                      <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">No users found</p>
                     </div>
                   )}
                 </div>
@@ -494,8 +494,8 @@ const AdminDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-center py-8">
-                  <Target className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">Campaign management features coming soon</p>
+                  <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">Campaign management features coming soon</p>
                   <Button className="mt-4" asChild>
                     <Link to="/admin/campaigns">Go to Campaign Management</Link>
                   </Button>
@@ -523,8 +523,8 @@ const AdminDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-center py-8">
-                  <DollarSign className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">Donation management features coming soon</p>
+                  <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">Donation management features coming soon</p>
                   <Button className="mt-4" asChild>
                     <Link to="/admin/donations">Go to Donation Management</Link>
                   </Button>

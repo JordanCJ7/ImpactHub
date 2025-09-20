@@ -165,9 +165,9 @@ const MyCampaigns: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+  <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white border-b">
+  <div className="bg-card border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -286,7 +286,7 @@ const MyCampaigns: React.FC = () => {
                     </Badge>
                   </div>
                   {campaign.category && (
-                    <Badge className="absolute top-3 right-3 bg-white text-gray-900">
+                    <Badge className="absolute top-3 right-3 bg-white/95 text-gray-900">
                       {campaign.category}
                     </Badge>
                   )}

@@ -280,12 +280,12 @@ const LeaderProfile: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+  <div className="min-h-screen bg-background py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Campaign Leader Profile</h1>
-          <p className="text-gray-600 mt-2">Manage your profile and campaign settings</p>
+          <h1 className="text-3xl font-bold text-foreground">Campaign Leader Profile</h1>
+          <p className="text-muted-foreground mt-2">Manage your profile and campaign settings</p>
         </div>
 
         {error && (
@@ -336,15 +336,15 @@ const LeaderProfile: React.FC = () => {
                 )}
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-2xl font-bold text-foreground">
                   {profile.firstName} {profile.lastName}
                 </h2>
-                <p className="text-gray-600">{profile.email}</p>
+                <p className="text-muted-foreground">{profile.email}</p>
                 <div className="flex items-center space-x-2 mt-2">
                   <Badge className={getLevelBadgeColor(stats.leaderLevel)}>
                     {stats.leaderLevel}
                   </Badge>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-muted-foreground">
                     Campaign Leader since {profile.joinDate}
                   </span>
                 </div>
@@ -378,8 +378,8 @@ const LeaderProfile: React.FC = () => {
               <div className="flex items-center">
                 <Target className="h-8 w-8 text-green-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Raised</p>
-                  <p className="text-2xl font-bold text-gray-900">${stats.totalRaised.toLocaleString()}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Total Raised</p>
+                  <p className="text-2xl font-bold text-foreground">${stats.totalRaised.toLocaleString()}</p>
                 </div>
               </div>
             </CardContent>
@@ -389,8 +389,8 @@ const LeaderProfile: React.FC = () => {
               <div className="flex items-center">
                 <Award className="h-8 w-8 text-blue-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Campaigns</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.campaignCount}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Total Campaigns</p>
+                  <p className="text-2xl font-bold text-foreground">{stats.campaignCount}</p>
                 </div>
               </div>
             </CardContent>
@@ -400,8 +400,8 @@ const LeaderProfile: React.FC = () => {
               <div className="flex items-center">
                 <Target className="h-8 w-8 text-orange-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Active Campaigns</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.activeCampaigns}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Active Campaigns</p>
+                  <p className="text-2xl font-bold text-foreground">{stats.activeCampaigns}</p>
                 </div>
               </div>
             </CardContent>
@@ -411,8 +411,8 @@ const LeaderProfile: React.FC = () => {
               <div className="flex items-center">
                 <Shield className="h-8 w-8 text-purple-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Leader Level</p>
-                  <p className="text-lg font-bold text-gray-900">{stats.leaderLevel}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Leader Level</p>
+                  <p className="text-lg font-bold text-foreground">{stats.leaderLevel}</p>
                 </div>
               </div>
             </CardContent>
@@ -466,7 +466,7 @@ const LeaderProfile: React.FC = () => {
                     type="email"
                     value={profile.email}
                     disabled
-                    className="bg-gray-50"
+                    className="bg-muted"
                   />
                   <p className="text-sm text-gray-500">Email cannot be changed</p>
                 </div>
@@ -551,12 +551,12 @@ const LeaderProfile: React.FC = () => {
                     <div key={campaign.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex-1">
                         <h4 className="font-medium text-gray-900">{campaign.title}</h4>
-                        <p className="text-sm text-gray-600">Created on {new Date(campaign.date).toLocaleDateString()}</p>
+                        <p className="text-sm text-muted-foreground">Created on {new Date(campaign.date).toLocaleDateString()}</p>
                         <div className="flex items-center space-x-4 mt-2">
                           <Badge variant={campaign.status === 'Active' ? 'default' : 'secondary'}>
                             {campaign.status}
                           </Badge>
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-muted-foreground">
                             ${campaign.raised.toLocaleString()} / ${campaign.goal.toLocaleString()}
                           </span>
                         </div>

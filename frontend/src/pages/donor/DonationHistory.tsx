@@ -166,8 +166,8 @@ const DonationHistory: React.FC = () => {
       case 'completed': return 'bg-green-100 text-green-800';
       case 'processing': return 'bg-blue-100 text-blue-800';
       case 'failed': return 'bg-red-100 text-red-800';
-      case 'refunded': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'refunded': return 'bg-muted text-foreground';
+      default: return 'bg-muted text-foreground';
     }
   };
 
@@ -228,14 +228,14 @@ const DonationHistory: React.FC = () => {
   const averageDonation = totalDonated / donations.length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white border-b">
+      <div className="bg-card border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Donation History</h1>
-              <p className="text-gray-600">Track all your donations and their impact over time.</p>
+              <h1 className="text-2xl font-bold text-foreground">Donation History</h1>
+              <p className="text-muted-foreground">Track all your donations and their impact over time.</p>
             </div>
             <div className="flex items-center space-x-3">
               <Button variant="outline">
@@ -258,7 +258,7 @@ const DonationHistory: React.FC = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Donated</p>
+                  <p className="text-sm font-medium text-muted-foreground">Total Donated</p>
                   <p className="text-2xl font-bold text-green-600">Rs.{totalDonated}</p>
                 </div>
                 <DollarSign className="h-8 w-8 text-green-600" />
@@ -270,7 +270,7 @@ const DonationHistory: React.FC = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Donations</p>
+                  <p className="text-sm font-medium text-muted-foreground">Total Donations</p>
                   <p className="text-2xl font-bold text-blue-600">{donations.length}</p>
                 </div>
                 <Gift className="h-8 w-8 text-blue-600" />
@@ -282,7 +282,7 @@ const DonationHistory: React.FC = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Average Donation</p>
+                  <p className="text-sm font-medium text-muted-foreground">Average Donation</p>
                   <p className="text-2xl font-bold text-purple-600">Rs.{averageDonation.toFixed(0)}</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-purple-600" />
@@ -294,7 +294,7 @@ const DonationHistory: React.FC = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Fees Covered</p>
+                  <p className="text-sm font-medium text-muted-foreground">Fees Covered</p>
                   <p className="text-2xl font-bold text-orange-600">Rs.{totalFeesCovered.toFixed(2)}</p>
                 </div>
                 <Heart className="h-8 w-8 text-orange-600" />
@@ -308,7 +308,7 @@ const DonationHistory: React.FC = () => {
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                 <Input
                   type="text"
                   placeholder="Search campaigns or organizers..."
@@ -363,8 +363,8 @@ const DonationHistory: React.FC = () => {
 
           {/* Donation List */}
           <TabsContent value="list" className="space-y-4">
-            {sortedDonations.map((donation) => (
-              <Card key={donation.id} className="overflow-hidden hover:shadow-md transition-shadow duration-200">
+            {sortedDonations.map((donation, idx) => (
+              <Card key={donation.id} className={`overflow-hidden hover:shadow-md transition-shadow duration-200 animate-in fade-in-50 slide-in-from-bottom-4`} style={{ animationDelay: `${Math.min(idx, 6) * 60}ms` }}>
                 <CardContent className="p-6">
                   <div className="flex items-start space-x-4">
                     <img
@@ -376,10 +376,10 @@ const DonationHistory: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900 mb-1">
+                          <h3 className="font-semibold text-foreground mb-1">
                             {donation.campaign.title}
                           </h3>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-muted-foreground">
                             by {donation.campaign.organizer}
                           </p>
                         </div>
@@ -394,7 +394,7 @@ const DonationHistory: React.FC = () => {
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground mb-3">
                         <div className="flex items-center space-x-1">
                           <Calendar className="h-4 w-4" />
                           <span>{new Date(donation.date).toLocaleDateString()}</span>
@@ -408,8 +408,8 @@ const DonationHistory: React.FC = () => {
                       </div>
 
                       {donation.message && (
-                        <div className="bg-gray-50 rounded-lg p-3 mb-3">
-                          <p className="text-sm text-gray-700 italic">"{donation.message}"</p>
+                        <div className="bg-muted rounded-lg p-3 mb-3">
+                          <p className="text-sm text-foreground italic">"{donation.message}"</p>
                         </div>
                       )}
 
@@ -424,7 +424,7 @@ const DonationHistory: React.FC = () => {
                       )}
 
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4 text-xs text-gray-500">
+                        <div className="flex items-center space-x-4 text-xs text-muted-foreground">
                           {donation.feesCovered && (
                             <span className="flex items-center space-x-1">
                               <Heart className="h-3 w-3 text-red-500" />
@@ -461,9 +461,9 @@ const DonationHistory: React.FC = () => {
             {sortedDonations.length === 0 && (
               <Card>
                 <CardContent className="text-center py-12">
-                  <Heart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No donations found</h3>
-                  <p className="text-gray-600 mb-6">
+                  <Heart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">No donations found</h3>
+                  <p className="text-muted-foreground mb-6">
                     {searchQuery || statusFilter !== 'all' || timeFilter !== 'all'
                       ? "Try adjusting your search terms or filters."
                       : "You haven't made any donations yet."}
@@ -490,7 +490,7 @@ const DonationHistory: React.FC = () => {
                   <CardDescription>Your giving patterns over time</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64 flex items-center justify-center text-gray-500">
+                  <div className="h-64 flex items-center justify-center text-muted-foreground">
                     <div className="text-center">
                       <BarChart3 className="h-12 w-12 mx-auto mb-4" />
                       <p>Donation trend chart would be displayed here</p>
@@ -509,28 +509,28 @@ const DonationHistory: React.FC = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium">Health & Medical</span>
                       <div className="flex items-center space-x-2">
-                        <div className="w-20 bg-gray-200 rounded-full h-2">
+                        <div className="w-20 bg-muted rounded-full h-2">
                           <div className="bg-blue-600 h-2 rounded-full" style={{ width: '45%' }} />
                         </div>
-                        <span className="text-sm text-gray-600">$225</span>
+                        <span className="text-sm text-muted-foreground">$225</span>
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium">Education</span>
                       <div className="flex items-center space-x-2">
-                        <div className="w-20 bg-gray-200 rounded-full h-2">
+                        <div className="w-20 bg-muted rounded-full h-2">
                           <div className="bg-green-600 h-2 rounded-full" style={{ width: '30%' }} />
                         </div>
-                        <span className="text-sm text-gray-600">$100</span>
+                        <span className="text-sm text-muted-foreground">$100</span>
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium">Emergency Relief</span>
                       <div className="flex items-center space-x-2">
-                        <div className="w-20 bg-gray-200 rounded-full h-2">
+                        <div className="w-20 bg-muted rounded-full h-2">
                           <div className="bg-red-600 h-2 rounded-full" style={{ width: '25%' }} />
                         </div>
-                        <span className="text-sm text-gray-600">$275</span>
+                        <span className="text-sm text-muted-foreground">$275</span>
                       </div>
                     </div>
                   </div>
@@ -546,15 +546,15 @@ const DonationHistory: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="text-center">
                     <div className="text-3xl font-bold text-green-600">$325</div>
-                    <div className="text-sm text-gray-600">This Month</div>
+                    <div className="text-sm text-muted-foreground">This Month</div>
                   </div>
                   <div className="text-center">
                     <div className="text-3xl font-bold text-blue-600">$275</div>
-                    <div className="text-sm text-gray-600">Last Month</div>
+                    <div className="text-sm text-muted-foreground">Last Month</div>
                   </div>
                   <div className="text-center">
                     <div className="text-3xl font-bold text-purple-600">+18%</div>
-                    <div className="text-sm text-gray-600">Growth</div>
+                    <div className="text-sm text-muted-foreground">Growth</div>
                   </div>
                 </div>
               </CardContent>
@@ -591,10 +591,10 @@ const DonationHistory: React.FC = () => {
                     {donations.filter(d => d.taxDeductible).map((donation) => (
                       <div key={donation.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex items-center space-x-3">
-                          <FileText className="h-5 w-5 text-gray-400" />
+                          <FileText className="h-5 w-5 text-muted-foreground" />
                           <div>
-                            <h4 className="font-medium text-gray-900">{donation.campaign.title}</h4>
-                            <p className="text-sm text-gray-600">
+                            <h4 className="font-medium text-foreground">{donation.campaign.title}</h4>
+                            <p className="text-sm text-muted-foreground">
                               ${donation.amount} • {new Date(donation.date).toLocaleDateString()}
                             </p>
                           </div>

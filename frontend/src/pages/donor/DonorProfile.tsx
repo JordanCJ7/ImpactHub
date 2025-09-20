@@ -336,17 +336,17 @@ const DonorProfile: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading your profile...</p>
+          <p className="text-muted-foreground">Loading your profile...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Error Alert */}
       {error && (
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
@@ -358,10 +358,10 @@ const DonorProfile: React.FC = () => {
       )}
 
       {/* Header */}
-      <div className="bg-white border-b">
+      <div className="bg-card border-b">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
+            <h1 className="text-2xl font-bold text-foreground">Profile Settings</h1>
             <Button 
               onClick={isEditing ? handleSave : () => setIsEditing(true)}
               disabled={saving}
@@ -414,25 +414,25 @@ const DonorProfile: React.FC = () => {
                       <div className="text-2xl font-bold text-green-600">
                         LKR {userStats.totalDonated?.toLocaleString() || '0'}
                       </div>
-                      <div className="text-sm text-gray-600">Total Donated</div>
+                      <div className="text-sm text-muted-foreground">Total Donated</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-600">
                         {userStats.donationCount || 0}
                       </div>
-                      <div className="text-sm text-gray-600">Donations Made</div>
+                      <div className="text-sm text-muted-foreground">Donations Made</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-purple-600">
                         {userStats.campaignsSupported || 0}
                       </div>
-                      <div className="text-sm text-gray-600">Campaigns Supported</div>
+                      <div className="text-sm text-muted-foreground">Campaigns Supported</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-yellow-600">
                         {userStats.donorLevel || 'Bronze'}
                       </div>
-                      <div className="text-sm text-gray-600">Donor Level</div>
+                      <div className="text-sm text-muted-foreground">Donor Level</div>
                     </div>
                   </div>
                   {userStats.impactPoints > 0 && (
@@ -441,7 +441,7 @@ const DonorProfile: React.FC = () => {
                         <div className="text-lg font-semibold text-indigo-600">
                           {userStats.impactPoints} Impact Points
                         </div>
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-muted-foreground">
                           Member since {profile.joinDate}
                         </div>
                       </div>
@@ -494,7 +494,7 @@ const DonorProfile: React.FC = () => {
                       <Camera className="h-4 w-4 mr-2" />
                       {uploadingAvatar ? 'Uploading...' : 'Change Photo'}
                     </Button>
-                    <p className="text-sm text-gray-500 mt-2">
+                    <p className="text-sm text-muted-foreground mt-2">
                       JPG, GIF or PNG. Max size of 2MB.
                     </p>
                   </div>
@@ -582,7 +582,7 @@ const DonorProfile: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="campaignUpdates">Campaign Updates</Label>
-                      <p className="text-sm text-gray-500">Get notified about progress on campaigns you support</p>
+                      <p className="text-sm text-muted-foreground">Get notified about progress on campaigns you support</p>
                     </div>
                     <Switch
                       id="campaignUpdates"
@@ -594,7 +594,7 @@ const DonorProfile: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="donationReceipts">Donation Receipts</Label>
-                      <p className="text-sm text-gray-500">Receive email receipts for your donations</p>
+                      <p className="text-sm text-muted-foreground">Receive email receipts for your donations</p>
                     </div>
                     <Switch
                       id="donationReceipts"
@@ -606,7 +606,7 @@ const DonorProfile: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="monthlyReports">Monthly Impact Reports</Label>
-                      <p className="text-sm text-gray-500">Monthly summary of your donation impact</p>
+                      <p className="text-sm text-muted-foreground">Monthly summary of your donation impact</p>
                     </div>
                     <Switch
                       id="monthlyReports"
@@ -618,7 +618,7 @@ const DonorProfile: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="newCampaigns">New Campaign Recommendations</Label>
-                      <p className="text-sm text-gray-500">Discover new campaigns that match your interests</p>
+                      <p className="text-sm text-muted-foreground">Discover new campaigns that match your interests</p>
                     </div>
                     <Switch
                       id="newCampaigns"
@@ -630,7 +630,7 @@ const DonorProfile: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="marketing">Marketing Communications</Label>
-                      <p className="text-sm text-gray-500">Platform updates, feature announcements, and tips</p>
+                      <p className="text-sm text-muted-foreground">Platform updates, feature announcements, and tips</p>
                     </div>
                     <Switch
                       id="marketing"
@@ -657,7 +657,7 @@ const DonorProfile: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="showProfile">Public Profile</Label>
-                      <p className="text-sm text-gray-500">Make your profile visible to other users</p>
+                      <p className="text-sm text-muted-foreground">Make your profile visible to other users</p>
                     </div>
                     <Switch
                       id="showProfile"
@@ -669,7 +669,7 @@ const DonorProfile: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="showDonations">Show Donation History</Label>
-                      <p className="text-sm text-gray-500">Display your donation amounts publicly</p>
+                      <p className="text-sm text-muted-foreground">Display your donation amounts publicly</p>
                     </div>
                     <Switch
                       id="showDonations"
@@ -681,7 +681,7 @@ const DonorProfile: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="showLeaderboard">Appear on Leaderboard</Label>
-                      <p className="text-sm text-gray-500">Show your ranking on donor leaderboards</p>
+                      <p className="text-sm text-muted-foreground">Show your ranking on donor leaderboards</p>
                     </div>
                     <Switch
                       id="showLeaderboard"
@@ -707,12 +707,12 @@ const DonorProfile: React.FC = () => {
                 {paymentMethods.map((method) => (
                   <div key={method.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center space-x-3">
-                      <CreditCard className="h-5 w-5 text-gray-400" />
+                      <CreditCard className="h-5 w-5 text-muted-foreground" />
                       <div>
                         <div className="font-medium">
                           {method.brand} ending in {method.last4}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-muted-foreground">
                           Expires {method.expiry}
                           {method.isDefault && <Badge className="ml-2">Default</Badge>}
                         </div>
@@ -750,7 +750,7 @@ const DonorProfile: React.FC = () => {
                       <div key={donation._id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex-1">
                           <div className="font-medium">{donation.campaign.title}</div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-muted-foreground">
                             {new Date(donation.createdAt).toLocaleDateString('en-US', {
                               year: 'numeric',
                               month: 'short',
@@ -784,12 +784,12 @@ const DonorProfile: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* First Donation Achievement */}
                   <div className={`flex items-start space-x-3 p-4 rounded-lg border ${
-                    stats.donationCount > 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50 border-gray-200'
+                    stats.donationCount > 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-muted border-border'
                   }`}>
-                    <Award className={`h-6 w-6 mt-1 ${stats.donationCount > 0 ? 'text-yellow-600' : 'text-gray-400'}`} />
+                    <Award className={`h-6 w-6 mt-1 ${stats.donationCount > 0 ? 'text-yellow-600' : 'text-muted-foreground'}`} />
                     <div className="flex-1">
                       <h4 className="font-semibold">First Donor</h4>
-                      <p className="text-sm text-gray-600 mb-2">Make your first donation to any campaign</p>
+                      <p className="text-sm text-muted-foreground mb-2">Make your first donation to any campaign</p>
                       {stats.donationCount > 0 ? (
                         <Badge className="bg-yellow-100 text-yellow-800">
                           Earned
@@ -802,12 +802,12 @@ const DonorProfile: React.FC = () => {
 
                   {/* Regular Supporter Achievement */}
                   <div className={`flex items-start space-x-3 p-4 rounded-lg border ${
-                    stats.donationCount >= 5 ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50 border-gray-200'
+                    stats.donationCount >= 5 ? 'bg-yellow-50 border-yellow-200' : 'bg-muted border-border'
                   }`}>
-                    <Award className={`h-6 w-6 mt-1 ${stats.donationCount >= 5 ? 'text-yellow-600' : 'text-gray-400'}`} />
+                    <Award className={`h-6 w-6 mt-1 ${stats.donationCount >= 5 ? 'text-yellow-600' : 'text-muted-foreground'}`} />
                     <div className="flex-1">
                       <h4 className="font-semibold">Regular Supporter</h4>
-                      <p className="text-sm text-gray-600 mb-2">Make 5 or more donations ({stats.donationCount}/5)</p>
+                      <p className="text-sm text-muted-foreground mb-2">Make 5 or more donations ({stats.donationCount}/5)</p>
                       {stats.donationCount >= 5 ? (
                         <Badge className="bg-yellow-100 text-yellow-800">
                           Earned
@@ -820,12 +820,12 @@ const DonorProfile: React.FC = () => {
 
                   {/* Generous Donor Achievement */}
                   <div className={`flex items-start space-x-3 p-4 rounded-lg border ${
-                    stats.totalDonated >= 10000 ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50 border-gray-200'
+                    stats.totalDonated >= 10000 ? 'bg-yellow-50 border-yellow-200' : 'bg-muted border-border'
                   }`}>
-                    <Award className={`h-6 w-6 mt-1 ${stats.totalDonated >= 10000 ? 'text-yellow-600' : 'text-gray-400'}`} />
+                    <Award className={`h-6 w-6 mt-1 ${stats.totalDonated >= 10000 ? 'text-yellow-600' : 'text-muted-foreground'}`} />
                     <div className="flex-1">
                       <h4 className="font-semibold">Generous Donor</h4>
-                      <p className="text-sm text-gray-600 mb-2">Donate LKR 10,000 or more in total</p>
+                      <p className="text-sm text-muted-foreground mb-2">Donate LKR 10,000 or more in total</p>
                       {stats.totalDonated >= 10000 ? (
                         <Badge className="bg-yellow-100 text-yellow-800">
                           Earned
@@ -838,12 +838,12 @@ const DonorProfile: React.FC = () => {
 
                   {/* Campaign Supporter Achievement */}
                   <div className={`flex items-start space-x-3 p-4 rounded-lg border ${
-                    stats.campaignsSupported >= 3 ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50 border-gray-200'
+                    stats.campaignsSupported >= 3 ? 'bg-yellow-50 border-yellow-200' : 'bg-muted border-border'
                   }`}>
-                    <Award className={`h-6 w-6 mt-1 ${stats.campaignsSupported >= 3 ? 'text-yellow-600' : 'text-gray-400'}`} />
+                    <Award className={`h-6 w-6 mt-1 ${stats.campaignsSupported >= 3 ? 'text-yellow-600' : 'text-muted-foreground'}`} />
                     <div className="flex-1">
                       <h4 className="font-semibold">Campaign Supporter</h4>
-                      <p className="text-sm text-gray-600 mb-2">Support 3 different campaigns ({stats.campaignsSupported}/3)</p>
+                      <p className="text-sm text-muted-foreground mb-2">Support 3 different campaigns ({stats.campaignsSupported}/3)</p>
                       {stats.campaignsSupported >= 3 ? (
                         <Badge className="bg-yellow-100 text-yellow-800">
                           Earned
