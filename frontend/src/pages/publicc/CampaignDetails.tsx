@@ -107,12 +107,12 @@ const CampaignDetails: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
+          <div className="text-center">
           <svg className="animate-spin h-8 w-8 text-indigo-600 mx-auto" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
           </svg>
-          <div className="mt-2 text-gray-600">Loading campaign...</div>
+          <div className="mt-2 text-muted-foreground">Loading campaign...</div>
         </div>
       </div>
     );
@@ -122,8 +122,8 @@ const CampaignDetails: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h3 className="text-lg font-medium text-gray-900">Campaign not found</h3>
-          <p className="text-gray-600 mt-2">{error || 'This campaign may have been removed or is unavailable.'}</p>
+          <h3 className="text-lg font-medium text-foreground">Campaign not found</h3>
+          <p className="text-muted-foreground mt-2">{error || 'This campaign may have been removed or is unavailable.'}</p>
           <div className="mt-4">
             <Button onClick={() => navigate('/campaigns')}>Back to campaigns</Button>
           </div>
@@ -164,7 +164,7 @@ const CampaignDetails: React.FC = () => {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <CardTitle className="text-2xl md:text-3xl mb-2">{campaign.title}</CardTitle>
-                    <div className="flex items-center space-x-4 text-sm text-gray-600">
+                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                       <div className="flex items-center space-x-1">
                         <MapPin className="h-4 w-4" />
                         <span>{campaign.location ? (typeof campaign.location === 'string' ? campaign.location : [campaign.location.city, campaign.location.state, campaign.location.country].filter(Boolean).join(', ')) : ''}</span>
@@ -212,27 +212,27 @@ const CampaignDetails: React.FC = () => {
                 <CardContent>
                   <TabsContent value="story" className="space-y-6">
                       <div className="prose max-w-none">
-                      <p className="text-lg text-gray-700 mb-6">{campaign.description}</p>
+                      <p className="text-lg text-foreground mb-6">{campaign.description}</p>
                       
                       {campaign.story && (
                         <>
                           <h3 className="text-xl font-semibold mb-4">Campaign Story</h3>
-                          <div className="text-gray-700 mb-6 whitespace-pre-wrap">{campaign.story}</div>
+                          <div className="text-foreground mb-6 whitespace-pre-wrap">{campaign.story}</div>
                         </>
                       )}
                       
                       {campaign.beneficiaries && (campaign.beneficiaries.description || campaign.beneficiaries.count > 0) && (
                         <>
                           <h3 className="text-xl font-semibold mb-4">Who Will Benefit</h3>
-                          <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                          <div className="bg-muted p-4 rounded-lg mb-6">
                             {campaign.beneficiaries.count > 0 && (
-                              <div className="flex items-center text-blue-800 mb-2">
+                              <div className="flex items-center text-foreground mb-2">
                                 <Users className="h-5 w-5 mr-2" />
                                 <span className="font-semibold">{campaign.beneficiaries.count.toLocaleString()} people will benefit</span>
                               </div>
                             )}
                             {campaign.beneficiaries.description && (
-                              <p className="text-blue-700">{campaign.beneficiaries.description}</p>
+                              <p className="text-muted-foreground">{campaign.beneficiaries.description}</p>
                             )}
                           </div>
                         </>
@@ -241,8 +241,8 @@ const CampaignDetails: React.FC = () => {
                       {campaign.timeline && (
                         <>
                           <h3 className="text-xl font-semibold mb-4">Project Timeline</h3>
-                          <div className="bg-gray-50 p-4 rounded-lg mb-6">
-                            <div className="whitespace-pre-wrap text-gray-700">{campaign.timeline}</div>
+                          <div className="bg-muted p-4 rounded-lg mb-6">
+                            <div className="whitespace-pre-wrap text-foreground">{campaign.timeline}</div>
                           </div>
                         </>
                       )}
@@ -250,8 +250,8 @@ const CampaignDetails: React.FC = () => {
                       {campaign.budget && (
                         <>
                           <h3 className="text-xl font-semibold mb-4">Budget Breakdown</h3>
-                          <div className="bg-green-50 p-4 rounded-lg mb-6">
-                            <div className="whitespace-pre-wrap text-gray-700">{campaign.budget}</div>
+                          <div className="bg-muted p-4 rounded-lg mb-6">
+                            <div className="whitespace-pre-wrap text-foreground">{campaign.budget}</div>
                           </div>
                         </>
                       )}
@@ -259,8 +259,8 @@ const CampaignDetails: React.FC = () => {
                       {campaign.risks && (
                         <>
                           <h3 className="text-xl font-semibold mb-4">Risks & Mitigation</h3>
-                          <div className="bg-yellow-50 p-4 rounded-lg mb-6">
-                            <div className="whitespace-pre-wrap text-gray-700">{campaign.risks}</div>
+                          <div className="bg-muted p-4 rounded-lg mb-6">
+                            <div className="whitespace-pre-wrap text-foreground">{campaign.risks}</div>
                           </div>
                         </>
                       )}
@@ -270,7 +270,7 @@ const CampaignDetails: React.FC = () => {
                           <h3 className="text-xl font-semibold mb-4">Campaign Tags</h3>
                           <div className="flex flex-wrap gap-2 mb-6">
                             {campaign.tags.map((tag: string, index: number) => (
-                              <Badge key={index} variant="outline" className="bg-gray-100">
+                              <Badge key={index} variant="outline" className="bg-muted">
                                 {tag}
                               </Badge>
                             ))}
@@ -283,12 +283,12 @@ const CampaignDetails: React.FC = () => {
                   <TabsContent value="updates" className="space-y-6">
                     {(campaign.updates || []).map((update: any) => (
                       <div key={update._id || update.id} className="border-b pb-6 last:border-b-0">
-                        <div className="flex items-center space-x-2 mb-3">
-                          <Calendar className="h-4 w-4 text-gray-500" />
-                          <span className="text-sm text-gray-500">{new Date(update.createdAt || update.date).toLocaleDateString()}</span>
+                          <div className="flex items-center space-x-2 mb-3">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">{new Date(update.createdAt || update.date).toLocaleDateString()}</span>
                         </div>
                         <h4 className="text-lg font-semibold mb-3">{update.title}</h4>
-                        <p className="text-gray-700 mb-4">{update.content}</p>
+                        <p className="text-foreground mb-4">{update.content}</p>
                         {(update.images || []).length > 0 && (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {(update.images || []).map((image: any, index: number) => (
@@ -307,7 +307,7 @@ const CampaignDetails: React.FC = () => {
                   
                   <TabsContent value="donors" className="space-y-4">
                     {((campaign.recentDonors && campaign.recentDonors.length > 0) ? campaign.recentDonors : (campaign.analytics && campaign.analytics.recentDonors) || []).map((donor: any, index: number) => (
-                      <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div key={index} className="flex items-center justify-between p-4 bg-muted rounded-lg">
                         <div className="flex items-center space-x-3">
                           <Avatar>
                             <AvatarImage src={donor.avatar ? resolveImageUrl(donor.avatar) : undefined} alt={donor.name} />
@@ -315,7 +315,7 @@ const CampaignDetails: React.FC = () => {
                           </Avatar>
                           <div>
                             <div className="font-medium">{donor.name}</div>
-                            <div className="text-sm text-gray-500">{donor.time || new Date(donor.createdAt || Date.now()).toLocaleString()}</div>
+                            <div className="text-sm text-muted-foreground">{donor.time || new Date(donor.createdAt || Date.now()).toLocaleString()}</div>
                           </div>
                         </div>
                         <div className="text-lg font-semibold text-green-600">
