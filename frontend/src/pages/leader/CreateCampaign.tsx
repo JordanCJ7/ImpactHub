@@ -500,7 +500,7 @@ const CreateCampaign: React.FC = () => {
   return (
   <div className="min-h-screen bg-background">
       {/* Header */}
-  <div className="bg-card border-b">
+  <div className="bg-card border border-border">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -509,8 +509,8 @@ const CreateCampaign: React.FC = () => {
                 Back to Dashboard
               </Button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Create New Campaign</h1>
-                <p className="text-gray-600">Step {currentStep + 1} of {steps.length}: {steps[currentStep].title}</p>
+                <h1 className="text-2xl font-bold text-foreground">Create New Campaign</h1>
+                <p className="text-muted-foreground">Step {currentStep + 1} of {steps.length}: {steps[currentStep].title}</p>
               </div>
             </div>
             {/* Removed Save Draft & Preview controls from header */}
@@ -524,10 +524,10 @@ const CreateCampaign: React.FC = () => {
           <div className="flex items-center justify-between mb-4">
             {steps.map((step, index) => (
               <div key={index} className="flex items-center">
-                <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
+                <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${ 
                   index <= currentStep 
                     ? 'bg-indigo-600 border-indigo-600 text-white' 
-                    : 'border-gray-300 text-gray-400'
+                    : 'border-border text-muted-foreground'
                 }`}>
                   {index < currentStep ? (
                     <CheckCircle className="h-5 w-5" />
@@ -536,8 +536,8 @@ const CreateCampaign: React.FC = () => {
                   )}
                 </div>
                 {index < steps.length - 1 && (
-                  <div className={`w-16 h-0.5 mx-2 ${
-                    index < currentStep ? 'bg-indigo-600' : 'bg-gray-300'
+                  <div className={`w-16 h-0.5 mx-2 ${ 
+                    index < currentStep ? 'bg-indigo-600' : 'bg-muted'
                   }`} />
                 )}
               </div>
@@ -555,7 +555,7 @@ const CreateCampaign: React.FC = () => {
           <CardContent>
             {/* Step 1: Basic Info */}
             {currentStep === 0 && (
-              <div className="space-y-6">
+                <div className="space-y-6">
                 <div>
                   <Label htmlFor="title">Campaign Title *</Label>
                   <Input
@@ -565,8 +565,7 @@ const CreateCampaign: React.FC = () => {
                     placeholder="Enter a compelling campaign title"
                     className="mt-1"
                   />
-                </div>
-
+                  </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <Label htmlFor="goal">Funding Goal (LKR) *</Label>
@@ -671,7 +670,7 @@ const CreateCampaign: React.FC = () => {
                     className="bg-muted"
                     placeholder="Please update your organization name in your profile settings"
                   />
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     This is automatically filled from your profile. Update your profile to change this.
                   </p>
                 </div>
@@ -686,7 +685,7 @@ const CreateCampaign: React.FC = () => {
                     className="bg-muted"
                     placeholder="Update your organization email in your profile"
                   />
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     Uses your organization email from profile, or defaults to your email.
                   </p>
                 </div>
@@ -702,7 +701,7 @@ const CreateCampaign: React.FC = () => {
                     }}
                     placeholder="Enter tags separated by commas (e.g., healthcare, emergency, children)"
                   />
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     Add relevant tags to help people find your campaign. Max 10 tags.
                   </p>
                 </div>
@@ -728,9 +727,9 @@ const CreateCampaign: React.FC = () => {
                   <Label>Campaign Images</Label>
                   <div className="mt-2 space-y-4">
                     {/* Upload Area */}
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                      <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600 mb-4">
+                    <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                      <Camera className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground mb-4">
                         Upload images to make your campaign more compelling (Max 5 images, 5MB each)
                       </p>
                       <input
@@ -764,7 +763,7 @@ const CreateCampaign: React.FC = () => {
                     {/* Uploaded Images Preview */}
                     {uploadedImages.length > 0 && (
                       <div>
-                        <p className="text-sm font-medium text-gray-700 mb-2">
+                        <p className="text-sm font-medium text-foreground mb-2">
                           Uploaded Images ({uploadedImages.length}/5)
                         </p>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -867,13 +866,13 @@ const CreateCampaign: React.FC = () => {
                 </div>
 
                 {/* Campaign Features */}
-                <div className="border rounded-lg p-4">
-                  <h3 className="text-lg font-semibold mb-4">Campaign Settings</h3>
+                  <div className="border rounded-lg p-4">
+                  <h3 className="text-lg font-semibold mb-4 text-foreground">Campaign Settings</h3>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <Label>Allow Anonymous Donations</Label>
-                        <p className="text-sm text-gray-600">Let donors choose to donate anonymously</p>
+                        <p className="text-sm text-muted-foreground">Let donors choose to donate anonymously</p>
                       </div>
                       <input
                         type="checkbox"
@@ -889,7 +888,7 @@ const CreateCampaign: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <Label>Allow Recurring Donations</Label>
-                        <p className="text-sm text-gray-600">Enable monthly recurring donations</p>
+                        <p className="text-sm text-muted-foreground">Enable monthly recurring donations</p>
                       </div>
                       <input
                         type="checkbox"
@@ -905,7 +904,7 @@ const CreateCampaign: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <Label>Send Updates to Donors</Label>
-                        <p className="text-sm text-gray-600">Automatically notify donors about campaign progress</p>
+                        <p className="text-sm text-muted-foreground">Automatically notify donors about campaign progress</p>
                       </div>
                       <input
                         type="checkbox"
@@ -921,7 +920,7 @@ const CreateCampaign: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <Label>Allow Comments</Label>
-                        <p className="text-sm text-gray-600">Let supporters leave encouraging messages</p>
+                        <p className="text-sm text-muted-foreground">Let supporters leave encouraging messages</p>
                       </div>
                       <input
                         type="checkbox"
@@ -992,42 +991,42 @@ const CreateCampaign: React.FC = () => {
             {/* Step 4: Review */}
             {currentStep === 3 && (
               <div className="space-y-6">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="bg-card border border-border rounded-lg p-4">
                   <div className="flex items-center space-x-2">
-                    <AlertCircle className="h-5 w-5 text-blue-600" />
-                    <h3 className="font-semibold text-blue-900">Review Your Campaign</h3>
+                    <AlertCircle className="h-5 w-5 text-foreground" />
+                    <h3 className="font-semibold text-foreground">Review Your Campaign</h3>
                   </div>
-                  <p className="text-blue-700 text-sm mt-2">
+                  <p className="text-muted-foreground text-sm mt-2">
                     Please review all information carefully. Once published, some details cannot be changed.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Basic Information</h4>
+                    <h4 className="font-semibold text-foreground mb-2">Basic Information</h4>
                     <div className="space-y-2 text-sm">
-                      <div><span className="text-gray-600">Title:</span> {formData.title}</div>
-                      <div><span className="text-gray-600">Goal:</span> LKR {formData.goal}</div>
-                      <div><span className="text-gray-600">End Date:</span> {formData.endDate}</div>
-                      <div><span className="text-gray-600">Category:</span> {formData.category}</div>
-                      <div><span className="text-gray-600">Location:</span> {[formData.location.city, formData.location.state, formData.location.country].filter(Boolean).join(', ')}</div>
-                      <div><span className="text-gray-600">Organization:</span> {formData.organizationName}</div>
-                      <div><span className="text-gray-600">Org Email:</span> {formData.organizationEmail}</div>
-                      {formData.tags.length > 0 && <div><span className="text-gray-600">Tags:</span> {formData.tags.join(', ')}</div>}
-                    </div>
+                      <div><span className="text-muted-foreground">Title:</span> {formData.title}</div>
+                      <div><span className="text-muted-foreground">Goal:</span> LKR {formData.goal}</div>
+                      <div><span className="text-muted-foreground">End Date:</span> {formData.endDate}</div>
+                      <div><span className="text-muted-foreground">Category:</span> {formData.category}</div>
+                      <div><span className="text-muted-foreground">Location:</span> {[formData.location.city, formData.location.state, formData.location.country].filter(Boolean).join(', ')}</div>
+                      <div><span className="text-muted-foreground">Organization:</span> {formData.organizationName}</div>
+                      <div><span className="text-muted-foreground">Org Email:</span> {formData.organizationEmail}</div>
+                      {formData.tags.length > 0 && <div><span className="text-muted-foreground">Tags:</span> {formData.tags.join(', ')}</div>}
+                      </div>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Content & Planning</h4>
+                    <h4 className="font-semibold text-foreground mb-2">Content & Planning</h4>
                     <div className="space-y-2 text-sm">
-                      <div><span className="text-gray-600">Description:</span> {formData.description.substring(0, 100)}...</div>
-                      <div><span className="text-gray-600">Story length:</span> {formData.story.length} characters</div>
-                      <div><span className="text-gray-600">Timeline:</span> {formData.timeline.length > 0 ? '✓ Provided' : '✗ Missing'}</div>
-                      <div><span className="text-gray-600">Budget:</span> {formData.budget.length > 0 ? '✓ Provided' : '✗ Missing'}</div>
-                      <div><span className="text-gray-600">Risks:</span> {formData.risks.length > 0 ? '✓ Provided' : 'Not specified'}</div>
-                      <div><span className="text-gray-600">Beneficiaries:</span> {formData.beneficiaries.count > 0 ? `${formData.beneficiaries.count} people` : 'Count not specified'}</div>
-                      {formData.beneficiaries.description && <div><span className="text-gray-600">Who benefits:</span> {formData.beneficiaries.description.substring(0, 50)}...</div>}
-                      <div><span className="text-gray-600">Images:</span> {formData.images.length} uploaded</div>
-                    </div>
+                      <div><span className="text-muted-foreground">Description:</span> {formData.description.substring(0, 100)}...</div>
+                      <div><span className="text-muted-foreground">Story length:</span> {formData.story.length} characters</div>
+                      <div><span className="text-muted-foreground">Timeline:</span> {formData.timeline.length > 0 ? '✓ Provided' : '✗ Missing'}</div>
+                      <div><span className="text-muted-foreground">Budget:</span> {formData.budget.length > 0 ? '✓ Provided' : '✗ Missing'}</div>
+                      <div><span className="text-muted-foreground">Risks:</span> {formData.risks.length > 0 ? '✓ Provided' : 'Not specified'}</div>
+                      <div><span className="text-muted-foreground">Beneficiaries:</span> {formData.beneficiaries.count > 0 ? `${formData.beneficiaries.count} people` : 'Count not specified'}</div>
+                      {formData.beneficiaries.description && <div><span className="text-muted-foreground">Who benefits:</span> {formData.beneficiaries.description.substring(0, 50)}...</div>}
+                      <div><span className="text-muted-foreground">Images:</span> {formData.images.length} uploaded</div>
+                      </div>
                   </div>
                 </div>
 
@@ -1042,12 +1041,12 @@ const CreateCampaign: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="bg-card border border-border rounded-lg p-4">
                   <div className="flex items-center space-x-2">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                    <h3 className="font-semibold text-green-900">Ready to Publish</h3>
+                    <CheckCircle className="h-5 w-5 text-foreground" />
+                    <h3 className="font-semibold text-foreground">Ready to Publish</h3>
                   </div>
-                  <p className="text-green-700 text-sm mt-2">
+                  <p className="text-muted-foreground text-sm mt-2">
                     Your campaign will be reviewed by our team and published within 24 hours.
                   </p>
                 </div>

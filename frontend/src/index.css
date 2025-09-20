@@ -103,4 +103,16 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Make native date picker calendar icon visible in dark mode */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    /* allow custom filter via CSS variable if needed */
+    filter: var(--date-indicator-filter, none);
+    opacity: 0.95;
+  }
+
+  /* In dark mode invert the default icon so it's visible on dark backgrounds */
+  .dark input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) brightness(2) contrast(1);
+  }
 }
