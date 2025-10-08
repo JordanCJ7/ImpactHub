@@ -25,6 +25,8 @@ import TermsOfService from './pages/publicc/TermsOfService';
 import DonorProfile from './pages/donor/DonorProfile';
 import DonorDashboard from './pages/donor/DonorDashboard';
 import DonationHistory from './pages/donor/DonationHistory'; 
+import DonorNotifications from './pages/donor/DonorNotifications'
+import DonorLeaderboard from './pages/donor/DonorLeaderboard'
 
 // Campaign Leader Pages
 import LeaderDashboard from './pages/leader/LeaderDashboard';
@@ -33,17 +35,23 @@ import CreateCampaign from './pages/leader/CreateCampaign';
 import LeaderDrafts from './pages/leader/LeaderDrafts';
 import MyCampaigns from './pages/leader/MyCampaigns';
 import EditCampaign from './pages/leader/EditCampaign';
+import LeaderNotifications from './pages/leader/LeaderNotifications'
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUserManagement from './pages/admin/AdminUserManagement';
 import AdminCampaignManagement from './pages/admin/AdminCampaignManagement';
 import AdminProfile from './pages/admin/AdminProfile';
+import LeaderAnalytics from './pages/leader/LeaderAnalytics';
+import AdminNotifications from './pages/admin/AdminNotifications'
+import AdminDonations from './pages/admin/AdminDonations';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
 
 // Development/Testing Pages
 import IntegrationTest from '@/pages/IntegrationTest';
 
 import NotFound from './pages/NotFound';
+import Impact from './pages/Impact';
 
 // Auth Components
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -98,9 +106,19 @@ const App = () => (
                 <DonorDashboard />
               </ProtectedRoute>
             } />
+            <Route path="/donor/notifications" element={
+              <ProtectedRoute allowedRoles={['donor']}>
+                <DonorNotifications/>
+              </ProtectedRoute>
+            } />
             <Route path="/donor/history" element={
               <ProtectedRoute allowedRoles={['donor']}>
                 <DonationHistory />
+              </ProtectedRoute>
+            } />
+            <Route path="/donor/leaderboard" element={
+              <ProtectedRoute allowedRoles={['donor']}>
+                <DonorLeaderboard />
               </ProtectedRoute>
             } />
 
@@ -130,6 +148,11 @@ const App = () => (
                       <LeaderDrafts />
                     </ProtectedRoute>
                   } />
+                   <Route path="/leader/analytics" element={
+                    <ProtectedRoute allowedRoles={['campaign-leader']}>
+                      <LeaderAnalytics />
+                    </ProtectedRoute>
+                  } />
                  <Route path="/leader/create" element={
                    <ProtectedRoute allowedRoles={['campaign-leader']}>
                      <CreateCampaign />
@@ -138,6 +161,11 @@ const App = () => (
                  <Route path="/leader/edit/:id" element={
                    <ProtectedRoute allowedRoles={['campaign-leader']}>
                      <EditCampaign />
+                   </ProtectedRoute>
+                 } />
+                  <Route path="/leader/notifications" element={
+                   <ProtectedRoute allowedRoles={['campaign-leader']}>
+                     <LeaderNotifications/>
                    </ProtectedRoute>
                  } />
 
@@ -167,6 +195,23 @@ const App = () => (
                 <AdminDashboard />
               </ProtectedRoute>
             } />
+            <Route path="/admin/notifications" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminNotifications />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/donations" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                < AdminDonations />
+              </ProtectedRoute>
+            } />
+
+             <Route path="/admin/analytics" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                < AdminAnalytics />
+              </ProtectedRoute>
+            } />
+
 
             {/* General Authenticated Routes */}
             <Route path="/donor/notifications" element={
@@ -180,6 +225,7 @@ const App = () => (
 
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />
+             <Route path="/impact" element={<Impact />} />
           </Routes>
         </Layout>
       </BrowserRouter>

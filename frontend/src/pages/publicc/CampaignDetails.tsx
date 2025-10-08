@@ -333,9 +333,9 @@ const CampaignDetails: React.FC = () => {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-6 overflow-visible">
             {/* Donation Card */}
-            <Card className="sticky top-4">
+            <Card className="top-4 z-10 mb-6">
               <CardHeader>
                 <div className="text-3xl font-bold text-foreground">
                   LKR {campaign.raised.toLocaleString()}
