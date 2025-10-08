@@ -94,7 +94,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         {/* Logo */}
         <div className="text-center">
@@ -188,9 +188,9 @@ const Login: React.FC = () => {
             {/* ...existing code... */}
 
             <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 Don't have an account?{' '}
-                <Link to="/register" className="text-indigo-600 hover:underline font-medium">
+                <Link to="/register" className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium">
                   Sign up
                 </Link>
               </p>
