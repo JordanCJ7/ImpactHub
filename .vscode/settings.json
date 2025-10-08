@@ -2,7 +2,7 @@
     "terminal.integrated.defaultProfile.windows": "PowerShell",
     "files.exclude": {
         "**/node_modules": true,
-        "**/.env": true
+        "**/.env": false
     },
     // Tailwind / CSS editor tweaks
     "css.validate": false,

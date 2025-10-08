@@ -67,20 +67,49 @@ const Donate: React.FC = () => {
 
     setIsProcessing(true);
 
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      // Prefer creating a Checkout Session for secure hosted payment
+      const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/donations/create-checkout-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          campaignId: id,
+          amount: selectedAmount,
+          currency: 'LKR',
+          donorEmail: '', // allow Stripe to collect or prefill if user logged in
+          donorName: '',
+          isAnonymous,
+          message
+        })
+      });
 
-    // Navigate to confirmation page
-    navigate(`/donation-confirmation/${campaign.id}`, {
-      state: {
-        amount: selectedAmount,
-        totalAmount,
-        coverFees,
-        isAnonymous,
-        message,
-        campaignTitle: campaign.title,
-      },
-    });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Failed to create checkout session');
+
+      // Redirect to Stripe Checkout
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+
+      // Fallback: if backend returned a clientSecret for PaymentIntent, navigate to confirmation (not implemented)
+      navigate(`/donation-confirmation/${campaign.id}`, {
+        state: {
+          amount: selectedAmount,
+          totalAmount,
+          coverFees,
+          isAnonymous,
+          message,
+          campaignTitle: campaign.title,
+        },
+      });
+    } catch (err: any) {
+      console.error('Donation error:', err);
+      // show a basic error toast / alert
+      alert(err.message || 'Failed to initiate donation. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (

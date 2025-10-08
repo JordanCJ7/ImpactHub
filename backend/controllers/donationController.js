@@ -75,6 +75,83 @@ const createPaymentIntent = async (req, res) => {
   }
 };
 
+// Create a Stripe Checkout Session for a campaign donation
+const createCheckoutSession = async (req, res) => {
+  try {
+    const { campaignId, amount, currency = 'LKR', donorEmail, donorName, isAnonymous = false, message } = req.body;
+
+    // Only campaignId and amount are required here; Stripe Checkout can collect payer email
+    if (!campaignId || !amount) {
+      return res.status(400).json({ error: 'Missing required fields: campaignId, amount' });
+    }
+
+    const campaign = await Campaign.findById(campaignId);
+    if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
+    if (campaign.status !== 'active') return res.status(400).json({ error: 'Campaign is not accepting donations' });
+
+    // Create a pending Donation record to be fulfilled after webhook confirmation
+    const donation = new Donation({
+      campaign: campaignId,
+      amount,
+      currency,
+      isAnonymous,
+      message,
+      status: 'pending',
+      payment: {
+        paymentId: `checkout_${Date.now()}`,
+        paymentMethod: 'stripe',
+        netAmount: amount,
+        currency
+      },
+      donor: undefined,
+      anonymousDonor: isAnonymous ? { name: donorName, email: donorEmail } : undefined,
+      metadata: {
+        userAgent: req.get('User-Agent'),
+        ipAddress: req.ip
+      }
+    });
+
+    await donation.save();
+
+    // Build session payload
+    const sessionPayload = {
+      payment_method_types: ['card'],
+      mode: 'payment',
+      line_items: [{
+        price_data: {
+          currency: currency.toLowerCase(),
+          product_data: { name: `Donation to ${campaign.title}` },
+          unit_amount: Math.round(amount * 100)
+        },
+        quantity: 1
+      }],
+      metadata: {
+        donationId: donation._id.toString(),
+        campaignId,
+        isAnonymous: isAnonymous.toString(),
+        message: message || ''
+      },
+      success_url: `${process.env.CLIENT_URL || 'http://localhost:5173'}/donation-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.CLIENT_URL || 'http://localhost:5173'}/donation-cancel`
+    };
+
+    if (donorEmail) sessionPayload.customer_email = donorEmail;
+    if (donorName) sessionPayload.metadata.donorName = donorName;
+
+    // Create Checkout Session
+    const session = await stripe.checkout.sessions.create(sessionPayload);
+
+    // Attach payment id
+    donation.payment.paymentId = session.id;
+    await donation.save();
+
+    res.json({ url: session.url, sessionId: session.id });
+  } catch (error) {
+    console.error('Error creating checkout session:', error);
+    res.status(500).json({ error: 'Failed to create checkout session' });
+  }
+};
+
 // Confirm donation after successful payment
 const confirmDonation = async (req, res) => {
   try {
@@ -201,28 +278,54 @@ const getDonationHistory = async (req, res) => {
 const handleWebhook = async (req, res) => {
   const sig = req.headers['stripe-signature'];
   let event;
-  
+
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
     console.error('Webhook signature verification failed:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
-  
+
   try {
     switch (event.type) {
       case 'payment_intent.succeeded':
         await handlePaymentSucceeded(event.data.object);
         break;
-        
+
       case 'payment_intent.payment_failed':
         await handlePaymentFailed(event.data.object);
         break;
-        
+
+      case 'checkout.session.completed':
+        // A Checkout Session completed — fulfill the donation
+        const session = event.data.object;
+        // If we created a Donation earlier and stored its id in metadata
+        const donationId = session.metadata && session.metadata.donationId;
+        if (donationId) {
+          const donation = await Donation.findById(donationId);
+          if (donation && donation.status === 'pending') {
+            donation.status = 'completed';
+            donation.payment.transactionId = session.payment_intent || session.payment_intent?.id || '';
+            await donation.save();
+
+            // Update campaign and user stats
+            await Campaign.findByIdAndUpdate(donation.campaign, {
+              $inc: { currentAmount: donation.amount, donationCount: 1 }
+            });
+
+            if (donation.anonymousDonor && donation.anonymousDonor.email) {
+              await User.findOneAndUpdate({ email: donation.anonymousDonor.email }, {
+                $inc: { 'donationStats.totalDonated': donation.amount, 'donationStats.donationCount': 1 }
+              });
+            }
+          }
+        }
+        break;
+
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
-    
+
     res.json({ received: true });
   } catch (error) {
     console.error('Webhook handling error:', error);
@@ -456,4 +559,6 @@ module.exports = {
   processPayment,
   stripeWebhook,
   payhereWebhook
+  ,
+  createCheckoutSession
 };

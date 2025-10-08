@@ -37,6 +37,7 @@ router.post('/', createDonationValidation, donationController.createDonation);
 
 // Payment processing
 router.post('/create-payment-intent', donationController.createPaymentIntent);
+router.post('/create-checkout-session', donationController.createCheckoutSession);
 router.post('/confirm', donationController.confirmDonation);
 router.post('/process-payment', donationController.processPayment);
 router.post('/webhook', donationController.handleWebhook);
