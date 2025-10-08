@@ -221,7 +221,7 @@ const IntegrationTest: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+  <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Backend Integration Test</h1>
@@ -259,7 +259,7 @@ const IntegrationTest: React.FC = () => {
                   {tests.map((test, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-3 bg-white rounded-lg border"
+                      className="flex items-center justify-between p-3 bg-card rounded-lg border"
                     >
                       <div className="flex items-center space-x-3">
                         {getStatusIcon(test.status)}

@@ -4,6 +4,21 @@
         "**/node_modules": true,
         "**/.env": true
     },
+    // Tailwind / CSS editor tweaks
+    "css.validate": false,
+    "tailwindCSS.includeLanguages": {
+        "plaintext": "html",
+        "javascript": "javascript",
+        "javascriptreact": "javascript",
+        "typescript": "javascript",
+        "typescriptreact": "javascript",
+        "css": "css",
+        "postcss": "css",
+        "scss": "scss"
+    },
+    "editor.quickSuggestions": {
+        "strings": true
+    },
     "search.exclude": {
         "**/node_modules": true,
         "**/uploads": true

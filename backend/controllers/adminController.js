@@ -123,18 +123,43 @@ const getUserById = async (req, res) => {
 // Update user status
 const updateUserStatus = async (req, res) => {
   try {
-    const { status } = req.body;
-    const userId = req.params.id;
+    let { status } = req.body || {};
+    // Backwards-compat: accept legacy boolean payloads
+    const legacyIsBanned = typeof req.body.isBanned !== 'undefined' ? req.body.isBanned : undefined;
+    const legacyIsActive = typeof req.body.isActive !== 'undefined' ? req.body.isActive : undefined;
+    const legacyBanReason = typeof req.body.banReason !== 'undefined' ? req.body.banReason : undefined;
 
-    if (!['active', 'suspended', 'banned'].includes(status)) {
+    // Map legacy booleans to a status string if status wasn't provided
+    if (!status && typeof legacyIsBanned !== 'undefined') {
+      if (legacyIsBanned) status = 'banned';
+      else if (typeof legacyIsActive !== 'undefined' ? legacyIsActive : !legacyIsBanned) status = 'active';
+    }
+    const userId = req.params.id;
+    if (!status || !['active', 'suspended', 'banned'].includes(status)) {
       return res.status(400).json({
         error: 'Invalid status. Must be active, suspended, or banned'
       });
     }
 
+    // Build update object: support both status string and legacy boolean fields
+    const updateObj = {};
+    if (status) updateObj.status = status;
+    if (typeof legacyIsBanned !== 'undefined') updateObj.isBanned = !!legacyIsBanned;
+    if (typeof legacyIsActive !== 'undefined') updateObj.isActive = !!legacyIsActive;
+    if (typeof legacyBanReason !== 'undefined') updateObj.banReason = legacyBanReason;
+
+    // If status provided but boolean fields not provided, derive boolean fields from status
+    if (status && typeof legacyIsBanned === 'undefined' && typeof legacyIsActive === 'undefined') {
+      updateObj.isBanned = status === 'banned';
+      updateObj.isActive = status === 'active';
+      if (status === 'suspended') {
+        updateObj.isActive = false;
+      }
+    }
+
     const user = await User.findByIdAndUpdate(
       userId,
-      { status },
+      updateObj,
       { new: true }
     ).select('-password');
 
@@ -145,15 +170,22 @@ const updateUserStatus = async (req, res) => {
     }
 
     // Log the action
-    await AuditLog.logAction({
-      user: req.user._id,
-      action: 'user_status_updated',
-      resource: 'user',
-      resourceId: userId,
-      details: { newStatus: status },
-      ipAddress: req.ip,
-      userAgent: req.get('User-Agent')
-    });
+    try {
+      if (req.user && req.user._id) {
+        await AuditLog.logAction({
+          user: req.user._id,
+          action: 'user_updated',
+          resource: 'user',
+          resourceId: userId,
+          details: { newStatus: status },
+          ipAddress: req.ip,
+          userAgent: req.get('User-Agent')
+        });
+      }
+    } catch (auditError) {
+      console.warn('AuditLog failed:', auditError);
+      // don't fail the main operation if audit logging fails
+    }
 
     res.json({
       message: 'User status updated successfully',
@@ -191,16 +223,22 @@ const updateUserRole = async (req, res) => {
       });
     }
 
-    // Log the action
-    await AuditLog.logAction({
-      user: req.user._id,
-      action: 'user_role_updated',
-      resource: 'user',
-      resourceId: userId,
-      details: { newRole: role },
-      ipAddress: req.ip,
-      userAgent: req.get('User-Agent')
-    });
+    // Log the action (don't let audit failures crash the request)
+    try {
+      if (req.user && req.user._id) {
+        await AuditLog.logAction({
+          user: req.user._id,
+          action: 'user_updated',
+          resource: 'user',
+          resourceId: userId,
+          details: { newRole: role },
+          ipAddress: req.ip,
+          userAgent: req.get('User-Agent')
+        });
+      }
+    } catch (auditErr) {
+      console.warn('AuditLog failed:', auditErr);
+    }
 
     res.json({
       message: 'User role updated successfully',
@@ -568,7 +606,7 @@ const updateSystemSettings = async (req, res) => {
 const getPendingCampaigns = async (req, res) => {
   try {
     const campaigns = await Campaign.find({ status: 'pending' })
-      .populate('creator', 'name email')
+      .populate('creator', 'name email organizationName')
       .sort({ createdAt: -1 });
     res.json({ campaigns });
   } catch (error) {
@@ -586,8 +624,35 @@ const suspendCampaign = async (req, res) => {
 
 const getAllDonations = async (req, res) => {
   try {
-    res.status(501).json({ error: 'Donation management not yet implemented' });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+    const status = req.query.status;
+
+    let filter = {};
+    if (status) {
+      filter.status = status;
+    }
+
+    const donations = await Donation.find(filter)
+      .populate('campaign', 'title creator')
+      .populate('campaign.creator', 'name email')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Donation.countDocuments(filter);
+
+    res.json({
+      donations,
+      pagination: {
+        current: page,
+        pages: Math.ceil(total / limit),
+        total
+      }
+    });
   } catch (error) {
+    console.error('Get all donations error:', error);
     res.status(500).json({ error: 'Failed to fetch donations' });
   }
 };
@@ -642,8 +707,40 @@ const getAuditReport = async (req, res) => {
 
 const getPlatformOverview = async (req, res) => {
   try {
-    res.status(501).json({ error: 'Platform overview not yet implemented' });
+    // Basic platform statistics
+    const totalUsers = await User.countDocuments();
+    const totalCampaigns = await Campaign.countDocuments();
+    const totalDonations = await Donation.countDocuments();
+
+    // Sum total donation amount
+    const totalAmountAgg = await Donation.aggregate([
+      { $match: { status: { $in: ['completed', 'verified', 'succeeded'] } } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const totalAmount = (totalAmountAgg[0] && totalAmountAgg[0].total) || 0;
+
+    // Users by role
+    const usersByRoleAgg = await User.aggregate([
+      { $group: { _id: '$role', count: { $sum: 1 } } }
+    ]);
+
+    // Campaigns by status
+    const campaignsByStatusAgg = await Campaign.aggregate([
+      { $group: { _id: '$status', count: { $sum: 1 } } }
+    ]);
+
+    res.json({
+      stats: {
+        totalUsers,
+        totalCampaigns,
+        totalDonations,
+        totalAmount,
+        usersByRole: usersByRoleAgg,
+        campaignsByStatus: campaignsByStatusAgg
+      }
+    });
   } catch (error) {
+    console.error('getPlatformOverview error:', error);
     res.status(500).json({ error: 'Failed to fetch platform overview' });
   }
 };

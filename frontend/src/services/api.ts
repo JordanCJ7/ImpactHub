@@ -38,8 +38,11 @@ class ApiService {
       'Content-Type': 'application/json',
     };
 
-    if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`;
+    // If the in-memory token is not set, pick up any token from localStorage.
+    // This helps in cases where the ApiService instance was created before auth completed.
+    const token = this.token || localStorage.getItem('auth_token');
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
     }
 
     return headers;

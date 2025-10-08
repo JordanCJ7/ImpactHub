@@ -256,7 +256,7 @@ const getCurrentUser = async (req, res) => {
         
         userObj.avatarData = `data:${mimeType};base64,${avatarData.toString('base64')}`;
       } catch (avatarError) {
-        console.log('Could not load avatar file:', avatarError.message);
+        console.error('Could not load avatar file:', avatarError.message);
         // Don't fail the request if avatar can't be loaded
       }
     }
@@ -275,7 +275,7 @@ const getCurrentUser = async (req, res) => {
 // Update user profile
 const updateProfile = async (req, res) => {
   try {
-    const { name, bio, phone, address, preferences } = req.body;
+    const { name, bio, phone, address, preferences, profile } = req.body;
     const user = req.user;
 
     // Update allowed fields
@@ -284,6 +284,14 @@ const updateProfile = async (req, res) => {
     if (phone !== undefined) user.profile.phone = phone;
     if (address) user.profile.address = { ...user.profile.address, ...address };
     if (preferences) user.preferences = { ...user.preferences, ...preferences };
+    
+    // Handle nested profile object
+    if (profile) {
+      if (profile.bio !== undefined) user.profile.bio = profile.bio;
+      if (profile.phone !== undefined) user.profile.phone = profile.phone;
+      if (profile.address) user.profile.address = { ...user.profile.address, ...profile.address };
+      if (profile.organization) user.profile.organization = { ...user.profile.organization, ...profile.organization };
+    }
 
     await user.save();
 
@@ -681,7 +689,7 @@ const uploadAvatar = async (req, res) => {
         await fs.unlink(oldAvatarPath);
       } catch (error) {
         // Ignore errors if file doesn't exist
-        console.log('Could not delete old avatar file:', error.message);
+        console.error('Could not delete old avatar file:', error.message);
       }
     }
 

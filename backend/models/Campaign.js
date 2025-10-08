@@ -56,8 +56,15 @@ const campaignSchema = new mongoose.Schema({
     maxlength: [100, 'Location cannot be more than 100 characters']
   },
   beneficiaries: {
-    type: String,
-    maxlength: [500, 'Beneficiaries description cannot be more than 500 characters']
+    count: {
+      type: Number,
+      default: 0,
+      min: [0, 'Beneficiaries count cannot be negative']
+    },
+    description: {
+      type: String,
+      maxlength: [1500, 'Beneficiaries description cannot be more than 1500 characters']
+    }
   },
   // Creator information
   creator: {
@@ -141,7 +148,7 @@ const campaignSchema = new mongoose.Schema({
   },
   risks: {
     type: String,
-    maxlength: [1000, 'Risk assessment cannot be more than 1000 characters']
+    maxlength: [2000, 'Risk assessment cannot be more than 2000 characters']
   },
   // Progress tracking
   updates: [{
@@ -188,6 +195,10 @@ const campaignSchema = new mongoose.Schema({
       default: 0
     },
     topDonation: {
+      type: Number,
+      default: 0
+    },
+    likes: {
       type: Number,
       default: 0
     },

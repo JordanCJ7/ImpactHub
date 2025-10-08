@@ -154,6 +154,17 @@ export interface CampaignAnalytics {
   };
 }
 
+export interface DraftCampaignSummary {
+  _id: string;
+  title?: string;
+  status: 'draft';
+  endDate?: string;
+  goal?: number;
+  category?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 class CampaignService {
   // Get all campaigns
   async getCampaigns(filters?: CampaignFilters) {
@@ -291,6 +302,36 @@ class CampaignService {
     return apiService.post(`/campaigns/${id}/view`);
   }
 
+  // Like a campaign
+  async likeCampaign(id: string) {
+    return apiService.post(`/campaigns/${id}/like`);
+  }
+
+  // Unlike a campaign
+  async unlikeCampaign(id: string) {
+    return apiService.delete(`/campaigns/${id}/like`);
+  }
+
+  // Toggle like (tries to like, caller can use response)
+  async toggleLike(id: string, liked: boolean) {
+    if (liked) {
+      return this.unlikeCampaign(id);
+    }
+
+    // Try to like; if we get a 401 but the client believes it's authenticated, retry once
+    const res = await this.likeCampaign(id);
+    if (res && res.error && res.error.toLowerCase().includes('unauthorized')) {
+      // Import authService lazily to avoid circular import issues
+      const { authService } = await import('./auth');
+      if (authService.isAuthenticated()) {
+        // Retry once after a short delay to allow token propagation
+        await new Promise(r => setTimeout(r, 250));
+        return this.likeCampaign(id);
+      }
+    }
+    return res;
+  }
+
   // Record share
   async recordShare(id: string) {
     return apiService.post(`/campaigns/${id}/share`);
@@ -334,6 +375,30 @@ class CampaignService {
   // Reject campaign (admin only)
   async rejectCampaign(id: string, reason: string) {
     return apiService.put(`/campaigns/${id}/reject`, { reason });
+  }
+
+  // Drafts
+  async createDraft(draftData: Partial<CreateCampaignData>) {
+    return apiService.post<{ campaign: { _id: string; status: 'draft'; createdAt: string } }>(
+      '/campaigns/drafts',
+      draftData
+    );
+  }
+
+  async getMyDrafts() {
+    // Add cache buster to avoid stale 304 responses during active editing
+    const ts = Date.now();
+    return apiService.get<{ drafts: DraftCampaignSummary[] }>(`/campaigns/user/drafts?_=${ts}`);
+  }
+
+  // Delete a draft (campaign leader or admin)
+  async deleteDraft(id: string) {
+    return apiService.delete(`/campaigns/${id}`);
+  }
+
+  async publishCampaign(id: string, data?: Partial<CreateCampaignData>) {
+    // Update with any provided data and set status active
+    return apiService.put(`/campaigns/${id}`, { ...(data || {}), status: 'active' });
   }
 }
 

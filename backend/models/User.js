@@ -95,7 +95,7 @@ const userSchema = new mongoose.Schema({
     dateOfBirth: Date,
     organization: {
       name: String,
-      website: String,
+      email: String,
       description: String,
       registrationNumber: String
     }
@@ -164,6 +164,11 @@ const userSchema = new mongoose.Schema({
       default: 'Bronze'
     }
   },
+  // Campaigns the user has supported/liked (client can add via like endpoint)
+  supportedCampaigns: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Campaign'
+  }],
   // Activity tracking
   lastLogin: {
     type: Date,

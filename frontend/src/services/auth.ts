@@ -22,7 +22,7 @@ export interface User {
     dateOfBirth?: string;
     organization?: {
       name?: string;
-      website?: string;
+      email?: string;
       description?: string;
       registrationNumber?: string;
     };

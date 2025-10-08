@@ -29,17 +29,17 @@ const DonationConfirmation: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Success Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6">
             <CheckCircle2 className="h-12 w-12 text-green-600" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             Thank You!
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Your generous donation of <span className="font-semibold text-green-600">LKR {donation.amount}</span> has been successfully processed.
           </p>
         </div>
@@ -57,19 +57,19 @@ const DonationConfirmation: React.FC = () => {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-gray-600">Donation ID:</span>
+                    <span className="text-muted-foreground">Donation ID:</span>
                     <div className="font-mono font-semibold">{donationId}</div>
                   </div>
                   <div>
-                    <span className="text-gray-600">Date:</span>
+                    <span className="text-muted-foreground">Date:</span>
                     <div className="font-semibold">{donationDate}</div>
                   </div>
                   <div>
-                    <span className="text-gray-600">Campaign:</span>
+                    <span className="text-muted-foreground">Campaign:</span>
                     <div className="font-semibold">{donation.campaignTitle}</div>
                   </div>
                   <div>
-                    <span className="text-gray-600">Status:</span>
+                    <span className="text-muted-foreground">Status:</span>
                     <Badge className="bg-green-100 text-green-800">Completed</Badge>
                   </div>
                 </div>
@@ -82,7 +82,7 @@ const DonationConfirmation: React.FC = () => {
                     <span className="font-semibold">LKR {donation.amount}</span>
                   </div>
                   {donation.coverFees && (
-                    <div className="flex justify-between text-sm text-gray-600">
+                    <div className="flex justify-between text-sm text-muted-foreground">
                       <span>Processing Fee (covered by you):</span>
                       <span>LKR {(donation.totalAmount - donation.amount).toFixed(2)}</span>
                     </div>
@@ -98,16 +98,15 @@ const DonationConfirmation: React.FC = () => {
                   <>
                     <Separator />
                     <div>
-                      <span className="text-gray-600 text-sm">Your Message:</span>
-                      <div className="mt-1 p-3 bg-gray-50 rounded-lg text-sm">
+                      <span className="text-muted-foreground text-sm">Your Message:</span>
+                      <div className="mt-1 p-3 bg-muted rounded-lg text-sm">
                         "{donation.message}"
                       </div>
                     </div>
                   </>
                 )}
-
                 <div className="flex gap-3 pt-4">
-                  <Button className="flex-1">
+                  <Button className="flex-1" variant="primaryGradient">
                     <Download className="mr-2 h-4 w-4" />
                     Download Receipt
                   </Button>
@@ -131,7 +130,7 @@ const DonationConfirmation: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="font-semibold">Immediate Impact</h4>
-                    <p className="text-gray-600 text-sm">Your donation is immediately available to the campaign organizer to make a difference.</p>
+                    <p className="text-muted-foreground text-sm">Your donation is immediately available to the campaign organizer to make a difference.</p>
                   </div>
                 </div>
                 
@@ -141,7 +140,7 @@ const DonationConfirmation: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="font-semibold">Regular Updates</h4>
-                    <p className="text-gray-600 text-sm">You'll receive email updates about the campaign's progress and how your donation is being used.</p>
+                    <p className="text-muted-foreground text-sm">You'll receive email updates about the campaign's progress and how your donation is being used.</p>
                   </div>
                 </div>
                 
@@ -151,7 +150,7 @@ const DonationConfirmation: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="font-semibold">Impact Reports</h4>
-                    <p className="text-gray-600 text-sm">Once the campaign is complete, you'll get a detailed impact report showing the results.</p>
+                    <p className="text-muted-foreground text-sm">Once the campaign is complete, you'll get a detailed impact report showing the results.</p>
                   </div>
                 </div>
               </CardContent>
@@ -194,7 +193,7 @@ const DonationConfirmation: React.FC = () => {
                 <CardTitle className="text-lg">Continue Your Impact</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button asChild className="w-full">
+                <Button asChild className="w-full" variant="primaryGradient">
                   <Link to="/campaigns">
                     <Heart className="mr-2 h-4 w-4" />
                     Find More Campaigns
@@ -206,13 +205,6 @@ const DonationConfirmation: React.FC = () => {
                     View Dashboard
                   </Link>
                 </Button>
-                
-                <Button variant="outline" asChild className="w-full">
-                  <Link to="/">
-                    <Home className="mr-2 h-4 w-4" />
-                    Return Home
-                  </Link>
-                </Button>
               </CardContent>
             </Card>
 
@@ -220,7 +212,7 @@ const DonationConfirmation: React.FC = () => {
             <Card>
               <CardContent className="text-center p-4">
                 <h4 className="font-semibold mb-2">Tax Deductible</h4>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-muted-foreground">
                   This donation may be tax deductible. Please consult your tax advisor and keep your receipt for your records.
                 </p>
               </CardContent>

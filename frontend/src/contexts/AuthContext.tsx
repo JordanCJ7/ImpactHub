@@ -14,6 +14,11 @@ interface User {
   profile?: any;
   preferences?: any;
   stats?: any;
+  createdAt?: string;
+  updatedAt?: string;
+  lastLogin?: string;
+  isActive?: boolean;
+  isBanned?: boolean;
 }
 
 interface AuthContextType {
@@ -41,7 +46,7 @@ interface AuthProviderProps {
 }
 
 // Convert API user to local user format
-const convertApiUser = (apiUser: ApiUser): User => ({
+export const convertApiUser = (apiUser: ApiUser): User => ({
   id: apiUser._id,
   name: apiUser.name,
   email: apiUser.email,
@@ -52,6 +57,11 @@ const convertApiUser = (apiUser: ApiUser): User => ({
   profile: apiUser.profile,
   preferences: apiUser.preferences,
   stats: apiUser.stats,
+  createdAt: (apiUser as any).createdAt,
+  updatedAt: (apiUser as any).updatedAt,
+  lastLogin: (apiUser as any).lastLogin,
+  isActive: (apiUser as any).isActive,
+  isBanned: (apiUser as any).isBanned,
 });
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {

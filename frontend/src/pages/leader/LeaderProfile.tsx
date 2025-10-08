@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { resolveImageUrl } from '@/lib/imageUtils';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { User, Mail, Phone, MapPin, Camera, Bell, Shield, Target, Award, Settings, Save, Loader2, AlertCircle } from 'lucide-react';
@@ -80,7 +82,7 @@ const LeaderProfile: React.FC = () => {
           bio: user.profile?.bio || '',
           location: user.profile?.address ? `${user.profile.address.city || ''}, ${user.profile.address.state || ''}, ${user.profile.address.country || ''}`.replace(/^, |, $/, '') : '',
           organizationName: user.profile?.organization?.name || '',
-          organizationEmail: user.profile?.organization?.website || '',
+          organizationEmail: user.profile?.organization?.email || '',
           joinDate: new Date(user.profile?.dateOfBirth || Date.now()).toLocaleDateString(),
           avatar: user.avatar || ''
         });
@@ -94,25 +96,25 @@ const LeaderProfile: React.FC = () => {
         leaderLevel: 'Rising Star'
       });
 
-      // Load campaign history (placeholder for now)
-      setCampaignHistory([
-        {
-          id: 1,
-          title: "Clean Water for Rural Communities",
-          status: "Active",
-          raised: 8500,
-          goal: 15000,
-          date: "2024-01-15"
-        },
-        {
-          id: 2,
-          title: "Education Support Program",
-          status: "Completed",
-          raised: 6500,
-          goal: 6000,
-          date: "2023-11-20"
+      // Load campaign history from API for this leader
+      try {
+        const myCampaignsRes = await campaignService.getMyCampaigns(1, 20);
+        if (!myCampaignsRes.error && myCampaignsRes.data && Array.isArray(myCampaignsRes.data.campaigns)) {
+          setCampaignHistory(myCampaignsRes.data.campaigns);
+          setStats(prev => ({
+            ...prev,
+            totalRaised: myCampaignsRes.data.campaigns.reduce((acc: number, c: any) => acc + (c.raised || 0), 0),
+            campaignCount: myCampaignsRes.data.campaigns.length,
+            activeCampaigns: myCampaignsRes.data.campaigns.filter((c: any) => c.status === 'active').length
+          }));
+        } else {
+          // fallback to empty
+          setCampaignHistory([]);
         }
-      ]);
+      } catch (campErr) {
+        console.error('Failed to load leader campaigns:', campErr);
+        setCampaignHistory([]);
+      }
 
     } catch (err) {
       console.error('Error loading profile data:', err);
@@ -127,19 +129,43 @@ const LeaderProfile: React.FC = () => {
       setSaving(true);
       setError(null);
 
-      const updatedProfile = {
+      // Structure the data correctly for the backend
+      const updateData = {
         name: `${profile.firstName} ${profile.lastName}`.trim(),
-        email: profile.email, // Add email to updateData
-        phone: profile.phone,
-        bio: profile.bio,
-        location: profile.location,
-        organizationName: profile.organizationName,
-        organizationEmail: profile.organizationEmail
+        profile: {
+          bio: profile.bio,
+          phone: profile.phone,
+          address: {
+            city: profile.location.split(',')[0]?.trim() || '',
+            state: profile.location.split(',')[1]?.trim() || '',
+            country: profile.location.split(',')[2]?.trim() || ''
+          },
+          organization: {
+            name: profile.organizationName,
+            email: profile.organizationEmail
+          }
+        }
       };
 
-      await authService.updateProfile(updatedProfile, profile.email);
-      updateUser({ ...user, ...updatedProfile });
-      setIsEditing(false);
+      // Use the auth/me endpoint instead of users/profile/:email for consistency
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/auth/me`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify(updateData)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Update local state and global user context
+        updateUser(data.user);
+        setIsEditing(false);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to update profile');
+      }
       
     } catch (err) {
       console.error('Error saving profile:', err);
@@ -254,12 +280,12 @@ const LeaderProfile: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+  <div className="min-h-screen bg-background py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Campaign Leader Profile</h1>
-          <p className="text-gray-600 mt-2">Manage your profile and campaign settings</p>
+          <h1 className="text-3xl font-bold text-foreground">Campaign Leader Profile</h1>
+          <p className="text-muted-foreground mt-2">Manage your profile and campaign settings</p>
         </div>
 
         {error && (
@@ -276,7 +302,7 @@ const LeaderProfile: React.FC = () => {
               <div className="relative">
                 <Avatar className="h-20 w-20">
                   <AvatarImage 
-                    src={profile.avatar ? `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${profile.avatar}` : undefined} 
+                    src={profile.avatar ? resolveImageUrl(profile.avatar) : undefined} 
                     alt={`${profile.firstName} ${profile.lastName}`} 
                   />
                   <AvatarFallback className="text-lg">
@@ -310,15 +336,15 @@ const LeaderProfile: React.FC = () => {
                 )}
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-2xl font-bold text-foreground">
                   {profile.firstName} {profile.lastName}
                 </h2>
-                <p className="text-gray-600">{profile.email}</p>
+                <p className="text-muted-foreground">{profile.email}</p>
                 <div className="flex items-center space-x-2 mt-2">
                   <Badge className={getLevelBadgeColor(stats.leaderLevel)}>
                     {stats.leaderLevel}
                   </Badge>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-muted-foreground">
                     Campaign Leader since {profile.joinDate}
                   </span>
                 </div>
@@ -352,8 +378,8 @@ const LeaderProfile: React.FC = () => {
               <div className="flex items-center">
                 <Target className="h-8 w-8 text-green-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Raised</p>
-                  <p className="text-2xl font-bold text-gray-900">${stats.totalRaised.toLocaleString()}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Total Raised</p>
+                  <p className="text-2xl font-bold text-foreground">${stats.totalRaised.toLocaleString()}</p>
                 </div>
               </div>
             </CardContent>
@@ -363,8 +389,8 @@ const LeaderProfile: React.FC = () => {
               <div className="flex items-center">
                 <Award className="h-8 w-8 text-blue-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Campaigns</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.campaignCount}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Total Campaigns</p>
+                  <p className="text-2xl font-bold text-foreground">{stats.campaignCount}</p>
                 </div>
               </div>
             </CardContent>
@@ -374,8 +400,8 @@ const LeaderProfile: React.FC = () => {
               <div className="flex items-center">
                 <Target className="h-8 w-8 text-orange-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Active Campaigns</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.activeCampaigns}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Active Campaigns</p>
+                  <p className="text-2xl font-bold text-foreground">{stats.activeCampaigns}</p>
                 </div>
               </div>
             </CardContent>
@@ -385,8 +411,8 @@ const LeaderProfile: React.FC = () => {
               <div className="flex items-center">
                 <Shield className="h-8 w-8 text-purple-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Leader Level</p>
-                  <p className="text-lg font-bold text-gray-900">{stats.leaderLevel}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Leader Level</p>
+                  <p className="text-lg font-bold text-foreground">{stats.leaderLevel}</p>
                 </div>
               </div>
             </CardContent>
@@ -440,7 +466,7 @@ const LeaderProfile: React.FC = () => {
                     type="email"
                     value={profile.email}
                     disabled
-                    className="bg-gray-50"
+                    className="bg-muted"
                   />
                   <p className="text-sm text-gray-500">Email cannot be changed</p>
                 </div>
@@ -525,18 +551,18 @@ const LeaderProfile: React.FC = () => {
                     <div key={campaign.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex-1">
                         <h4 className="font-medium text-gray-900">{campaign.title}</h4>
-                        <p className="text-sm text-gray-600">Created on {new Date(campaign.date).toLocaleDateString()}</p>
+                        <p className="text-sm text-muted-foreground">Created on {new Date(campaign.date).toLocaleDateString()}</p>
                         <div className="flex items-center space-x-4 mt-2">
                           <Badge variant={campaign.status === 'Active' ? 'default' : 'secondary'}>
                             {campaign.status}
                           </Badge>
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-muted-foreground">
                             ${campaign.raised.toLocaleString()} / ${campaign.goal.toLocaleString()}
                           </span>
                         </div>
                       </div>
-                      <Button variant="outline" size="sm">
-                        View Details
+                      <Button asChild variant="outline" size="sm">
+                        <Link to={`/campaigns/${campaign._id || campaign.id}`}>View Details</Link>
                       </Button>
                     </div>
                   ))}

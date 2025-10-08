@@ -4,6 +4,7 @@ export { authService } from './auth';
 export { campaignService } from './campaigns';
 export { donationService } from './donations';
 export { analyticsService } from './analytics';
+export { adminService } from './admin';
 
 // Types exports
 export type { User, LoginCredentials, RegisterData, AuthResponse } from './auth';

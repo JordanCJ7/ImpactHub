@@ -94,7 +94,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         {/* Logo */}
         <div className="text-center">
@@ -185,48 +185,12 @@ const Login: React.FC = () => {
               </Button>
             </form>
 
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-muted-foreground">Or try demo accounts</span>
-                </div>
-              </div>
-              
-              <div className="mt-4 space-y-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
-                  onClick={() => handleDemoLogin('donor')}
-                  disabled={isLoading}
-                >
-                  Demo Donor Account
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
-                  onClick={() => handleDemoLogin('campaign-leader')}
-                  disabled={isLoading}
-                >
-                  Demo Campaign Leader
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
-                  onClick={() => handleDemoLogin('admin')}
-                  disabled={isLoading}
-                >
-                  Demo Admin Account
-                </Button>
-              </div>
-            </div>
+            {/* ...existing code... */}
 
             <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 Don't have an account?{' '}
-                <Link to="/register" className="text-indigo-600 hover:underline font-medium">
+                <Link to="/register" className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium">
                   Sign up
                 </Link>
               </p>
