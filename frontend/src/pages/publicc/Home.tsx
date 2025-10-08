@@ -73,10 +73,10 @@ const Home: React.FC = () => {
       {/* Hero Section */}
       <Section className="pt-16 pb-20 bg-gradient-to-br from-indigo-50 via-white to-blue-50 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-900" center>
           <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
               Make a <span className="bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">Difference</span> Today
             </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
               Join thousands of donors making an impact worldwide. Every contribution matters, every story counts.
             </p>
             
@@ -109,8 +109,8 @@ const Home: React.FC = () => {
                   <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full bg-white shadow-lg mb-3`}>
                     <stat.icon className={`h-6 w-6 ${stat.color}`} />
                   </div>
-                  <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                  <div className="text-sm text-gray-600">{stat.label}</div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -147,24 +147,24 @@ const Home: React.FC = () => {
                         {campaign.title ? campaign.title.substring(0, 2).toUpperCase() : 'CA'}
                       </div>
                     )}
-                    <Badge className="absolute top-3 left-3 bg-white/95 text-gray-900 backdrop-blur border">
+                    <Badge className="absolute top-3 left-3 bg-white/95 text-gray-900 dark:text-gray-900 backdrop-blur border">
                       {campaign.category}
                     </Badge>
                   </div>
                   <CardHeader>
-                    <CardTitle className="text-lg">{campaign.title}</CardTitle>
-                    <CardDescription>{campaign.description}</CardDescription>
+                    <CardTitle className="text-lg text-gray-900 dark:text-white">{campaign.title}</CardTitle>
+                    <CardDescription className="text-gray-600 dark:text-gray-300">{campaign.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       <div>
                         <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm font-medium text-gray-600">LKR {campaign.raised.toLocaleString()} raised</span>
-                          <span className="text-sm text-gray-500">LKR{campaign.goal.toLocaleString()} goal</span>
+                          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">LKR {campaign.raised.toLocaleString()} raised</span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">LKR{campaign.goal.toLocaleString()} goal</span>
                         </div>
                         <Progress value={(campaign.raised / (campaign.goal || 1)) * 100} className="h-2" />
                       </div>
-                      <div className="flex justify-between items-center text-sm text-gray-600">
+                      <div className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-300">
                         <span>{campaign.donors} donors</span>
                         <span>{campaign.daysLeft} days left</span>
                       </div>
@@ -201,8 +201,8 @@ const Home: React.FC = () => {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-500/20 mb-6">
                 <Users className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Discover Campaigns</h3>
-              <p className="text-gray-600">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Discover Campaigns</h3>
+              <p className="text-gray-600 dark:text-gray-300">
                 Browse through verified campaigns and find causes that resonate with your values and interests.
               </p>
             </div>
@@ -211,8 +211,8 @@ const Home: React.FC = () => {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-500/20 mb-6">
                 <Heart className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Make a Donation</h3>
-              <p className="text-gray-600">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Make a Donation</h3>
+              <p className="text-gray-600 dark:text-gray-300">
                 Choose your donation amount and make secure payments. Every contribution, big or small, makes a difference.
               </p>
             </div>
@@ -221,8 +221,8 @@ const Home: React.FC = () => {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-500/20 mb-6">
                 <TrendingUp className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Track Impact</h3>
-              <p className="text-gray-600">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Track Impact</h3>
+              <p className="text-gray-600 dark:text-gray-300">
                 Receive regular updates on your donations and see the real-world impact of your generosity.
               </p>
             </div>
