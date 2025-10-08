@@ -205,13 +205,6 @@ const DonationConfirmation: React.FC = () => {
                     View Dashboard
                   </Link>
                 </Button>
-                
-                <Button variant="outline" asChild className="w-full">
-                  <Link to="/">
-                    <Home className="mr-2 h-4 w-4" />
-                    Return Home
-                  </Link>
-                </Button>
               </CardContent>
             </Card>
 

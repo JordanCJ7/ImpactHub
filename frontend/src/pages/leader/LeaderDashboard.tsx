@@ -322,10 +322,6 @@ const LeaderDashboard: React.FC = () => {
                     Create New Campaign
                   </Link>
                 </Button>
-                <Button variant="outline" className="w-full">
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  Send Update to Donors
-                </Button>
                 <Button variant="outline" className="w-full" asChild>
                   <Link to="/leader/analytics">
                     <BarChart3 className="mr-2 h-4 w-4" />

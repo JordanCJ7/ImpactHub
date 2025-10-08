@@ -18,6 +18,21 @@ const Navbar: React.FC = () => {
     navigate('/');
   };
 
+   // Get notification path based on user role
+   const getNotificationPath = () => {
+     if (!user?.role) return '/';
+     switch (user.role) {
+       case 'donor':
+         return '/donor/notifications';
+       case 'campaign-leader':
+         return '/leader/notifications';
+       case 'admin':
+         return '/admin/notifications';
+       default:
+         return '/';
+     }
+   };
+
   const getDashboardPath = () => {
     if (!user?.role) return '/';
     switch (user.role) {
@@ -93,14 +108,14 @@ const Navbar: React.FC = () => {
             
             {isAuthenticated ? (
               <div className="flex items-center space-x-3">
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/donor/notifications" className="relative">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                      3
-                    </span>
-                  </Link>
-                </Button>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to={getNotificationPath()} className="relative">
+                      <Bell className="h-5 w-5" />
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                        3
+                      </span>
+                    </Link>
+                  </Button>
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
