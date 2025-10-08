@@ -339,7 +339,7 @@ const DonorProfile: React.FC = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading your profile...</p>
+          <p className="text-muted-foreground dark:text-gray-300">Loading your profile...</p>
         </div>
       </div>
     );

@@ -4,7 +4,7 @@ export default function WelcomePage() {
       <div className="space-y-8 max-w-md animate-in fade-in slide-in-from-bottom-8 duration-700">
         <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Welcome to MGX</h1>
 
-        <p className="text-lg text-muted-foreground animate-in fade-in delay-300 duration-700">Let's build something amazing</p>
+  <p className="text-lg text-muted-foreground dark:text-gray-300 animate-in fade-in delay-300 duration-700">Let's build something amazing</p>
       </div>
     </div>
   );

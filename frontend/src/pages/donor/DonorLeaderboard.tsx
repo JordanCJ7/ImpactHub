@@ -75,7 +75,7 @@ const DonorLeaderboard: React.FC = () => {
     if (rank === 1) return <Crown className="h-6 w-6 text-yellow-500" />;
     if (rank === 2) return <Medal className="h-6 w-6 text-gray-400" />;
     if (rank === 3) return <Award className="h-6 w-6 text-orange-500" />;
-    return <span className="text-lg font-bold text-gray-600">#{rank}</span>;
+  return <span className="text-lg font-bold text-gray-600 dark:text-gray-300">#{rank}</span>;
   };
 
   return (

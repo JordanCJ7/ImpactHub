@@ -179,7 +179,7 @@ const MyCampaigns: React.FC = () => {
               </Button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">My Campaigns</h1>
-                <p className="text-gray-600">Manage and track all your campaigns.</p>
+                <p className="text-gray-600 dark:text-gray-300">Manage and track all your campaigns.</p>
               </div>
             </div>
             <Button asChild>
@@ -232,7 +232,7 @@ const MyCampaigns: React.FC = () => {
             </Select>
           </div>
 
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600 dark:text-gray-300">
             {loading ? (
               <div className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -251,7 +251,7 @@ const MyCampaigns: React.FC = () => {
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-            <span className="ml-2 text-gray-600">Loading campaigns...</span>
+            <span className="ml-2 text-gray-600 dark:text-gray-300">Loading campaigns...</span>
           </div>
         ) : campaigns.length === 0 ? (
           <div className="text-center py-12">
@@ -259,7 +259,7 @@ const MyCampaigns: React.FC = () => {
               <Calendar className="h-12 w-12 text-gray-400" />
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No campaigns found</h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
               {searchQuery || statusFilter !== 'all' ? 'Try adjusting your filters or search terms.' : 'Get started by creating your first campaign.'}
             </p>
             <Button asChild>

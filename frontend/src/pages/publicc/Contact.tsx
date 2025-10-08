@@ -9,7 +9,7 @@ const Contact: React.FC = () => {
       <Section title="Contact Us" center>
         <Card className="max-w-lg mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
           <CardContent className="p-8 space-y-8">
-            <p className="text-lg text-muted-foreground text-center">
+            <p className="text-lg text-muted-foreground dark:text-gray-300 text-center">
               We're here to help! Reach out to us with any questions, feedback, or partnership opportunities.
             </p>
             <div className="space-y-6">

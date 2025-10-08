@@ -8,13 +8,13 @@ const About: React.FC = () => {
       <Section title="About ImpactHub" center>
         <Card className="max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
           <CardContent className="p-8 space-y-8">
-            <p className="text-lg text-muted-foreground text-center">
+            <p className="text-lg text-muted-foreground dark:text-gray-300 text-center">
               ImpactHub is a charity donation platform built to empower donors with transparency, trust, and real-world impact. Our mission is to connect hearts and change lives by making charitable giving simple, secure, and meaningful.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
               <div>
                 <h2 className="text-xl font-semibold mb-2 text-foreground">Our Vision</h2>
-                <p className="text-muted-foreground">To create a world where every act of generosity leads to measurable change and every donor feels the impact of their contribution.</p>
+                <p className="text-muted-foreground dark:text-gray-300">To create a world where every act of generosity leads to measurable change and every donor feels the impact of their contribution.</p>
               </div>
               <div>
                 <h2 className="text-xl font-semibold mb-2 text-foreground">Our Values</h2>

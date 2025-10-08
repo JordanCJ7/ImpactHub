@@ -587,7 +587,7 @@ const LeaderProfile: React.FC = () => {
                       <Label htmlFor={key} className="text-base">
                         {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                       </Label>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
                         {key === 'campaignUpdates' && 'Get notified about campaign updates and milestones'}
                         {key === 'donationAlerts' && 'Receive alerts when donations are made to your campaigns'}
                         {key === 'monthlyReports' && 'Monthly summary of your campaign performance'}

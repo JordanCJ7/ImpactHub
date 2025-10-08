@@ -235,7 +235,7 @@ const DonationHistory: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground">Donation History</h1>
-              <p className="text-muted-foreground">Track all your donations and their impact over time.</p>
+              <p className="text-muted-foreground dark:text-gray-300">Track all your donations and their impact over time.</p>
             </div>
             <div className="flex items-center space-x-3">
               <Button variant="outline">

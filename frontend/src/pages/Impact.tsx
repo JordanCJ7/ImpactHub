@@ -53,7 +53,7 @@ const Impact: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold">Your Impact Summary</h1>
-            <p className="text-muted-foreground">Personal summary of your donations and impact.</p>
+            <p className="text-muted-foreground dark:text-gray-300">Personal summary of your donations and impact.</p>
           </div>
           <div className="flex items-center space-x-2">
             <Button variant="outline" asChild>
@@ -71,7 +71,7 @@ const Impact: React.FC = () => {
               <CardTitle>Please sign in</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Sign in to view your personal donation summary.</p>
+              <p className="text-sm text-muted-foreground dark:text-gray-300">Sign in to view your personal donation summary.</p>
               <div className="mt-4">
                 <Button asChild>
                   <Link to="/login">Sign in</Link>
