@@ -22,10 +22,12 @@ import {
 } from "lucide-react";
 import type { CheckedState } from "@radix-ui/react-checkbox";
 import { resolveCampaignImageUrl } from "@/lib/imageUtils";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Donate: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [donationAmount, setDonationAmount] = useState("");
   const [customAmount, setCustomAmount] = useState("");
@@ -74,18 +76,23 @@ const Donate: React.FC = () => {
 
     try {
       // Prefer creating a Checkout Session for secure hosted payment
+      const requestBody = {
+        campaignId: id,
+        amount: selectedAmount,
+        currency: 'LKR',
+        donorEmail: user?.email || '', // Use authenticated user's email if available
+        donorName: user?.name || '', // Use authenticated user's name if available  
+        isAnonymous,
+        message
+      };
+
       const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/donations/create-checkout-session`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          campaignId: id,
-          amount: selectedAmount,
-          currency: 'LKR',
-          donorEmail: '', // Stripe will collect this
-          donorName: '', // Stripe will collect this
-          isAnonymous,
-          message
-        })
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(user ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+        },
+        body: JSON.stringify(requestBody)
       });
 
       const data = await resp.json();
@@ -236,6 +243,18 @@ const Donate: React.FC = () => {
                       Donate anonymously
                     </Label>
                   </div>
+                  
+                  {!isAnonymous && user && (
+                    <div className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
+                      <p>Your donation will be credited to: <strong>{user.name}</strong> ({user.email})</p>
+                    </div>
+                  )}
+                  
+                  {!isAnonymous && !user && (
+                    <div className="text-sm text-muted-foreground bg-blue-50 p-3 rounded-lg border border-blue-200">
+                      <p>💡 <strong>Tip:</strong> <Link to="/auth" className="text-blue-600 hover:underline">Sign in</Link> to track your donations and get updates!</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Message */}

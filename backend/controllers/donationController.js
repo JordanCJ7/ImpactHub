@@ -93,6 +93,23 @@ const createCheckoutSession = async (req, res) => {
     if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
     if (campaign.status !== 'active') return res.status(400).json({ error: 'Campaign is not accepting donations' });
 
+    // Try to get authenticated user from JWT token if present
+    let authUser = null;
+    try {
+      const token = req.header('Authorization')?.replace('Bearer ', '');
+      if (token) {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        authUser = await User.findById(decoded.id || decoded.userId).select('name email _id');
+      }
+    } catch (err) {
+      // Not authenticated, continue without user
+    }
+
+    // Use authenticated user info or fallback to provided info
+    const finalDonorEmail = authUser?.email || donorEmail || '';
+    const finalDonorName = authUser?.name || donorName || '';
+
     // Create a pending Donation record to be fulfilled after webhook confirmation
     const donationData = {
       campaign: campaignId,
@@ -113,15 +130,26 @@ const createCheckoutSession = async (req, res) => {
       }
     };
 
-    // Handle donor vs anonymousDonor based on isAnonymous flag
+    // Handle donor vs anonymousDonor based on isAnonymous flag and authentication
     if (isAnonymous) {
-      donationData.anonymousDonor = { name: donorName || 'Anonymous', email: donorEmail || '' };
+      donationData.anonymousDonor = { name: 'Anonymous', email: '' };
     } else {
-      // For non-anonymous donations, we need a donor User ID
-      // Since we don't have user authentication in this flow, we'll create as anonymous
-      // but store the donor info in anonymousDonor for now
-      donationData.isAnonymous = true; // Force anonymous since we don't have user auth
-      donationData.anonymousDonor = { name: donorName || 'Anonymous', email: donorEmail || '' };
+      // For non-anonymous donations, prefer authenticated user
+      if (authUser) {
+        donationData.donor = authUser._id;
+      } else if (finalDonorEmail) {
+        // Try to find existing user by email
+        const existingUser = await User.findOne({ email: finalDonorEmail });
+        if (existingUser) {
+          donationData.donor = existingUser._id;
+        } else {
+          // Store donor info for linking later when customer details are available
+          donationData.anonymousDonor = { name: finalDonorName || 'Supporter', email: finalDonorEmail };
+        }
+      } else {
+        // Stripe will collect email - mark as non-anonymous for now
+        donationData.anonymousDonor = { name: finalDonorName || 'Supporter', email: '' };
+      }
     }
 
     const donation = new Donation(donationData);
@@ -142,8 +170,8 @@ const createCheckoutSession = async (req, res) => {
       cancel_url: `${process.env.CLIENT_URL || 'http://localhost:5173'}/donation-cancel`
     };
 
-    if (donorEmail) sessionPayload.customer_email = donorEmail;
-    if (donorName) sessionPayload.metadata.donorName = donorName;
+    if (finalDonorEmail) sessionPayload.customer_email = finalDonorEmail;
+    if (finalDonorName) sessionPayload.metadata.donorName = finalDonorName;
 
     // Use dynamic pricing for variable donation amounts (no fixed Price ID needed)
     sessionPayload.line_items = [{
@@ -223,8 +251,8 @@ const confirmDonation = async (req, res) => {
     // Update campaign amounts and counts
     await Campaign.findByIdAndUpdate(donation.campaignId, {
       $inc: { 
-        currentAmount: donation.amount,
-        donationCount: 1
+        raised: donation.amount,
+        'analytics.donorCount': 1
       }
     });
     
@@ -344,15 +372,42 @@ const handleWebhook = async (req, res) => {
           if (donation && donation.status === 'pending') {
             donation.status = 'completed';
             donation.payment.transactionId = session.payment_intent || session.payment_intent?.id || '';
+            
+            // Update donor information from Stripe if available and donation is not anonymous
+            if (!donation.isAnonymous && session.customer_details) {
+              if (session.customer_details.email && !donation.anonymousDonor.email) {
+                donation.anonymousDonor.email = session.customer_details.email;
+              }
+              if (session.customer_details.name && !donation.anonymousDonor.name) {
+                donation.anonymousDonor.name = session.customer_details.name;
+              }
+              
+              // Try to link to existing user by email
+              if (session.customer_details.email && !donation.donor) {
+                const existingUser = await User.findOne({ email: session.customer_details.email });
+                if (existingUser) {
+                  donation.donor = existingUser._id;
+                }
+              }
+            }
+            
             await donation.save();
 
-            // Update campaign and user stats
+            // Update campaign amounts - use correct field name 'raised' not 'currentAmount'
             await Campaign.findByIdAndUpdate(donation.campaign, {
-              $inc: { currentAmount: donation.amount, donationCount: 1 }
+              $inc: { raised: donation.amount, 'analytics.donorCount': 1 }
             });
 
+            // Update user stats if donor email exists
             if (donation.anonymousDonor && donation.anonymousDonor.email) {
               await User.findOneAndUpdate({ email: donation.anonymousDonor.email }, {
+                $inc: { 'donationStats.totalDonated': donation.amount, 'donationStats.donationCount': 1 }
+              });
+            }
+            
+            // Also update user stats if donor ID exists
+            if (donation.donor) {
+              await User.findByIdAndUpdate(donation.donor, {
                 $inc: { 'donationStats.totalDonated': donation.amount, 'donationStats.donationCount': 1 }
               });
             }
@@ -382,8 +437,8 @@ const handlePaymentSucceeded = async (paymentIntent) => {
     // Update campaign
     await Campaign.findByIdAndUpdate(donation.campaignId, {
       $inc: { 
-        currentAmount: donation.amount,
-        donationCount: 1
+        raised: donation.amount,
+        'analytics.donorCount': 1
       }
     });
     
