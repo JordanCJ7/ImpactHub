@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,21 +10,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import {
   ArrowLeft,
   Heart,
   Lock,
-  CreditCard,
   DollarSign,
-  Gift,
 } from "lucide-react";
 import type { CheckedState } from "@radix-ui/react-checkbox";
+import { resolveCampaignImageUrl } from "@/lib/imageUtils";
 
 const Donate: React.FC = () => {
   const { id } = useParams();
@@ -32,27 +29,35 @@ const Donate: React.FC = () => {
 
   const [donationAmount, setDonationAmount] = useState("");
   const [customAmount, setCustomAmount] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("card");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [coverFees, setCoverFees] = useState<CheckedState>(false);
   const [message, setMessage] = useState("");
-  const [cardDetails, setCardDetails] = useState({
-    number: "",
-    expiry: "",
-    cvc: "",
-    name: "",
-  });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [campaign, setCampaign] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock campaign data
-  const campaign = {
-    id: 1,
-    title: "Clean Water for Rural Communities",
-    image: "/images/CleanWater.jpg",
-    raised: 75420,
-    goal: 100000,
-    organizer: "Water for Life Foundation",
-  };
+  // Fetch campaign data
+  useEffect(() => {
+    const fetchCampaign = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/campaigns/${id}`);
+        if (response.ok) {
+          const campaignData = await response.json();
+          setCampaign(campaignData);
+        } else {
+          console.error('Failed to fetch campaign');
+        }
+      } catch (error) {
+        console.error('Error fetching campaign:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchCampaign();
+    }
+  }, [id]);
 
   const presetAmounts = [500, 1000, 2000, 2500, 5000, 10000];
   const selectedAmount =
@@ -76,8 +81,8 @@ const Donate: React.FC = () => {
           campaignId: id,
           amount: selectedAmount,
           currency: 'LKR',
-          donorEmail: '', // allow Stripe to collect or prefill if user logged in
-          donorName: '',
+          donorEmail: '', // Stripe will collect this
+          donorName: '', // Stripe will collect this
           isAnonymous,
           message
         })
@@ -93,14 +98,14 @@ const Donate: React.FC = () => {
       }
 
       // Fallback: if backend returned a clientSecret for PaymentIntent, navigate to confirmation (not implemented)
-      navigate(`/donation-confirmation/${campaign.id}`, {
+      navigate(`/donation-confirmation/${id}`, {
         state: {
           amount: selectedAmount,
           totalAmount,
           coverFees,
           isAnonymous,
           message,
-          campaignTitle: campaign.title,
+          campaignTitle: campaign?.title || 'Campaign',
         },
       });
     } catch (err: any) {
@@ -207,115 +212,6 @@ const Donate: React.FC = () => {
 
                 <Separator />
 
-                {/* Payment Method */}
-                <div>
-                  <Label className="text-base font-semibold">
-                    Payment Method
-                  </Label>
-                  <RadioGroup
-                    value={paymentMethod}
-                    onValueChange={setPaymentMethod}
-                    className="mt-3"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="card" id="card" />
-                      <Label
-                        htmlFor="card"
-                        className="flex items-center space-x-2 cursor-pointer"
-                      >
-                        <CreditCard className="h-4 w-4" />
-                        <span>Credit/Debit Card</span>
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="paypal" id="paypal" />
-                      <Label htmlFor="paypal" className="cursor-pointer">
-                        PayPal
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="apple" id="apple" />
-                      <Label htmlFor="apple" className="cursor-pointer">
-                        Apple Pay
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="google" id="google" />
-                      <Label htmlFor="google" className="cursor-pointer">
-                        Google Pay
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                {/* Card Details */}
-                {paymentMethod === "card" && (
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="cardNumber">Card Number</Label>
-                      <Input
-                        id="cardNumber"
-                        placeholder="1234 5678 9012 3456"
-                        value={cardDetails.number}
-                        onChange={(e) =>
-                          setCardDetails((prev) => ({
-                            ...prev,
-                            number: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="expiry">Expiry Date</Label>
-                        <Input
-                          id="expiry"
-                          placeholder="MM/YY"
-                          value={cardDetails.expiry}
-                          onChange={(e) =>
-                            setCardDetails((prev) => ({
-                              ...prev,
-                              expiry: e.target.value,
-                            }))
-                          }
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="cvc">CVC</Label>
-                        <Input
-                          id="cvc"
-                          placeholder="123"
-                          value={cardDetails.cvc}
-                          onChange={(e) =>
-                            setCardDetails((prev) => ({
-                              ...prev,
-                              cvc: e.target.value,
-                            }))
-                          }
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="cardName">Cardholder Name</Label>
-                      <Input
-                        id="cardName"
-                        placeholder="Kamal Jayasuriya"
-                        value={cardDetails.name}
-                        onChange={(e) =>
-                          setCardDetails((prev) => ({
-                            ...prev,
-                            name: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <Separator />
-
                 {/* Options */}
                 <div className="space-y-4">
                   <div className="flex items-center space-x-2">
@@ -332,9 +228,9 @@ const Donate: React.FC = () => {
 
                   <div className="flex items-center space-x-2">
                     <Checkbox
-                      id="coverFees"
-                      checked={coverFees}
-                      onCheckedChange={(checked) => setCoverFees(checked)}
+                      id="anonymous"
+                      checked={isAnonymous}
+                      onCheckedChange={setIsAnonymous}
                     />
                     <Label htmlFor="anonymous" className="text-sm">
                       Donate anonymously
@@ -383,34 +279,48 @@ const Donate: React.FC = () => {
 
           {/* Campaign Summary */}
           <div className="space-y-6">
-            <Card>
-              <CardContent className="p-0">
-                <img
-                  src={campaign.image}
-                  alt={campaign.title}
-                  className="w-full h-32 object-cover rounded-t-lg"
-                />
-                <div className="p-4">
-                  <h3 className="font-semibold text-lg mb-2">
-                    {campaign.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    by {campaign.organizer}
-                  </p>
+            {loading ? (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <p>Loading campaign...</p>
+                </CardContent>
+              </Card>
+            ) : campaign ? (
+              <Card>
+                <CardContent className="p-0">
+                  <img
+                    src={resolveCampaignImageUrl(campaign)}
+                    alt={campaign.title}
+                    className="w-full h-32 object-cover rounded-t-lg"
+                  />
+                  <div className="p-4">
+                    <h3 className="font-semibold text-lg mb-2">
+                      {campaign.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      by {campaign.organizationName || campaign.organizer}
+                    </p>
 
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Rs. {campaign.raised.toLocaleString()} raised</span>
-                      <span>Rs. {campaign.goal.toLocaleString()} goal</span>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Rs. {(campaign.currentAmount || 0).toLocaleString()} raised</span>
+                        <span>Rs. {(campaign.targetAmount || 0).toLocaleString()} goal</span>
+                      </div>
+                      <Progress
+                        value={campaign.targetAmount > 0 ? (campaign.currentAmount / campaign.targetAmount) * 100 : 0}
+                        className="h-2"
+                      />
                     </div>
-                    <Progress
-                      value={(campaign.raised / campaign.goal) * 100}
-                      className="h-2"
-                    />
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <p>Campaign not found</p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Donation Summary */}
             {selectedAmount > 0 && (
