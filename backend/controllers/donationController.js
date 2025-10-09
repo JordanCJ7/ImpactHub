@@ -4,6 +4,10 @@ const User = require('../models/User');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { validationResult } = require('express-validator');
 
+if (process.env.NODE_ENV !== 'production') {
+  console.log('Donation controller loaded. Using dynamic pricing for variable donation amounts.');
+}
+
 // Create payment intent for donation
 const createPaymentIntent = async (req, res) => {
   try {
@@ -90,7 +94,7 @@ const createCheckoutSession = async (req, res) => {
     if (campaign.status !== 'active') return res.status(400).json({ error: 'Campaign is not accepting donations' });
 
     // Create a pending Donation record to be fulfilled after webhook confirmation
-    const donation = new Donation({
+    const donationData = {
       campaign: campaignId,
       amount,
       currency,
@@ -103,13 +107,24 @@ const createCheckoutSession = async (req, res) => {
         netAmount: amount,
         currency
       },
-      donor: undefined,
-      anonymousDonor: isAnonymous ? { name: donorName, email: donorEmail } : undefined,
       metadata: {
         userAgent: req.get('User-Agent'),
         ipAddress: req.ip
       }
-    });
+    };
+
+    // Handle donor vs anonymousDonor based on isAnonymous flag
+    if (isAnonymous) {
+      donationData.anonymousDonor = { name: donorName || 'Anonymous', email: donorEmail || '' };
+    } else {
+      // For non-anonymous donations, we need a donor User ID
+      // Since we don't have user authentication in this flow, we'll create as anonymous
+      // but store the donor info in anonymousDonor for now
+      donationData.isAnonymous = true; // Force anonymous since we don't have user auth
+      donationData.anonymousDonor = { name: donorName || 'Anonymous', email: donorEmail || '' };
+    }
+
+    const donation = new Donation(donationData);
 
     await donation.save();
 
@@ -117,14 +132,6 @@ const createCheckoutSession = async (req, res) => {
     const sessionPayload = {
       payment_method_types: ['card'],
       mode: 'payment',
-      line_items: [{
-        price_data: {
-          currency: currency.toLowerCase(),
-          product_data: { name: `Donation to ${campaign.title}` },
-          unit_amount: Math.round(amount * 100)
-        },
-        quantity: 1
-      }],
       metadata: {
         donationId: donation._id.toString(),
         campaignId,
@@ -138,8 +145,39 @@ const createCheckoutSession = async (req, res) => {
     if (donorEmail) sessionPayload.customer_email = donorEmail;
     if (donorName) sessionPayload.metadata.donorName = donorName;
 
-    // Create Checkout Session
-    const session = await stripe.checkout.sessions.create(sessionPayload);
+    // Use dynamic pricing for variable donation amounts (no fixed Price ID needed)
+    sessionPayload.line_items = [{
+      price_data: {
+        currency: currency.toLowerCase(),
+        product_data: { 
+          name: `Donation to ${campaign.title}`,
+          description: `Support ${campaign.title} - One-time donation`
+        },
+        unit_amount: Math.round(amount * 100) // Convert to smallest currency unit (cents)
+      },
+      quantity: 1
+    }];
+
+    // Create Checkout Session with dynamic pricing
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create(sessionPayload);
+    } catch (stripeErr) {
+      // Log detailed Stripe error for debugging
+      console.error('Stripe Checkout session creation failed:');
+      console.error('Message:', stripeErr.message);
+      if (stripeErr.type) console.error('Type:', stripeErr.type);
+      if (stripeErr.code) console.error('Code:', stripeErr.code);
+      if (stripeErr.raw && stripeErr.raw.message) console.error('Stripe raw message:', stripeErr.raw.message);
+
+      // Return helpful error in development; keep generic in production
+      const resp = { error: 'Failed to create checkout session' };
+      if (process.env.NODE_ENV !== 'production') {
+        resp.detail = stripeErr.message;
+        if (stripeErr.raw && stripeErr.raw.message) resp.stripeRaw = stripeErr.raw.message;
+      }
+      return res.status(500).json(resp);
+    }
 
     // Attach payment id
     donation.payment.paymentId = session.id;

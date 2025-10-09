@@ -84,7 +84,7 @@ const Donate: React.FC = () => {
       });
 
       const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error || 'Failed to create checkout session');
+  if (!resp.ok) throw { message: data.error || 'Failed to create checkout session', data };
 
       // Redirect to Stripe Checkout
       if (data.url) {
@@ -105,8 +105,18 @@ const Donate: React.FC = () => {
       });
     } catch (err: any) {
       console.error('Donation error:', err);
-      // show a basic error toast / alert
-      alert(err.message || 'Failed to initiate donation. Please try again.');
+
+      // If backend returned structured data, show detailed message
+      if (err && err.data) {
+        console.error('Backend response data:', err.data);
+        const body = err.data;
+        const msg = (body.error ? body.error + '\n' : '') + (body.detail || body.stripeRaw || err.message || 'Failed to initiate donation');
+        alert(msg);
+        return;
+      }
+
+      // Fallback: show error message
+      alert(err?.message || 'Failed to initiate donation. Please try again.');
     } finally {
       setIsProcessing(false);
     }
