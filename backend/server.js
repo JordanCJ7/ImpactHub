@@ -45,18 +45,6 @@ app.use(cors(corsOptions));
 // Respond to preflight requests globally
 app.options('*', cors(corsOptions));
 
-// Special-case: use raw body for Stripe webhooks so signature verification works.
-// We must attach this before the JSON body parser below so the route receives a raw buffer.
-app.use((req, res, next) => {
-  const url = req.originalUrl || req.url || '';
-  if (url.startsWith('/api/donations/webhook')) {
-    // Use the raw body parser for Stripe webhook endpoints
-    express.raw({ type: 'application/json' })(req, res, next);
-  } else {
-    next();
-  }
-});
-
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
