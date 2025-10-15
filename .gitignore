@@ -171,7 +171,7 @@ docs/_build/
 docs/.doctrees/
 
 # Package manager lock files (choose one based on preference)
-# package-lock.json
+package-lock.json
 # yarn.lock
 # pnpm-lock.yaml
 
