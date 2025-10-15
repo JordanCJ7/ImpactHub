@@ -75,13 +75,12 @@ const Donate: React.FC = () => {
     setIsProcessing(true);
 
     try {
-      // Prefer creating a Checkout Session for secure hosted payment
       const requestBody = {
         campaignId: id,
         amount: selectedAmount,
         currency: 'LKR',
-        donorEmail: user?.email || '', // Use authenticated user's email if available
-        donorName: user?.name || '', // Use authenticated user's name if available  
+        donorEmail: user?.email || '',
+        donorName: user?.name || '',
         isAnonymous,
         message
       };
@@ -96,29 +95,21 @@ const Donate: React.FC = () => {
       });
 
       const data = await resp.json();
-  if (!resp.ok) throw { message: data.error || 'Failed to create checkout session', data };
+      if (!resp.ok) throw { message: data.error || 'Failed to create checkout session', data };
 
-      // Redirect to Stripe Checkout
-      if (data.url) {
+      // Check if this is a local mock payment or external redirect
+      if (data.isLocal && data.sessionId) {
+        // Navigate to our mock payment page
+        navigate(`/payment/${data.sessionId}`);
+      } else if (data.url) {
+        // External redirect (e.g., real Stripe)
         window.location.href = data.url;
-        return;
+      } else {
+        throw new Error('Invalid payment session response');
       }
-
-      // Fallback: if backend returned a clientSecret for PaymentIntent, navigate to confirmation (not implemented)
-      navigate(`/donation-confirmation/${id}`, {
-        state: {
-          amount: selectedAmount,
-          totalAmount,
-          coverFees,
-          isAnonymous,
-          message,
-          campaignTitle: campaign?.title || 'Campaign',
-        },
-      });
     } catch (err: any) {
       console.error('Donation error:', err);
 
-      // If backend returned structured data, show detailed message
       if (err && err.data) {
         console.error('Backend response data:', err.data);
         const body = err.data;
@@ -127,7 +118,6 @@ const Donate: React.FC = () => {
         return;
       }
 
-      // Fallback: show error message
       alert(err?.message || 'Failed to initiate donation. Please try again.');
     } finally {
       setIsProcessing(false);
