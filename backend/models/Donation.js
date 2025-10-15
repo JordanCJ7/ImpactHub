@@ -68,10 +68,12 @@ const donationSchema = new mongoose.Schema({
     },
     paymentMethod: {
       type: String,
-      enum: ['card', 'bank_transfer', 'paypal', 'stripe', 'razorpay', 'payhere'],
+      enum: ['card', 'bank_transfer', 'paypal', 'stripe', 'razorpay', 'payhere', 'mock_card'],
       required: [true, 'Payment method is required']
     },
     transactionId: String,
+    cardLast4: String,
+    cardBrand: String,
     processingFee: {
       type: Number,
       default: 0
@@ -115,6 +117,7 @@ const donationSchema = new mongoose.Schema({
   metadata: {
     userAgent: String,
     ipAddress: String,
+    sessionId: String,
     source: {
       type: String,
       enum: ['web', 'mobile_app', 'api', 'widget', 'social_media'],

@@ -38,8 +38,9 @@ router.post('/', createDonationValidation, donationController.createDonation);
 // Payment processing
 router.post('/create-payment-intent', donationController.createPaymentIntent);
 router.post('/create-checkout-session', donationController.createCheckoutSession);
+router.post('/process-payment', donationController.processMockPayment);
+router.get('/session/:sessionId', donationController.getSessionDetails);
 router.post('/confirm', donationController.confirmDonation);
-router.post('/process-payment', donationController.processPayment);
 router.post('/webhook', donationController.handleWebhook);
 router.post('/webhook/stripe', donationController.stripeWebhook);
 router.post('/webhook/payhere', donationController.payhereWebhook);

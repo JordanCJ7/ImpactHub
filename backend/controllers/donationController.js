@@ -1,31 +1,34 @@
 const Donation = require('../models/Donation');
 const Campaign = require('../models/Campaign');
 const User = require('../models/User');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { validationResult } = require('express-validator');
+const {
+  processPayment,
+  generateSessionId,
+  generatePaymentIntentId,
+  validateCardNumber,
+  validateExpiry,
+  validateCVV
+} = require('../utils/paymentSimulator');
 
 if (process.env.NODE_ENV !== 'production') {
-  console.log('Donation controller loaded. Using dynamic pricing for variable donation amounts.');
+  console.log('Donation controller loaded. Using mock payment simulator.');
 }
 
-// Create payment intent for donation
 const createPaymentIntent = async (req, res) => {
   try {
-    const { campaignId, amount, currency = 'USD', donorEmail, donorName, message, isAnonymous = false } = req.body;
+    const { campaignId, amount, currency = 'LKR', donorEmail, donorName, message, isAnonymous = false } = req.body;
     
-    // Validate input
     if (!campaignId || !amount || !donorEmail || !donorName) {
       return res.status(400).json({ 
         error: 'Missing required fields: campaignId, amount, donorEmail, donorName' 
       });
     }
     
-    // Validate minimum amount
     if (amount < 1) {
       return res.status(400).json({ error: 'Minimum donation amount is $1' });
     }
     
-    // Check if campaign exists and is active
     const campaign = await Campaign.findById(campaignId);
     if (!campaign) {
       return res.status(404).json({ error: 'Campaign not found' });
@@ -35,30 +38,24 @@ const createPaymentIntent = async (req, res) => {
       return res.status(400).json({ error: 'Campaign is not accepting donations' });
     }
     
-    // Create Stripe payment intent
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // Convert to cents
-      currency: currency.toLowerCase(),
-      metadata: {
-        campaignId,
-        donorEmail,
-        donorName,
-        isAnonymous: isAnonymous.toString(),
-        message: message || ''
-      }
-    });
+    // Generate mock payment intent ID
+    const paymentIntentId = generatePaymentIntentId();
     
     // Create pending donation record
     const donation = new Donation({
-      campaignId,
-      donorEmail,
-      donorName,
+      campaign: campaignId,
       amount,
       currency,
-      paymentIntentId: paymentIntent.id,
       status: 'pending',
       isAnonymous,
       message,
+      anonymousDonor: { name: donorName, email: donorEmail },
+      payment: {
+        paymentId: paymentIntentId,
+        paymentMethod: 'mock_card',
+        netAmount: amount,
+        currency
+      },
       metadata: {
         userAgent: req.get('User-Agent'),
         ipAddress: req.ip,
@@ -69,8 +66,9 @@ const createPaymentIntent = async (req, res) => {
     await donation.save();
     
     res.json({
-      clientSecret: paymentIntent.client_secret,
-      donationId: donation._id
+      clientSecret: `${paymentIntentId}_secret_${Math.random().toString(36).substring(7)}`,
+      donationId: donation._id,
+      paymentIntentId
     });
     
   } catch (error) {
@@ -79,12 +77,12 @@ const createPaymentIntent = async (req, res) => {
   }
 };
 
-// Create a Stripe Checkout Session for a campaign donation
+// Create a mock checkout session for donation
 const createCheckoutSession = async (req, res) => {
   try {
     const { campaignId, amount, currency = 'LKR', donorEmail, donorName, isAnonymous = false, message } = req.body;
 
-    // Only campaignId and amount are required here; Stripe Checkout can collect payer email
+    // Only campaignId and amount are required
     if (!campaignId || !amount) {
       return res.status(400).json({ error: 'Missing required fields: campaignId, amount' });
     }
@@ -110,7 +108,10 @@ const createCheckoutSession = async (req, res) => {
     const finalDonorEmail = authUser?.email || donorEmail || '';
     const finalDonorName = authUser?.name || donorName || '';
 
-    // Create a pending Donation record to be fulfilled after webhook confirmation
+    // Generate a mock session ID
+    const sessionId = generateSessionId();
+
+    // Create a pending Donation record
     const donationData = {
       campaign: campaignId,
       amount,
@@ -119,14 +120,15 @@ const createCheckoutSession = async (req, res) => {
       message,
       status: 'pending',
       payment: {
-        paymentId: `checkout_${Date.now()}`,
-        paymentMethod: 'stripe',
+        paymentId: sessionId,
+        paymentMethod: 'mock_card',
         netAmount: amount,
         currency
       },
       metadata: {
         userAgent: req.get('User-Agent'),
-        ipAddress: req.ip
+        ipAddress: req.ip,
+        sessionId
       }
     };
 
@@ -143,75 +145,27 @@ const createCheckoutSession = async (req, res) => {
         if (existingUser) {
           donationData.donor = existingUser._id;
         } else {
-          // Store donor info for linking later when customer details are available
           donationData.anonymousDonor = { name: finalDonorName || 'Supporter', email: finalDonorEmail };
         }
       } else {
-        // Stripe will collect email - mark as non-anonymous for now
         donationData.anonymousDonor = { name: finalDonorName || 'Supporter', email: '' };
       }
     }
 
     const donation = new Donation(donationData);
-
     await donation.save();
 
-    // Build session payload
-    const sessionPayload = {
-      payment_method_types: ['card'],
-      mode: 'payment',
-      metadata: {
-        donationId: donation._id.toString(),
-        campaignId,
-        isAnonymous: isAnonymous.toString(),
-        message: message || ''
-      },
-      success_url: `${process.env.CLIENT_URL || 'http://localhost:5173'}/donation-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.CLIENT_URL || 'http://localhost:5173'}/donation-cancel`
-    };
-
-    if (finalDonorEmail) sessionPayload.customer_email = finalDonorEmail;
-    if (finalDonorName) sessionPayload.metadata.donorName = finalDonorName;
-
-    // Use dynamic pricing for variable donation amounts (no fixed Price ID needed)
-    sessionPayload.line_items = [{
-      price_data: {
-        currency: currency.toLowerCase(),
-        product_data: { 
-          name: `Donation to ${campaign.title}`,
-          description: `Support ${campaign.title} - One-time donation`
-        },
-        unit_amount: Math.round(amount * 100) // Convert to smallest currency unit (cents)
-      },
-      quantity: 1
-    }];
-
-    // Create Checkout Session with dynamic pricing
-    let session;
-    try {
-      session = await stripe.checkout.sessions.create(sessionPayload);
-    } catch (stripeErr) {
-      // Log detailed Stripe error for debugging
-      console.error('Stripe Checkout session creation failed:');
-      console.error('Message:', stripeErr.message);
-      if (stripeErr.type) console.error('Type:', stripeErr.type);
-      if (stripeErr.code) console.error('Code:', stripeErr.code);
-      if (stripeErr.raw && stripeErr.raw.message) console.error('Stripe raw message:', stripeErr.raw.message);
-
-      // Return helpful error in development; keep generic in production
-      const resp = { error: 'Failed to create checkout session' };
-      if (process.env.NODE_ENV !== 'production') {
-        resp.detail = stripeErr.message;
-        if (stripeErr.raw && stripeErr.raw.message) resp.stripeRaw = stripeErr.raw.message;
-      }
-      return res.status(500).json(resp);
-    }
-
-    // Attach payment id
-    donation.payment.paymentId = session.id;
-    await donation.save();
-
-    res.json({ url: session.url, sessionId: session.id });
+    // Return session info - frontend will navigate to our mock payment page
+    res.json({ 
+      sessionId,
+      donationId: donation._id.toString(),
+      amount,
+      currency,
+      campaignTitle: campaign.title,
+      // Instead of Stripe URL, we return a local payment page URL
+      url: `/payment/${sessionId}`,
+      isLocal: true // Flag to tell frontend this is a local mock payment
+    });
   } catch (error) {
     console.error('Error creating checkout session:', error);
     res.status(500).json({ error: 'Failed to create checkout session' });
@@ -227,15 +181,8 @@ const confirmDonation = async (req, res) => {
       return res.status(400).json({ error: 'Payment intent ID is required' });
     }
     
-    // Retrieve payment intent from Stripe to verify payment
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-    
-    if (paymentIntent.status !== 'succeeded') {
-      return res.status(400).json({ error: 'Payment not completed' });
-    }
-    
-    // Find and update donation record
-    const donation = await Donation.findOne({ paymentIntentId });
+    // Find donation by payment intent ID
+    const donation = await Donation.findOne({ 'payment.paymentId': paymentIntentId });
     if (!donation) {
       return res.status(404).json({ error: 'Donation record not found' });
     }
@@ -249,7 +196,7 @@ const confirmDonation = async (req, res) => {
     await donation.save();
     
     // Update campaign amounts and counts
-    await Campaign.findByIdAndUpdate(donation.campaignId, {
+    await Campaign.findByIdAndUpdate(donation.campaign, {
       $inc: { 
         raised: donation.amount,
         'analytics.donorCount': 1
@@ -257,15 +204,17 @@ const confirmDonation = async (req, res) => {
     });
     
     // Update user donation stats if user exists
-    await User.findOneAndUpdate(
-      { email: donation.donorEmail },
-      {
-        $inc: {
-          'donationStats.totalDonated': donation.amount,
-          'donationStats.donationCount': 1
+    if (donation.anonymousDonor && donation.anonymousDonor.email) {
+      await User.findOneAndUpdate(
+        { email: donation.anonymousDonor.email },
+        {
+          $inc: {
+            'donationStats.totalDonated': donation.amount,
+            'donationStats.donationCount': 1
+          }
         }
-      }
-    );
+      );
+    }
     
     res.json({
       message: 'Donation confirmed successfully',
@@ -273,7 +222,6 @@ const confirmDonation = async (req, res) => {
         id: donation._id,
         amount: donation.amount,
         currency: donation.currency,
-        campaignId: donation.campaignId,
         status: donation.status,
         createdAt: donation.createdAt
       }
@@ -298,22 +246,22 @@ const getDonationHistory = async (req, res) => {
     }
     
     const donations = await Donation.find({ 
-      donorEmail: email,
+      'anonymousDonor.email': email,
       status: 'completed'
     })
-    .populate('campaignId', 'title organizationName imageUrl')
+    .populate('campaign', 'title organizationName imageUrl')
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
     
     const total = await Donation.countDocuments({ 
-      donorEmail: email,
+      'anonymousDonor.email': email,
       status: 'completed'
     });
     
     // Calculate summary stats
     const stats = await Donation.aggregate([
-      { $match: { donorEmail: email, status: 'completed' } },
+      { $match: { 'anonymousDonor.email': email, status: 'completed' } },
       {
         $group: {
           _id: null,
@@ -340,129 +288,137 @@ const getDonationHistory = async (req, res) => {
   }
 };
 
-// Handle Stripe webhook for payment updates
-const handleWebhook = async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  let event;
-
+// Process mock payment
+const processMockPayment = async (req, res) => {
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-  } catch (err) {
-    console.error('Webhook signature verification failed:', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
+    const { sessionId, cardNumber, expiryMonth, expiryYear, cvv, cardholderName } = req.body;
 
-  try {
-    switch (event.type) {
-      case 'payment_intent.succeeded':
-        await handlePaymentSucceeded(event.data.object);
-        break;
-
-      case 'payment_intent.payment_failed':
-        await handlePaymentFailed(event.data.object);
-        break;
-
-      case 'checkout.session.completed':
-        // A Checkout Session completed — fulfill the donation
-        const session = event.data.object;
-        // If we created a Donation earlier and stored its id in metadata
-        const donationId = session.metadata && session.metadata.donationId;
-        if (donationId) {
-          const donation = await Donation.findById(donationId);
-          if (donation && donation.status === 'pending') {
-            donation.status = 'completed';
-            donation.payment.transactionId = session.payment_intent || session.payment_intent?.id || '';
-            
-            // Update donor information from Stripe if available and donation is not anonymous
-            if (!donation.isAnonymous && session.customer_details) {
-              if (session.customer_details.email && !donation.anonymousDonor.email) {
-                donation.anonymousDonor.email = session.customer_details.email;
-              }
-              if (session.customer_details.name && !donation.anonymousDonor.name) {
-                donation.anonymousDonor.name = session.customer_details.name;
-              }
-              
-              // Try to link to existing user by email
-              if (session.customer_details.email && !donation.donor) {
-                const existingUser = await User.findOne({ email: session.customer_details.email });
-                if (existingUser) {
-                  donation.donor = existingUser._id;
-                }
-              }
-            }
-            
-            await donation.save();
-
-            // Update campaign amounts - use correct field name 'raised' not 'currentAmount'
-            await Campaign.findByIdAndUpdate(donation.campaign, {
-              $inc: { raised: donation.amount, 'analytics.donorCount': 1 }
-            });
-
-            // Update user stats if donor email exists
-            if (donation.anonymousDonor && donation.anonymousDonor.email) {
-              await User.findOneAndUpdate({ email: donation.anonymousDonor.email }, {
-                $inc: { 'donationStats.totalDonated': donation.amount, 'donationStats.donationCount': 1 }
-              });
-            }
-            
-            // Also update user stats if donor ID exists
-            if (donation.donor) {
-              await User.findByIdAndUpdate(donation.donor, {
-                $inc: { 'donationStats.totalDonated': donation.amount, 'donationStats.donationCount': 1 }
-              });
-            }
-          }
-        }
-        break;
-
-      default:
-        console.log(`Unhandled event type: ${event.type}`);
+    if (!sessionId || !cardNumber || !expiryMonth || !expiryYear || !cvv || !cardholderName) {
+      return res.status(400).json({ 
+        error: 'Missing required payment fields',
+        required: ['sessionId', 'cardNumber', 'expiryMonth', 'expiryYear', 'cvv', 'cardholderName']
+      });
     }
 
-    res.json({ received: true });
-  } catch (error) {
-    console.error('Webhook handling error:', error);
-    res.status(500).json({ error: 'Webhook handling failed' });
-  }
-};
+    // Find the donation by session ID
+    const donation = await Donation.findOne({ 'metadata.sessionId': sessionId });
+    if (!donation) {
+      return res.status(404).json({ error: 'Donation session not found' });
+    }
 
-// Helper function to handle successful payment
-const handlePaymentSucceeded = async (paymentIntent) => {
-  const donation = await Donation.findOne({ paymentIntentId: paymentIntent.id });
-  
-  if (donation && donation.status === 'pending') {
+    if (donation.status === 'completed') {
+      return res.status(400).json({ error: 'This donation has already been processed' });
+    }
+
+    // Process the payment using our simulator
+    const paymentResult = await processPayment({
+      cardNumber,
+      expiryMonth,
+      expiryYear,
+      cvv,
+      cardholderName,
+      amount: donation.amount,
+      currency: donation.currency
+    });
+
+    if (!paymentResult.success) {
+      // Payment failed - update donation status
+      donation.status = 'failed';
+      donation.failureReason = paymentResult.message;
+      await donation.save();
+
+      return res.status(400).json({ 
+        error: paymentResult.error,
+        message: paymentResult.message
+      });
+    }
+
+    // Payment successful - update donation
     donation.status = 'completed';
-    await donation.save();
+    donation.payment.transactionId = paymentResult.transactionId;
+    donation.payment.paymentMethod = 'card';
+    donation.payment.cardLast4 = paymentResult.card.last4;
+    donation.payment.cardBrand = paymentResult.card.brand;
+    donation.completedAt = new Date();
     
-    // Update campaign
-    await Campaign.findByIdAndUpdate(donation.campaignId, {
-      $inc: { 
-        raised: donation.amount,
-        'analytics.donorCount': 1
+    await donation.save();
+
+    // Update campaign amounts
+    await Campaign.findByIdAndUpdate(donation.campaign, {
+      $inc: { raised: donation.amount, 'analytics.donorCount': 1 }
+    });
+
+    // Update user stats if donor email exists
+    if (donation.anonymousDonor && donation.anonymousDonor.email) {
+      await User.findOneAndUpdate({ email: donation.anonymousDonor.email }, {
+        $inc: { 'donationStats.totalDonated': donation.amount, 'donationStats.donationCount': 1 }
+      });
+    }
+
+    // Also update user stats if donor ID exists
+    if (donation.donor) {
+      await User.findByIdAndUpdate(donation.donor, {
+        $inc: { 'donationStats.totalDonated': donation.amount, 'donationStats.donationCount': 1 }
+      });
+    }
+
+    res.json({
+      success: true,
+      sessionId,
+      transactionId: paymentResult.transactionId,
+      donation: {
+        id: donation._id,
+        amount: donation.amount,
+        currency: donation.currency,
+        status: donation.status
       }
     });
-    
-    // Update user stats
-    await User.findOneAndUpdate(
-      { email: donation.donorEmail },
-      {
-        $inc: {
-          'donationStats.totalDonated': donation.amount,
-          'donationStats.donationCount': 1
-        }
-      }
-    );
+
+  } catch (error) {
+    console.error('Error processing mock payment:', error);
+    res.status(500).json({ error: 'Failed to process payment' });
   }
 };
 
-// Helper function to handle failed payment
-const handlePaymentFailed = async (paymentIntent) => {
-  const donation = await Donation.findOne({ paymentIntentId: paymentIntent.id });
-  
-  if (donation && donation.status === 'pending') {
-    donation.status = 'failed';
-    await donation.save();
+// Get session details
+const getSessionDetails = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+
+    const donation = await Donation.findOne({ 'metadata.sessionId': sessionId })
+      .populate('campaign', 'title imageUrl organizationName')
+      .populate('donor', 'name email');
+
+    if (!donation) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    res.json({
+      sessionId,
+      donationId: donation._id,
+      amount: donation.amount,
+      currency: donation.currency,
+      status: donation.status,
+      campaign: {
+        id: donation.campaign._id,
+        title: donation.campaign.title,
+        imageUrl: donation.campaign.imageUrl,
+        organizationName: donation.campaign.organizationName
+      },
+      isAnonymous: donation.isAnonymous,
+      message: donation.message
+    });
+
+  } catch (error) {
+    console.error('Error fetching session details:', error);
+    res.status(500).json({ error: 'Failed to fetch session details' });
   }
+};
+
+// Handle Stripe webhook for payment updates (now just a mock)
+const handleWebhook = async (req, res) => {
+  // Mock webhook - not needed for simulator but kept for compatibility
+  res.json({ received: true, message: 'Mock webhook - no action needed' });
 };
 
 // Get recent donations (public)
@@ -473,10 +429,11 @@ const getRecentDonations = async (req, res) => {
       status: 'completed',
       isAnonymous: false 
     })
-    .populate('campaignId', 'title')
+    .populate('campaign', 'title')
+    .populate('donor', 'name')
     .sort({ createdAt: -1 })
     .limit(limit)
-    .select('donorName amount campaignId createdAt message');
+    .select('donor anonymousDonor amount campaign createdAt message');
     
     res.json(donations);
   } catch (error) {
@@ -493,10 +450,11 @@ const getTopDonations = async (req, res) => {
       status: 'completed',
       isAnonymous: false 
     })
-    .populate('campaignId', 'title')
+    .populate('campaign', 'title')
+    .populate('donor', 'name')
     .sort({ amount: -1 })
     .limit(limit)
-    .select('donorName amount campaignId createdAt message');
+    .select('donor anonymousDonor amount campaign createdAt message');
     
     res.json(donations);
   } catch (error) {
@@ -534,15 +492,15 @@ const createDonation = async (req, res) => {
   });
 };
 
-// Placeholder functions for missing routes
+// Get my donations
 const getMyDonations = async (req, res) => {
   try {
-    const userEmail = req.user.email;
+    const userId = req.user.id || req.user.userId;
     const donations = await Donation.find({ 
-      donorEmail: userEmail,
+      donor: userId,
       status: 'completed' 
     })
-    .populate('campaignId', 'title')
+    .populate('campaign', 'title')
     .sort({ createdAt: -1 });
     
     res.json(donations);
@@ -612,17 +570,18 @@ const resumeRecurringDonation = async (req, res) => {
   res.status(501).json({ error: 'Function not implemented yet' });
 };
 
-const processPayment = async (req, res) => {
-  res.status(501).json({ error: 'Function not implemented yet' });
-};
-
 const stripeWebhook = async (req, res) => {
-  res.status(501).json({ error: 'Function not implemented yet' });
+  res.json({ received: true, message: 'Mock Stripe webhook' });
 };
 
 const payhereWebhook = async (req, res) => {
-  res.status(501).json({ error: 'Function not implemented yet' });
+  res.json({ received: true, message: 'Mock PayHere webhook' });
 };
+
+// Note: the functions above (e.g. createDonation, getDonationById, etc.)
+// are intentionally defined once earlier in this file. Duplicated
+// placeholder stubs were removed to prevent duplicate declarations and
+// allow the imported `processPayment` from the payment simulator to be used.
 
 module.exports = {
   createPaymentIntent,
@@ -649,9 +608,9 @@ module.exports = {
   cancelRecurringDonation,
   pauseRecurringDonation,
   resumeRecurringDonation,
-  processPayment,
   stripeWebhook,
-  payhereWebhook
-  ,
-  createCheckoutSession
+  payhereWebhook,
+  createCheckoutSession,
+  processMockPayment,
+  getSessionDetails
 };
