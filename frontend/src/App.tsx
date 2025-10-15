@@ -18,6 +18,7 @@ import CampaignDetails from './pages/publicc/CampaignDetails';
 import Donate from './pages/publicc/Donate';
 import DonationSuccess from './pages/publicc/DonationSuccess';
 import DonationCancel from './pages/publicc/DonationCancel';
+import MockPayment from './pages/publicc/MockPayment';
 import About from './pages/publicc/About';
 import Contact from './pages/publicc/Contact';
 import Help from './pages/publicc/Help';
@@ -92,6 +93,7 @@ const App = () => (
             <Route path="/donation-confirmation/:id" element={<DonationConfirmation />} />
             <Route path="/campaigns/:id" element={<CampaignDetails />} />
             <Route path="/donate/:id" element={<Donate />} />
+            <Route path="/payment/:sessionId" element={<MockPayment />} />
             <Route path="/donation-success" element={<DonationSuccess />} />
             <Route path="/donation-cancel" element={<DonationCancel />} />
             <Route path="/about" element={<About />} />
