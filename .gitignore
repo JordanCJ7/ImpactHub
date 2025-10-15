@@ -191,3 +191,4 @@ docker-compose.override.yml
 *.map
 .sass-cache/
 frontend/package-lock.json
+backend/package-lock.json
