@@ -61,8 +61,8 @@ const DonorDashboard: React.FC = () => {
       // Load user analytics and stats
       const [analyticsResponse, donationsResponse, campaignsResponse] = await Promise.allSettled([
         analyticsService.getUserAnalytics(),
-        donationService.getMyDonations({ limit: 5 }),
-        campaignService.getSupportedCampaigns(1, 3)
+          donationService.getMyDonations({ limit: 6 }),
+          campaignService.getSupportedCampaigns(1, 3)
       ]);
 
       // Handle analytics data
@@ -81,9 +81,10 @@ const DonorDashboard: React.FC = () => {
       if (donationsResponse.status === 'fulfilled' && donationsResponse.value.data) {
         const donationsData = donationsResponse.value.data;
         if (donationsData && 'donations' in donationsData) {
-          setRecentDonations(donationsData.donations || []);
+          // Ensure we only keep the latest 6 donations
+          setRecentDonations((donationsData.donations || []).slice(0, 6));
         } else if (Array.isArray(donationsData)) {
-          setRecentDonations(donationsData);
+          setRecentDonations(donationsData.slice(0, 6));
         }
       }
 
@@ -200,6 +201,20 @@ const DonorDashboard: React.FC = () => {
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  // Compute cumulative donated amount for a campaign for the current user
+  const getCampaignDonatedAmount = (campaignId: string) => {
+    // Prefer server-provided donatedAmount on campaign
+    const campaign = supportedCampaigns.find(c => c._id === campaignId);
+    if (campaign && (campaign.donatedAmount !== undefined && campaign.donatedAmount !== null)) {
+      return campaign.donatedAmount;
+    }
+
+    // Fallback: sum amounts in recentDonations for that campaign
+    const sum = recentDonations.filter(d => d.campaign && d.campaign._id === campaignId)
+      .reduce((acc, d) => acc + (d.amount || 0), 0);
+    return sum;
   };
 
   const getDonorLevelColor = (level: string) => {
@@ -337,7 +352,7 @@ const DonorDashboard: React.FC = () => {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>Your Supported Campaigns</CardTitle>
+                  <CardTitle>Your Favourite Campaigns</CardTitle>
                   <Button variant="outline" size="sm" asChild>
                     <Link to="/campaigns">View All</Link>
                   </Button>
@@ -364,17 +379,17 @@ const DonorDashboard: React.FC = () => {
                           <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-foreground mb-1">{campaign.title}</h4>
                           <p className="text-sm text-muted-foreground mb-2">
-                            Your contribution: <span className="font-medium text-green-600">{formatCurrency(campaign.donatedAmount || 0)}</span>
+                            Your contribution: <span className="font-medium text-green-600">{formatCurrency(campaign.donatedAmount ?? getCampaignDonatedAmount(campaign._id))}</span>
                           </p>
                           
                           <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                              <span className="text-sm text-muted-foreground">{formatCurrency(campaign.amountRaised || 0)} raised</span>
+                              <span className="text-sm text-muted-foreground">{formatCurrency(campaign.amountRaised ?? campaign.raised ?? campaign.currentAmount ?? 0)} raised</span>
                               <span className="text-sm text-muted-foreground">
                                 {campaign.endDate ? Math.max(0, Math.ceil((new Date(campaign.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 'N/A'} days left
                               </span>
                             </div>
-                            <Progress value={campaign.goal ? ((campaign.amountRaised || 0) / campaign.goal) * 100 : 0} className="h-2" />
+                            <Progress value={campaign.goal ? ((campaign.amountRaised ?? campaign.raised ?? campaign.currentAmount ?? 0) / (campaign.goal || campaign.targetAmount || 1)) * 100 : 0} className="h-2" />
                           </div>
                           
                           {campaign.lastUpdate && (
@@ -433,11 +448,17 @@ const DonorDashboard: React.FC = () => {
                     recentDonations.map((donation) => (
                       <div key={donation._id} className="flex items-center justify-between p-4 border rounded-lg">
                         <div className="flex items-center space-x-3">
-                          <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                            <Heart className="h-6 w-6 text-blue-600" />
-                          </div>
+                                <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                                  {/* Try to show campaign image for the donation if available */}
+                                  {resolveCampaignImageUrl(donation.campaign) ? (
+                                    <img src={resolveCampaignImageUrl(donation.campaign)} alt={donation.campaign?.title || 'campaign'} className="w-12 h-12 rounded-md object-cover" />
+                                  ) : (
+                                    <Heart className="h-6 w-6 text-blue-600" />
+                                  )}
+                                </div>
                           <div>
                             <h4 className="font-medium text-foreground">{donation.campaign.title}</h4>
+                            <p className="text-xs text-muted-foreground">Contributed total: <span className="font-medium">{formatCurrency(getCampaignDonatedAmount(donation.campaign._id))}</span></p>
                             <p className="text-sm text-muted-foreground">{formatDate(donation.createdAt)}</p>
                           </div>
                         </div>
