@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { donationService } from '@/services';
+import { resolveCampaignImageUrl } from '@/lib/imageUtils';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -274,13 +275,16 @@ const DonationHistory: React.FC = () => {
               <Card key={donation._id || donation.id} className={`overflow-hidden hover:shadow-md transition-shadow duration-200 animate-in fade-in-50 slide-in-from-bottom-4`} style={{ animationDelay: `${Math.min(idx, 6) * 60}ms` }}>
                 <CardContent className="p-6">
                   <div className="flex items-start space-x-4">
-                    <img
-                      src={
-                        (typeof (window) !== 'undefined' && ( (donation.campaign && (donation.campaign.image || (donation.campaign.images && donation.campaign.images[0]))) )) ? (donation.campaign.image || (donation.campaign.images && donation.campaign.images[0])) : '/images/placeholder-campaign.png'
-                      }
-                      alt={donation.campaign?.title || 'Campaign image'}
-                      className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                    />
+                    <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                      <img
+                        src={resolveCampaignImageUrl(donation.campaign)}
+                        alt={donation.campaign?.title || 'Campaign image'}
+                        className="w-16 h-16 object-cover"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.opacity = '0';
+                        }}
+                      />
+                    </div>
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between mb-2">

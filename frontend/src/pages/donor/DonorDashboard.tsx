@@ -445,18 +445,22 @@ const DonorDashboard: React.FC = () => {
               <CardContent>
                 <div className="space-y-4">
                   {recentDonations.length > 0 ? (
-                    recentDonations.map((donation) => (
-                      <div key={donation._id} className="flex items-center justify-between p-4 border rounded-lg">
+                    recentDonations.map((donation) => {
+                      const campaignImageUrl = resolveCampaignImageUrl(donation.campaign);
+                      return (
+                      <div key={donation._id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                         <div className="flex items-center space-x-3">
-                                <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                                  {/* Try to show campaign image for the donation if available */}
-                                  {resolveCampaignImageUrl(donation.campaign) ? (
-                                    <img src={resolveCampaignImageUrl(donation.campaign)} alt={donation.campaign?.title || 'campaign'} className="w-12 h-12 rounded-md object-cover" />
-                                  ) : (
-                                    <Heart className="h-6 w-6 text-blue-600" />
-                                  )}
-                                </div>
-                          <div>
+                          <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                            <img 
+                              src={campaignImageUrl} 
+                              alt={donation.campaign?.title || 'campaign'} 
+                              className="w-12 h-12 object-cover"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.opacity = '0';
+                              }}
+                            />
+                          </div>
+                          <div className="flex-1">
                             <h4 className="font-medium text-foreground">{donation.campaign.title}</h4>
                             <p className="text-xs text-muted-foreground">Contributed total: <span className="font-medium">{formatCurrency(getCampaignDonatedAmount(donation.campaign._id))}</span></p>
                             <p className="text-sm text-muted-foreground">{formatDate(donation.createdAt)}</p>
@@ -469,7 +473,8 @@ const DonorDashboard: React.FC = () => {
                           </Badge>
                         </div>
                       </div>
-                    ))
+                    );
+                    })
                   ) : (
                     <div className="text-center py-8">
                       <Heart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
