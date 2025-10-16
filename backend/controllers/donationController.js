@@ -249,7 +249,7 @@ const getDonationHistory = async (req, res) => {
       'anonymousDonor.email': email,
       status: 'completed'
     })
-    .populate('campaign', 'title organizationName imageUrl')
+    .populate('campaign', 'title organizationName images primaryImage description goal raised category creator')
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
@@ -386,7 +386,7 @@ const getSessionDetails = async (req, res) => {
     const { sessionId } = req.params;
 
     const donation = await Donation.findOne({ 'metadata.sessionId': sessionId })
-      .populate('campaign', 'title imageUrl organizationName')
+      .populate('campaign', 'title images primaryImage organizationName description goal raised category creator')
       .populate('donor', 'name email');
 
     if (!donation) {
@@ -429,7 +429,7 @@ const getRecentDonations = async (req, res) => {
       status: 'completed',
       isAnonymous: false 
     })
-    .populate('campaign', 'title')
+    .populate('campaign', 'title images primaryImage description goal raised category creator organizationName')
     .populate('donor', 'name')
     .sort({ createdAt: -1 })
     .limit(limit)
@@ -450,7 +450,7 @@ const getTopDonations = async (req, res) => {
       status: 'completed',
       isAnonymous: false 
     })
-    .populate('campaign', 'title')
+    .populate('campaign', 'title images primaryImage description goal raised category creator organizationName')
     .populate('donor', 'name')
     .sort({ amount: -1 })
     .limit(limit)
@@ -500,7 +500,7 @@ const getMyDonations = async (req, res) => {
       donor: userId,
       status: 'completed' 
     })
-    .populate('campaign', 'title')
+    .populate('campaign', 'title description images primaryImage goal raised category creator organizationName')
     .sort({ createdAt: -1 });
     
     res.json(donations);
