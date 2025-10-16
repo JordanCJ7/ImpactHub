@@ -20,9 +20,11 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  FileText
+  FileText,
+  Loader2
 } from 'lucide-react';
 import { campaignService, type DraftCampaignSummary } from '@/services/campaigns';
+import { analyticsService } from '@/services/analytics';
 import { resolveCampaignImageUrl } from '@/lib/imageUtils';
 
 const LeaderDashboard: React.FC = () => {
@@ -32,8 +34,26 @@ const LeaderDashboard: React.FC = () => {
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
   const [recentDonations, setRecentDonations] = useState<any[] | null>(null);
   const [loadingDonations, setLoadingDonations] = useState(false);
+  const [dashboardStats, setDashboardStats] = useState<any | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
 
   useEffect(() => {
+    // Load dashboard stats
+    const loadStats = async () => {
+      try {
+        setStatsLoading(true);
+        const res = await analyticsService.getDashboardStats();
+        if (!(res as any).error) {
+          setDashboardStats((res as any).data?.stats || (res as any).stats);
+        }
+      } catch (e) {
+        console.error('Error loading dashboard stats:', e);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    // Load drafts
     const loadDrafts = async () => {
       try {
         setLoadingDrafts(true);
@@ -47,8 +67,8 @@ const LeaderDashboard: React.FC = () => {
         setLoadingDrafts(false);
       }
     };
-    loadDrafts();
-    // load campaigns and recent donations for leader
+
+    // Load campaigns and recent donations for leader
     const loadCampaigns = async () => {
       try {
         setLoadingCampaigns(true);
@@ -115,13 +135,40 @@ const LeaderDashboard: React.FC = () => {
         setLoadingCampaigns(false);
       }
     };
+
+    loadStats();
+    loadDrafts();
     loadCampaigns();
   }, []);
   const stats = [
-    { icon: Target, label: "Active Campaigns", value: "3", change: "+1 this month", color: "text-blue-600" },
-    { icon: DollarSign, label: "Total Raised", value: "LKR 47,250", change: "LKR 8,500 this month", color: "text-green-600" },
-    { icon: Users, label: "Total Donors", value: "892", change: "+127 this month", color: "text-purple-600" },
-    { icon: TrendingUp, label: "Avg. Donation", value: "LKR 530", change: "+12% this month", color: "text-orange-600" }
+    { 
+      icon: Target, 
+      label: "Active Campaigns", 
+      value: dashboardStats?.campaigns?.active || 0, 
+      change: `${dashboardStats?.campaigns?.total || 0} total`, 
+      color: "text-blue-600" 
+    },
+    { 
+      icon: DollarSign, 
+      label: "Total Raised", 
+      value: `LKR ${(dashboardStats?.amount?.total || 0).toLocaleString()}`, 
+      change: `${dashboardStats?.donations?.total || 0} donations`, 
+      color: "text-green-600" 
+    },
+    { 
+      icon: Users, 
+      label: "Total Donors", 
+      value: dashboardStats?.donations?.total || 0,
+      change: dashboardStats?.campaigns?.active ? `From ${dashboardStats?.campaigns?.active} active campaigns` : "From active campaigns", 
+      color: "text-purple-600" 
+    },
+    { 
+      icon: TrendingUp, 
+      label: "Avg. Donation", 
+      value: dashboardStats?.donations?.total && dashboardStats?.amount?.total ? `LKR ${Math.floor(dashboardStats.amount.total / dashboardStats.donations.total).toLocaleString()}` : "LKR 0",
+      change: "+12% this month", 
+      color: "text-orange-600" 
+    }
   ];
 
   // campaigns state is fetched from API
@@ -178,24 +225,43 @@ const LeaderDashboard: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => (
-            <Card key={index}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
-                    <div className="flex items-center space-x-2">
-                      <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+          {statsLoading ? (
+            <>
+              {[...Array(4)].map((_, index) => (
+                <Card key={index}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="h-4 bg-muted rounded w-2/3 mb-2"></div>
+                        <div className="h-8 bg-muted rounded w-1/2 mb-2"></div>
+                        <div className="h-3 bg-muted rounded w-3/4"></div>
+                      </div>
+                      <div className="h-10 w-10 bg-muted rounded-lg"></div>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">{stat.change}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </>
+          ) : (
+            stats.map((stat, index) => (
+              <Card key={index}>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
+                      <div className="flex items-center space-x-2">
+                        <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{stat.change}</p>
+                    </div>
+                    <div className={`p-2 rounded-lg bg-muted`}>
+                      <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                    </div>
                   </div>
-                  <div className={`p-2 rounded-lg bg-muted`}>
-                    <stat.icon className={`h-6 w-6 ${stat.color}`} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
