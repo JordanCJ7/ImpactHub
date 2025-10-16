@@ -163,7 +163,7 @@ const AdminUserManagement = () => {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                     <div>
                       <p className="text-sm font-medium">Total Donations</p>
-                      <p className="text-2xl font-bold">${user.stats?.totalDonated?.toLocaleString() || 0}</p>
+                      <p className="text-2xl font-bold">LKR {user.stats?.totalDonated?.toLocaleString() || 0}</p>
                     </div>
                     <div>
                       {user.role === 'campaign-leader' ? (
