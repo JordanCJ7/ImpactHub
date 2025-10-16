@@ -209,8 +209,8 @@ const confirmDonation = async (req, res) => {
         { email: donation.anonymousDonor.email },
         {
           $inc: {
-            'donationStats.totalDonated': donation.amount,
-            'donationStats.donationCount': 1
+            'stats.totalDonated': donation.amount,
+            'stats.donationCount': 1
           }
         }
       );
@@ -351,14 +351,14 @@ const processMockPayment = async (req, res) => {
     // Update user stats if donor email exists
     if (donation.anonymousDonor && donation.anonymousDonor.email) {
       await User.findOneAndUpdate({ email: donation.anonymousDonor.email }, {
-        $inc: { 'donationStats.totalDonated': donation.amount, 'donationStats.donationCount': 1 }
+        $inc: { 'stats.totalDonated': donation.amount, 'stats.donationCount': 1 }
       });
     }
 
     // Also update user stats if donor ID exists
     if (donation.donor) {
       await User.findByIdAndUpdate(donation.donor, {
-        $inc: { 'donationStats.totalDonated': donation.amount, 'donationStats.donationCount': 1 }
+        $inc: { 'stats.totalDonated': donation.amount, 'stats.donationCount': 1 }
       });
     }
 
