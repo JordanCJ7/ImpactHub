@@ -17,7 +17,7 @@
         "terminal.integrated.defaultProfile.windows": "PowerShell",
         "files.exclude": {
             "**/node_modules": true,
-            "**/.env": true
+            "**/.env": false
         },
         "search.exclude": {
             "**/node_modules": true,

@@ -139,7 +139,7 @@ const AdminAnalytics: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Campaign Analytics</h1>
-              <p className="text-gray-600">Track performance and insights for your campaigns.</p>
+              <p className="text-gray-600 dark:text-gray-300">Track performance and insights for your campaigns.</p>
             </div>
             <div className="flex items-center space-x-3">
               <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
@@ -178,7 +178,7 @@ const AdminAnalytics: React.FC = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">{stat.label}</p>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{stat.label}</p>
                     <div className="flex items-center space-x-2">
                       <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
                     </div>
@@ -228,7 +228,7 @@ const AdminAnalytics: React.FC = () => {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                         <div className="text-center">
                           <div className="text-2xl font-bold text-green-600">
-                            ${campaign.raised.toLocaleString()}
+                            LKR {campaign.raised.toLocaleString()}
                           </div>
                           <div className="text-sm text-gray-600">Raised</div>
                         </div>

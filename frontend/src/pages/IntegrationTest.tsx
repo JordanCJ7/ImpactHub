@@ -225,7 +225,7 @@ const IntegrationTest: React.FC = () => {
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Backend Integration Test</h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-gray-600 dark:text-gray-300 mt-2">
             Test the connection and functionality of all backend services
           </p>
         </div>

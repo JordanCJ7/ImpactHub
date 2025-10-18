@@ -339,7 +339,7 @@ const DonorProfile: React.FC = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading your profile...</p>
+          <p className="text-muted-foreground dark:text-gray-300">Loading your profile...</p>
         </div>
       </div>
     );
@@ -400,7 +400,7 @@ const DonorProfile: React.FC = () => {
           {/* Personal Information */}
           <TabsContent value="personal" className="space-y-6">
             {/* User Statistics */}
-            {userStats && (
+            {stats && (stats.totalDonated > 0 || stats.donationCount > 0 || stats.campaignsSupported > 0) && (
               <Card>
                 <CardHeader>
                   <CardTitle>Your Impact</CardTitle>
@@ -412,41 +412,36 @@ const DonorProfile: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-green-600">
-                        LKR {userStats.totalDonated?.toLocaleString() || '0'}
+                        LKR {stats.totalDonated?.toLocaleString()}
                       </div>
                       <div className="text-sm text-muted-foreground">Total Donated</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-600">
-                        {userStats.donationCount || 0}
+                        {stats.donationCount}
                       </div>
                       <div className="text-sm text-muted-foreground">Donations Made</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-purple-600">
-                        {userStats.campaignsSupported || 0}
+                        {stats.campaignsSupported}
                       </div>
                       <div className="text-sm text-muted-foreground">Campaigns Supported</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-yellow-600">
-                        {userStats.donorLevel || 'Bronze'}
+                        {stats.donorLevel || 'Bronze'}
                       </div>
                       <div className="text-sm text-muted-foreground">Donor Level</div>
                     </div>
                   </div>
-                  {userStats.impactPoints > 0 && (
-                    <div className="mt-4 pt-4 border-t">
-                      <div className="text-center">
-                        <div className="text-lg font-semibold text-indigo-600">
-                          {userStats.impactPoints} Impact Points
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          Member since {profile.joinDate}
-                        </div>
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="text-center">
+                      <div className="text-sm text-muted-foreground">
+                        Member since {profile.joinDate}
                       </div>
                     </div>
-                  )}
+                  </div>
                 </CardContent>
               </Card>
             )}

@@ -8,6 +8,9 @@ router.post('/register', userController.register);
 router.post('/login', userController.login);
 router.post('/google-auth', userController.googleAuth);
 
+// Public leaderboard (no auth required)
+router.get('/leaderboard', userController.getLeaderboard);
+
 // Protected routes
 router.use(auth);
 

@@ -12,7 +12,7 @@ const Help: React.FC = () => {
             <div className="flex flex-col items-center space-y-4">
               <HelpCircle className="h-12 w-12 text-primary" />
             </div>
-            <p className="text-lg text-muted-foreground text-center">
+            <p className="text-lg text-muted-foreground dark:text-gray-300 text-center">
               Find answers to common questions, troubleshooting tips, and guidance for using ImpactHub.
             </p>
             <div className="space-y-6 mt-4">

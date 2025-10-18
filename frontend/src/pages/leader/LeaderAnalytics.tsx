@@ -228,7 +228,7 @@ const LeaderAnalytics: React.FC = () => {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                         <div className="text-center">
                           <div className="text-2xl font-bold text-green-600">
-                            ${campaign.raised.toLocaleString()}
+                            LKR {campaign.raised.toLocaleString()}
                           </div>
                           <div className="text-sm text-gray-600">Raised</div>
                         </div>

@@ -137,11 +137,11 @@ const AdminCampaignManagement = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div>
                       <p className="text-sm font-medium">Goal Amount</p>
-                      <p className="text-2xl font-bold">${campaign.goal.toLocaleString()}</p>
+                      <p className="text-2xl font-bold">LKR {campaign.goal.toLocaleString()}</p>
                     </div>
                     <div>
                       <p className="text-sm font-medium">Amount Raised</p>
-                      <p className="text-2xl font-bold">${campaign.raised.toLocaleString()}</p>
+                      <p className="text-2xl font-bold">LKR {campaign.raised.toLocaleString()}</p>
                     </div>
                     <div>
                       <p className="text-sm font-medium">Progress</p>

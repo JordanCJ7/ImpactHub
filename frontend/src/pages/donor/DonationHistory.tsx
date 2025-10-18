@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { donationService } from '@/services';
+import { resolveCampaignImageUrl } from '@/lib/imageUtils';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,134 +34,29 @@ const DonationHistory: React.FC = () => {
   const [timeFilter, setTimeFilter] = useState('all');
   const [sortBy, setSortBy] = useState('recent');
 
-  const donations = [
-    {
-      id: 'DON-20240115001',
-      campaign: {
-        id: 1,
-        title: 'Clean Water for Rural Communities',
-        image: '/images/CleanWater.jpg',
-        organizer: 'Water for Life Foundation'
-      },
-      amount: 15000,
-      processingFee: 40.65,
-      totalAmount: 15040.65,
-      feesCovered: true,
-      date: '2024-01-15',
-      status: 'completed',
-      paymentMethod: 'Visa ****4242',
-      isAnonymous: false,
-      message: 'Happy to support this important cause!',
-      taxDeductible: true,
-      receiptDownloaded: false,
-      impactUpdate: 'Your donation helped drill a new well serving 200 families'
-    },
-    {
-      id: 'DON-20240112002',
-      campaign: {
-        id: 2,
-        title: 'Education for Every Child',
-        image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=100&h=100&fit=crop',
-        organizer: 'Education First'
-      },
-      amount: 10000,
-      processingFee: 30.20,
-      totalAmount: 10030.20,
-      feesCovered: false,
-      date: '2024-01-12',
-      status: 'completed',
-      paymentMethod: 'Mastercard ****5555',
-      isAnonymous: false,
-      message: '',
-      taxDeductible: true,
-      receiptDownloaded: true,
-      impactUpdate: 'Helped purchase school supplies for 25 students'
-    },
-    {
-      id: 'DON-20240108003',
-      campaign: {
-        id: 3,
-        title: 'Emergency Food Relief',
-        image: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=100&h=100&fit=crop',
-        organizer: 'Relief International'
-      },
-      amount: 45000,
-      processingFee: 60.48,
-      totalAmount: 45060.48,
-      feesCovered: true,
-      date: '2024-01-08',
-      status: 'completed',
-      paymentMethod: 'PayPal',
-      isAnonymous: true,
-      message: '',
-      taxDeductible: true,
-      receiptDownloaded: false,
-      impactUpdate: 'Provided 15 emergency food packages to families in need'
-    },
-    {
-      id: 'DON-20240105004',
-      campaign: {
-        id: 4,
-        title: 'Animal Shelter Support',
-        image: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=100&h=100&fit=crop',
-        organizer: 'Local Animal Shelter'
-      },
-      amount: 50000,
-      processingFee: 100.75,
-      totalAmount: 50100.75,
-      feesCovered: true,
-      date: '2024-01-05',
-      status: 'completed',
-      paymentMethod: 'Apple Pay',
-      isAnonymous: false,
-      message: 'Love supporting our furry friends!',
-      taxDeductible: true,
-      receiptDownloaded: true,
-      impactUpdate: 'Helped provide medical care for 3 rescued animals'
-    },
-    {
-      id: 'DON-20231228005',
-      campaign: {
-        id: 5,
-        title: 'Holiday Meals for Families',
-        image: 'https://images.unsplash.com/photo-1574484284002-952d92456975?w=100&h=100&fit=crop',
-        organizer: 'Community Food Bank'
-      },
-      amount: 20000,
-      processingFee: 60.10,
-      totalAmount: 20060.10,
-      feesCovered: true,
-      date: '2023-12-28',
-      status: 'completed',
-      paymentMethod: 'Visa ****4242',
-      isAnonymous: false,
-      message: 'Merry Christmas to all families!',
-      taxDeductible: true,
-      receiptDownloaded: true,
-      impactUpdate: 'Provided holiday meals for 40 families'
-    },
-    {
-      id: 'DON-20231220006',
-      campaign: {
-        id: 6,
-        title: 'Winter Clothing Drive',
-        image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=100&h=100&fit=crop',
-        organizer: 'Homeless Support Network'
-      },
-      amount: 12500,
-      processingFee: 30.93,
-      totalAmount: 12530.93,
-      feesCovered: true,
-      date: '2023-12-20',
-      status: 'completed',
-      paymentMethod: 'Google Pay',
-      isAnonymous: false,
-      message: 'Stay warm everyone!',
-      taxDeductible: true,
-      receiptDownloaded: false,
-      impactUpdate: 'Provided winter coats for 8 individuals'
-    }
-  ];
+  const [donations, setDonations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        setLoading(true);
+        const res: any = await donationService.getMyDonations({ limit: 1000 });
+        if (res && res.data && Array.isArray(res.data.donations)) {
+          if (mounted) setDonations(res.data.donations);
+        } else if (res && Array.isArray(res.data)) {
+          if (mounted) setDonations(res.data);
+        }
+      } catch (err) {
+        console.error('Failed to load donation history:', err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -227,6 +124,17 @@ const DonationHistory: React.FC = () => {
   );
   const averageDonation = totalDonated / donations.length;
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin border-4 border-blue-300 rounded-full mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading donation history...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -235,7 +143,7 @@ const DonationHistory: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground">Donation History</h1>
-              <p className="text-muted-foreground">Track all your donations and their impact over time.</p>
+              <p className="text-muted-foreground dark:text-gray-300">Track all your donations and their impact over time.</p>
             </div>
             <div className="flex items-center space-x-3">
               <Button variant="outline">
@@ -364,14 +272,19 @@ const DonationHistory: React.FC = () => {
           {/* Donation List */}
           <TabsContent value="list" className="space-y-4">
             {sortedDonations.map((donation, idx) => (
-              <Card key={donation.id} className={`overflow-hidden hover:shadow-md transition-shadow duration-200 animate-in fade-in-50 slide-in-from-bottom-4`} style={{ animationDelay: `${Math.min(idx, 6) * 60}ms` }}>
+              <Card key={donation._id || donation.id} className={`overflow-hidden hover:shadow-md transition-shadow duration-200 animate-in fade-in-50 slide-in-from-bottom-4`} style={{ animationDelay: `${Math.min(idx, 6) * 60}ms` }}>
                 <CardContent className="p-6">
                   <div className="flex items-start space-x-4">
-                    <img
-                      src={donation.campaign.image}
-                      alt={donation.campaign.title}
-                      className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                    />
+                    <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                      <img
+                        src={resolveCampaignImageUrl(donation.campaign)}
+                        alt={donation.campaign?.title || 'Campaign image'}
+                        className="w-16 h-16 object-cover"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.opacity = '0';
+                        }}
+                      />
+                    </div>
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between mb-2">
@@ -380,16 +293,16 @@ const DonationHistory: React.FC = () => {
                             {donation.campaign.title}
                           </h3>
                           <p className="text-sm text-muted-foreground">
-                            by {donation.campaign.organizer}
+                            by {donation.campaign?.creator?.name || donation.campaign?.organizer || ''}
                           </p>
                         </div>
                         <div className="text-right">
                           <div className="text-xl font-bold text-green-600">
-                            Rs.{donation.amount}
+                            Rs.{donation.amount || donation.netAmount || (donation.payment && donation.payment.netAmount) || 0}
                           </div>
-                          <Badge className={getStatusColor(donation.status)}>
-                            {getStatusIcon(donation.status)}
-                            <span className="ml-1 capitalize">{donation.status}</span>
+                          <Badge className={getStatusColor(donation.status || 'completed')}>
+                            {getStatusIcon(donation.status || 'completed')}
+                            <span className="ml-1 capitalize">{(donation.status || 'completed')}</span>
                           </Badge>
                         </div>
                       </div>
@@ -397,7 +310,7 @@ const DonationHistory: React.FC = () => {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground mb-3">
                         <div className="flex items-center space-x-1">
                           <Calendar className="h-4 w-4" />
-                          <span>{new Date(donation.date).toLocaleDateString()}</span>
+                          <span>{new Date(donation.createdAt || donation.date || donation._createdAt || Date.now()).toLocaleDateString()}</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <span>Payment: {donation.paymentMethod}</span>

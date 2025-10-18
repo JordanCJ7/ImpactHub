@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Donation = require('../models/Donation');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 
@@ -303,6 +304,95 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
+// Get donor leaderboard
+const getLeaderboard = async (req, res) => {
+  try {
+    const { limit = 50 } = req.query;
+
+    console.log('=== Leaderboard Debug ===');
+    
+    // Calculate real-time donor stats from completed donations
+    const donorStats = await Donation.aggregate([
+      { $match: { status: 'completed', donor: { $ne: null } } },
+      {
+        $group: {
+          _id: '$donor',
+          totalDonated: { $sum: '$amount' },
+          donationCount: { $sum: 1 }
+        }
+      },
+      { $match: { totalDonated: { $gt: 0 } } },
+      { $sort: { totalDonated: -1 } },
+      { $limit: parseInt(limit) }
+    ]);
+
+    console.log('Donor stats from aggregation:', donorStats.length);
+
+    // Get user details for each donor
+    const donorIds = donorStats.map(stat => stat._id);
+    const donors = await User.find({ 
+      _id: { $in: donorIds },
+      role: 'donor'
+    })
+    .select('name email avatar createdAt');
+
+    console.log('Donors found:', donors.length);
+
+    // Count campaigns supported by each donor
+    const campaignCounts = await Donation.aggregate([
+      { $match: { donor: { $in: donorIds }, status: 'completed' } },
+      { $group: { _id: '$donor', campaignsSupported: { $addToSet: '$campaign' } } },
+      { $project: { _id: 1, campaignsSupported: { $size: '$campaignsSupported' } } }
+    ]);
+
+    // Combine data
+    const donorMap = donors.reduce((map, donor) => {
+      map[donor._id.toString()] = donor;
+      return map;
+    }, {});
+
+    const campaignMap = campaignCounts.reduce((map, item) => {
+      map[item._id.toString()] = item.campaignsSupported;
+      return map;
+    }, {});
+
+    // Format the leaderboard
+    const leaderboard = donorStats.map((stat, index) => {
+      const donorId = stat._id.toString();
+      const donor = donorMap[donorId];
+      const totalDonated = stat.totalDonated;
+      
+      // Calculate donor level
+      let donorLevel = 'Bronze';
+      if (totalDonated >= 100000) donorLevel = 'Platinum';
+      else if (totalDonated >= 20000) donorLevel = 'Gold';
+      else if (totalDonated >= 5000) donorLevel = 'Silver';
+
+      return {
+        _id: stat._id,
+        name: donor?.name || 'Anonymous',
+        avatar: donor?.avatar || null,
+        totalDonated: stat.totalDonated,
+        campaignsSupported: campaignMap[donorId] || 0,
+        donorLevel,
+        rank: index + 1
+      };
+    });
+
+    console.log('Final leaderboard count:', leaderboard.length);
+    console.log('=========================');
+
+    res.json({ 
+      success: true,
+      count: leaderboard.length,
+      leaderboard 
+    });
+  } catch (error) {
+    console.error('Error fetching leaderboard:', error);
+    res.status(500).json({ error: 'Failed to fetch leaderboard' });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -310,5 +400,6 @@ module.exports = {
   getUserProfile,
   getCurrentUser,
   logout,
-  updateUserProfile
+  updateUserProfile,
+  getLeaderboard
 };

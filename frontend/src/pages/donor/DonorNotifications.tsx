@@ -124,8 +124,8 @@ const DonorNotifications: React.FC = () => {
             <div className="flex items-center space-x-3">
               <Bell className="h-6 w-6 text-indigo-600" />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-                <p className="text-gray-600">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Notifications</h1>
+                <p className="text-gray-600 dark:text-gray-300">
                   Stay updated on your campaigns and achievements
                   {unreadCount > 0 && (
                     <Badge className="ml-2 bg-red-500 text-white">

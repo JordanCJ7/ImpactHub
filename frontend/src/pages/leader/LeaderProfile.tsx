@@ -379,7 +379,7 @@ const LeaderProfile: React.FC = () => {
                 <Target className="h-8 w-8 text-green-600" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-muted-foreground">Total Raised</p>
-                  <p className="text-2xl font-bold text-foreground">${stats.totalRaised.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-foreground">LKR {stats.totalRaised.toLocaleString()}</p>
                 </div>
               </div>
             </CardContent>
@@ -557,7 +557,7 @@ const LeaderProfile: React.FC = () => {
                             {campaign.status}
                           </Badge>
                           <span className="text-sm text-muted-foreground">
-                            ${campaign.raised.toLocaleString()} / ${campaign.goal.toLocaleString()}
+                            LKR {campaign.raised.toLocaleString()} / LKR {campaign.goal.toLocaleString()}
                           </span>
                         </div>
                       </div>
@@ -587,7 +587,7 @@ const LeaderProfile: React.FC = () => {
                       <Label htmlFor={key} className="text-base">
                         {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                       </Label>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
                         {key === 'campaignUpdates' && 'Get notified about campaign updates and milestones'}
                         {key === 'donationAlerts' && 'Receive alerts when donations are made to your campaigns'}
                         {key === 'monthlyReports' && 'Monthly summary of your campaign performance'}

@@ -218,7 +218,7 @@ const CampaignList: React.FC = () => {
               </Select>
             </div>
 
-            <div className="text-center text-gray-600">
+            <div className="text-center text-gray-600 dark:text-gray-300">
               {loading ? (
                 <div className="flex items-center justify-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -240,7 +240,7 @@ const CampaignList: React.FC = () => {
           {loading && (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-              <span className="ml-2 text-gray-600">Loading campaigns...</span>
+              <span className="ml-2 text-gray-600 dark:text-gray-300">Loading campaigns...</span>
             </div>
           )}
 
@@ -248,8 +248,8 @@ const CampaignList: React.FC = () => {
           {error && (
             <div className="text-center py-12">
               <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to load campaigns</h3>
-              <p className="text-gray-600 mb-6">{error}</p>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Failed to load campaigns</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">{error}</p>
               <Button onClick={fetchCampaigns}>
                 Try Again
               </Button>
@@ -279,7 +279,7 @@ const CampaignList: React.FC = () => {
                         </Badge>
                       )}
                     </div>
-                    <Badge className="absolute top-3 right-3 bg-white text-gray-900 capitalize">
+                    <Badge className="absolute top-3 right-3 bg-white text-gray-900 dark:text-gray-900 capitalize">
                       {campaign.category}
                     </Badge>
                   </div>
